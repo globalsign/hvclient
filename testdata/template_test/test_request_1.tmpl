@@ -1,0 +1,19 @@
+{
+  "validity": {
+    "not_before": {{.NotBefore}},
+    "not_after": {{.NotAfter}}
+  },
+  "subject_dn": {
+    "common_name": "{{index .Values "commonname"}}",
+    "organizational_unit": []
+  },
+  "san": {
+    "dns_names": [],
+    "ip_addresses": [],
+    "uris": [],
+    "emails": []
+  },
+  "extended_key_usages": [],
+  "custom_extensions": {},
+  "public_key": "{{.Key}}"
+}

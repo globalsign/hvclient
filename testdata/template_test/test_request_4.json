@@ -1,0 +1,13 @@
+{
+  "validity": {
+    "not_before": 1538860000,
+    "not_after": 1538870000
+  },
+  "subject_dn": {
+    "common_name": "WilliamTell",
+    "organizational_unit": []
+  },
+  "custom_extensions": {},
+  "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvDJEEqXIHr6mImRbAapK\nbTykc3N0Rul1S369vHPBoLpQn2FPX9SoaWSLZkkZFI6vmMgAUj0hekjEhip/Gz16\n31CcFNfeUWLr8vV83rvZeV2glbJGSSghYfQq2exUe9NKY258RcTh65S5gadojfxA\nckRyLJy9k4xdzOpBT8pEk/Kif0XiVS8bt7/dOoBtzHScEVPR/ZkcpOz74VcQQjMK\nLMO6chxGmYBn+Cm6QxH7sTK1Cq5K7yq5tiXcPH9EbpuogjX4WzeSuD+YOBihnFz5\nnGDqMPQF+Ojr1fd+Kavd76+UtNCQTg4elfKOuQPNWsGVXCiFBAA485BJWkRwoGl8\nDwIDAQAB\n-----END PUBLIC KEY-----"
+  "public_key_signature": "MHpzApKIx3vxj6iaSv1z9wnJI9iw7RUhxcGrMHKZFWHpQNzg/GbDAJzTjqaWmQxlI8tnSlxoPp/EEX0tSX3kmEOcYmsCfePgjhxCaCjzvEbwX8Pt3nGhXLJf/zaot4vYSGYUip9dR6leXVoXUCPri60EjvqaKkeJJWj33OwYwZhNnY1IsKhdLTWjtvCE4UQ5V1YYdX+/Tb/9IS+kE562UVHsCFkeuAiQ8gDcceDkCxkgJ744ZjEV0PjB3SvV3HoMfMzd+iGsIOmMHscBn/kH9XpFC0X+hZx0+rYCHZ1AMXflv1j00jWqrO4z0gmUyDRlnjOhWancGP1BV6hbQXEuiw=="
+}

@@ -1,0 +1,13 @@
+{
+  "validity": {
+    "not_before": {{.NotBefore}},
+    "not_after": {{.NotAfter}}
+  },
+  "subject_dn": {
+    "common_name": "{{index .Values "commonname"}}",
+    "organizational_unit": []
+  },
+  "custom_extensions": {},
+  "public_key": "{{.Key}}"
+  "public_key_signature": "{{.Signature}}"
+}

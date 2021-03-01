@@ -1,0 +1,20 @@
+{
+  "validity": {
+    "not_before": 1538748944,
+    "not_after": 1546518944
+  },
+  "subject_dn": {
+    "common_name": "MichaelKnight",
+    "email": "michael@knight.com",
+    "organizational_unit": []
+  },
+  "san": {
+    "dns_names": [],
+    "ip_addresses": [],
+    "uris": [],
+    "emails": []
+  },
+  "extended_key_usages": [],
+  "custom_extensions": {},
+  "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqX0GbIs/ltBqGTK6uLs9\nwYzo/IRrtJq7yDAn+0zT7Bg6Q9y0yrGaIwcWs/5De/yP2bPtJ6XkmLMblB74qoKU\njxk4gITzQZf3FLZ7hBm2keykb3rj0hcb3aIpQamsn0LtnJG227Gp17AcJkeSAEWT\nHkwjakitSVBtYzcaHC0tFUcPf1lynZSsWKugPk+xooZfo/T7nRkWTEglDh5qLGF3\npnWm6r6NqBbl8fvjbs+oxg36D84ods2HyvJzJQ1CW+UpKuZaFasjp9kHMW5f/oQy\nEwHk9v/oZTcUT2/4pf9XZNZCSWH8znzW2bWlCr77Wi16FfR9Ss/eusJBb31NhmpM\npwIDAQAB\n-----END PUBLIC KEY-----"
+}

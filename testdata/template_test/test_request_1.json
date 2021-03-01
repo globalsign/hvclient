@@ -1,0 +1,19 @@
+{
+  "validity": {
+    "not_before": 1538860000,
+    "not_after": 1538870000
+  },
+  "subject_dn": {
+    "common_name": "DoctorFoster",
+    "organizational_unit": []
+  },
+  "san": {
+    "dns_names": [],
+    "ip_addresses": [],
+    "uris": [],
+    "emails": []
+  },
+  "extended_key_usages": [],
+  "custom_extensions": {},
+  "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyAXOKa6HHM+t7eHYSVfn\nnOYnNjOr3/UEeE+tSWr2lH8VgLG1vQ71oRYLtAeN8SE5OBPNNRZ8OmqonJf4MHM9\nCqDQLscDDBrRwj73fju0SFeT/kOpeK147cvAeC+sZXRmuGXDNB9c7RRCysYN7R7q\nawSpEPKvsg71CMkCgEK87uFkrUw0lXZ2nh1mbTDmJO+/JJJAjZ1pf8AfLvaByA7u\nKrYd8SOYpTaQ5DazZssqeslNpf2wK6CpP+auI/BC5WEZ3T3P2+hP7miLRtREyJ++\nMApo0gaMyp1lvruf/vaeJLZD7vYr8XAXUrFIv8Qv3Gw+vBMrdxURe7bYA2kKyCIW\nLwIDAQAB\n-----END PUBLIC KEY-----"
+}

@@ -1,0 +1,12 @@
+*~
+*.bak
+*.cert
+*.crt
+*.key
+*.o
+*.out
+*.p10
+*.pem
+*.swn
+*.swo
+*.swp

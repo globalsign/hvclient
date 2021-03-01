@@ -1,5 +1,7 @@
 # hvclient
 
+[![Build Status](https://github.com/globalsign/hvclient/actions/workflows/go.yml/badge.svg)](https://github.com/globalsign/hvclient/actions/workflows/go.yml)
+
 Package hvclient provides an interface for making HVCA API calls.
 
 Comprehensive examples of using this package to make HVCA API calls may be found

@@ -11,6 +11,7 @@ package hvclient
 
 import (
 	"crypto/rsa"
+	"reflect"
 	"testing"
 	"time"
 
@@ -23,25 +24,38 @@ func TestConfigNewFromFile(t *testing.T) {
 	var testcases = []struct {
 		filename string
 		want     Config
+		keyType  reflect.Type
 	}{
 		{
-			"testdata/config_test.conf",
-			Config{
+			filename: "testdata/config_test.conf",
+			want: Config{
 				URL:       "https://emea.api.hvca.globalsign.com:8443/v2",
 				version:   2,
 				APIKey:    "1234",
 				APISecret: "abcdefgh",
 				Timeout:   time.Second * 60,
 			},
+			keyType: reflect.TypeOf((*rsa.PrivateKey)(nil)),
 		},
 		{
-			"testdata/config_test_with_timeout.conf",
-			Config{
+			filename: "testdata/config_test_with_timeout.conf",
+			want: Config{
 				URL:       "https://emea.api.hvca.globalsign.com:8443/v2",
 				version:   2,
 				APIKey:    "5678",
 				APISecret: "stuvwxyz",
 				Timeout:   time.Second * 5,
+			},
+			keyType: reflect.TypeOf((*rsa.PrivateKey)(nil)),
+		},
+		{
+			filename: "testdata/config_test_no_version.conf",
+			want: Config{
+				URL:       "http://127.0.0.1:5500",
+				version:   2,
+				APIKey:    "1234",
+				APISecret: "abcdefgh",
+				Timeout:   time.Second * 60,
 			},
 		},
 	}
@@ -60,27 +74,23 @@ func TestConfigNewFromFile(t *testing.T) {
 			}
 
 			if conf.URL != tc.want.URL {
-				t.Errorf("got URL %s, want %s", conf.URL, tc.want.URL)
+				t.Fatalf("got URL %s, want %s", conf.URL, tc.want.URL)
 			}
 
 			if conf.version != tc.want.version {
-				t.Errorf("got version %d, want %d", conf.version, tc.want.version)
+				t.Fatalf("got version %d, want %d", conf.version, tc.want.version)
 			}
 
 			if conf.APIKey != tc.want.APIKey {
-				t.Errorf("got API key %s, want %s", conf.APIKey, tc.want.APIKey)
+				t.Fatalf("got API key %s, want %s", conf.APIKey, tc.want.APIKey)
 			}
 
 			if conf.APISecret != tc.want.APISecret {
-				t.Errorf("got API secret %s, want %s", conf.APISecret, tc.want.APISecret)
+				t.Fatalf("got API secret %s, want %s", conf.APISecret, tc.want.APISecret)
 			}
 
-			if key, ok := conf.TLSKey.(*rsa.PrivateKey); !ok {
-				t.Errorf("unexpected key type: %T", conf.TLSKey)
-			} else {
-				if err := key.Validate(); err != nil {
-					t.Errorf("failed to validate private key: %v", err)
-				}
+			if (conf.TLSKey == nil) != (tc.keyType == nil) {
+				t.Fatalf("got key type %T, want %v", conf.TLSKey, tc.keyType)
 			}
 		})
 	}
@@ -93,7 +103,6 @@ func TestConfigNewFromFileFailure(t *testing.T) {
 		"testdata/no_such_file.conf",
 		"testdata/config_test_bad_key.conf",
 		"testdata/config_test_bad_cert.conf",
-		"testdata/config_test_bad_version.conf",
 		"testdata/config_test_bad_url.conf",
 	}
 

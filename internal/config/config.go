@@ -36,6 +36,12 @@ type Config struct {
 	// encrypted, this should be set to the emptry string.
 	KeyPassphrase string `json:"key_passphrase"`
 
+	// If InsecureSkipVerify is true, TLS accepts any certificate
+	// presented by the server and any host name in that certificate.
+	// In this mode, TLS is susceptible to man-in-the-middle attacks.
+	// This should be used only for testing.
+	InsecureSkipVerify bool `json:"insecure_skip_verify"`
+
 	// Timeout is the maximum time in seconds for an HVCA API request.
 	Timeout int `json:"timeout"`
 }

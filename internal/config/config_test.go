@@ -47,6 +47,19 @@ func TestConfigNewFromFile(t *testing.T) {
 				Timeout:       30,
 			},
 		},
+		{
+			"testdata/test_insecure.conf",
+			config.Config{
+				URL:                "https://emea.api.hvca.globalsign.com:8443/v2",
+				APIKey:             "api key goes here",
+				APISecret:          "api secret goes here",
+				CertFile:           "/home/jdoe/fully/qualified/path/to/certfile.pem",
+				KeyFile:            "/home/jdoe/fully/qualified/path/to/keyfile.pem",
+				KeyPassphrase:      "",
+				InsecureSkipVerify: true,
+				Timeout:            30,
+			},
+		},
 	}
 
 	for _, tc := range testcases {

@@ -602,36 +602,44 @@ func NewClient(ctx context.Context, conf *Config) (*Client, error) {
 		return nil, err
 	}
 
-	// Build the new HVCA client. Note we set the last logged in time to a time early
-	// enough that it won't prevent our initial login. See documentation for the login
-	// method for more information on our login strategy.
+	// Build the new HVCA client. Note the last logged in time is at its
+	// default zero value, which is a time early enough that it won't prevent
+	// our initial login. See documentation for the login method for more
+	// information on our login strategy.
+
+	// Build a TLS transport only if an HTTPS URL was specified.
+	var tnspt http.RoundTripper
+
+	if conf.url.Scheme == "https" {
+		// Populate TLS client certificates only if one was provided.
+		var tlsCerts []tls.Certificate
+		if conf.TLSCert != nil {
+			tlsCerts = []tls.Certificate{
+				tls.Certificate{
+					Certificate: [][]byte{conf.TLSCert.Raw},
+					PrivateKey:  conf.TLSKey,
+					Leaf:        conf.TLSCert,
+				},
+			}
+		}
+
+		tnspt = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:            conf.TLSRoots,
+				Certificates:       tlsCerts,
+				InsecureSkipVerify: conf.InsecureSkipVerify,
+			},
+		}
+	}
 
 	var newClient = Client{
-		config: conf,
-		url:    conf.url,
-		httpClient: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					RootCAs: conf.TLSRoots,
-					Certificates: []tls.Certificate{
-						tls.Certificate{
-							Certificate: [][]byte{
-								conf.TLSCert.Raw,
-							},
-							PrivateKey: conf.TLSKey,
-							Leaf:       conf.TLSCert,
-						},
-					},
-				},
-			},
-		},
+		config:       conf,
+		url:          conf.url,
+		httpClient:   &http.Client{Transport: tnspt},
 		loginRequest: newLoginRequest(conf.APIKey, conf.APISecret),
-		token:        "",
-		lastLoggedIn: time.Time{},
 	}
 
 	// Perform the initial login and return the new client.
-
 	if err = newClient.login(ctx); err != nil {
 		return nil, err
 	}

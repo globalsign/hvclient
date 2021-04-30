@@ -11,6 +11,7 @@ package config_test
 
 import (
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/globalsign/hvclient/internal/config"
@@ -57,7 +58,10 @@ func TestConfigNewFromFile(t *testing.T) {
 				KeyFile:            "/home/jdoe/fully/qualified/path/to/keyfile.pem",
 				KeyPassphrase:      "",
 				InsecureSkipVerify: true,
-				Timeout:            30,
+				ExtraHeaders: map[string]string{
+					"X-SSL-Client-Serial": "01C71933E117CBB601887D9738BB1690",
+				},
+				Timeout: 30,
 			},
 		},
 	}
@@ -74,7 +78,7 @@ func TestConfigNewFromFile(t *testing.T) {
 				t.Fatalf("couldn't get configuration from file: %v", err)
 			}
 
-			if *got != tc.want {
+			if !reflect.DeepEqual(*got, tc.want) {
 				t.Errorf("got %v, want %v", *got, tc.want)
 			}
 		})

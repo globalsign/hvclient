@@ -42,6 +42,10 @@ type Config struct {
 	// This should be used only for testing.
 	InsecureSkipVerify bool `json:"insecure_skip_verify"`
 
+	// ExtraHeaders contains custom HTTP request headers to be passed to the
+	// HVCA server with each request.
+	ExtraHeaders map[string]string `json:"extra_headers,omitempty"`
+
 	// Timeout is the maximum time in seconds for an HVCA API request.
 	Timeout int `json:"timeout"`
 }

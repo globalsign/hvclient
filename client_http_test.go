@@ -12,6 +12,10 @@ import (
 	"github.com/go-chi/chi"
 )
 
+const (
+	sslClientSerialHeader = "X-SSL-Client-Serial"
+)
+
 // newMockServer returns an *httptest.Server which mocks the HVCA API /login
 // endpoint.
 func newMockServer(t *testing.T) *httptest.Server {
@@ -38,6 +42,13 @@ func newMockServer(t *testing.T) *httptest.Server {
 				return
 			}
 
+			// Trivially verify the expected SSL client serial header.
+			var serial = r.Header.Get(sslClientSerialHeader)
+			if serial != "mock_serial" {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+
 			// Trivially verify the expected API key.
 			if loginRequest.APIKey != "mock_key" {
 				w.WriteHeader(http.StatusUnauthorized)
@@ -59,18 +70,28 @@ func TestClientHTTPTrivial(t *testing.T) {
 		name      string
 		apiKey    string
 		apiSecret string
+		serial    string
 		status    int
 	}{
 		{
 			name:      "OK",
 			apiKey:    "mock_key",
 			apiSecret: "mock_secret",
+			serial:    "mock_serial",
 			status:    http.StatusOK,
 		},
 		{
 			name:      "WrongAPIKey",
 			apiKey:    "wrong_key",
 			apiSecret: "mock_secret",
+			serial:    "mock_serial",
+			status:    http.StatusUnauthorized,
+		},
+		{
+			name:      "WrongSerial",
+			apiKey:    "mock_key",
+			apiSecret: "mock_secret",
+			serial:    "wrong_serial",
 			status:    http.StatusUnauthorized,
 		},
 	}
@@ -91,6 +112,9 @@ func TestClientHTTPTrivial(t *testing.T) {
 				URL:       testServer.URL,
 				APIKey:    tc.apiKey,
 				APISecret: tc.apiSecret,
+				ExtraHeaders: map[string]string{
+					sslClientSerialHeader: tc.serial,
+				},
 			})
 			if tc.status == http.StatusOK {
 				if err != nil {

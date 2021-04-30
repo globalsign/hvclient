@@ -517,6 +517,11 @@ func (c *Client) makeRequest(ctx context.Context, req apiRequest) (*http.Respons
 
 		request = request.WithContext(ctx)
 
+		// Add any extra headers to the request.
+		for key, value := range c.config.ExtraHeaders {
+			request.Header.Set(key, value)
+		}
+
 		if response, err = c.httpClient.Do(request); err != nil {
 			return nil, err
 		}

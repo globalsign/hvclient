@@ -59,6 +59,10 @@ type Config struct {
 	// server certificate. If nil, the system pool will be used.
 	TLSRoots *x509.CertPool
 
+	// ExtraHeaders contains custom HTTP request headers to be passed to the
+	// HVCA server with each request.
+	ExtraHeaders map[string]string
+
 	// If InsecureSkipVerify is true, TLS accepts any certificate
 	// presented by the server and any host name in that certificate.
 	// In this mode, TLS is susceptible to man-in-the-middle attacks.
@@ -159,6 +163,7 @@ func NewConfigFromFile(filename string) (*Config, error) {
 		URL:                fileconf.URL,
 		APIKey:             fileconf.APIKey,
 		APISecret:          fileconf.APISecret,
+		ExtraHeaders:       fileconf.ExtraHeaders,
 		InsecureSkipVerify: fileconf.InsecureSkipVerify,
 		Timeout:            time.Second * time.Duration(fileconf.Timeout),
 	}
@@ -198,6 +203,7 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 		URL:                jsonConfig.URL,
 		APIKey:             jsonConfig.APIKey,
 		APISecret:          jsonConfig.APISecret,
+		ExtraHeaders:       jsonConfig.ExtraHeaders,
 		InsecureSkipVerify: jsonConfig.InsecureSkipVerify,
 		Timeout:            time.Second * time.Duration(jsonConfig.Timeout),
 	}

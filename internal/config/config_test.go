@@ -11,6 +11,7 @@ package config_test
 
 import (
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/globalsign/hvclient/internal/config"
@@ -47,6 +48,22 @@ func TestConfigNewFromFile(t *testing.T) {
 				Timeout:       30,
 			},
 		},
+		{
+			"testdata/test_insecure.conf",
+			config.Config{
+				URL:                "https://emea.api.hvca.globalsign.com:8443/v2",
+				APIKey:             "api key goes here",
+				APISecret:          "api secret goes here",
+				CertFile:           "/home/jdoe/fully/qualified/path/to/certfile.pem",
+				KeyFile:            "/home/jdoe/fully/qualified/path/to/keyfile.pem",
+				KeyPassphrase:      "",
+				InsecureSkipVerify: true,
+				ExtraHeaders: map[string]string{
+					"X-SSL-Client-Serial": "01C71933E117CBB601887D9738BB1690",
+				},
+				Timeout: 30,
+			},
+		},
 	}
 
 	for _, tc := range testcases {
@@ -61,7 +78,7 @@ func TestConfigNewFromFile(t *testing.T) {
 				t.Fatalf("couldn't get configuration from file: %v", err)
 			}
 
-			if *got != tc.want {
+			if !reflect.DeepEqual(*got, tc.want) {
 				t.Errorf("got %v, want %v", *got, tc.want)
 			}
 		})

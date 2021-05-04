@@ -56,14 +56,30 @@ type Config struct {
 	APISecret string
 
 	// TLSRoots contain the root certificates used to validate HVCA's TLS
-	// server certificate.
+	// server certificate. If nil, the system pool will be used.
 	TLSRoots *x509.CertPool
+
+	// ExtraHeaders contains custom HTTP request headers to be passed to the
+	// HVCA server with each request.
+	ExtraHeaders map[string]string
+
+	// If InsecureSkipVerify is true, TLS accepts any certificate
+	// presented by the server and any host name in that certificate.
+	// In this mode, TLS is susceptible to man-in-the-middle attacks.
+	// This should be used only for testing.
+	InsecureSkipVerify bool
 
 	// Timeout is the number of seconds to wait before cancelling an HVCA API
 	// request. If this is omitted or set to zero, a reasonable default will
 	// be used.
 	Timeout time.Duration
 }
+
+const (
+	// Default version is assumed if the URL in the configuration file does
+	// not contain a version number.
+	defaultVersion = 2
+)
 
 var defaultTimeout = time.Second * 60
 
@@ -73,8 +89,7 @@ var defaultTimeout = time.Second * 60
 func (c *Config) Validate() error {
 	// Build up the URL for accessing the HVCA system. We're anticipating versioning
 	// and the possibility of supporting both v2 and future versions, but since only
-	// v2 is live right now, we just return with an error for any other specified version.
-
+	// v2 is live right now, we just assume it if the version number is unrecognized.
 	if c.URL == "" {
 		return errors.New("no URL specified")
 	}
@@ -90,17 +105,15 @@ func (c *Config) Validate() error {
 	case "v2":
 		c.version = 2
 	default:
-		return fmt.Errorf("unsupported HVCA version: %s", versionstring)
+		c.version = defaultVersion
 	}
 
 	// Calculate default timeout.
-
 	if c.Timeout == 0 {
 		c.Timeout = defaultTimeout
 	}
 
-	// Check TLS key and certificate are present.
-
+	// Ensure API key and secret were provided.
 	if c.APIKey == "" {
 		return errors.New("no API key provided")
 	}
@@ -109,12 +122,11 @@ func (c *Config) Validate() error {
 		return errors.New("no API secret provided")
 	}
 
-	if c.TLSKey == nil {
-		return errors.New("no private key provided")
-	}
-
-	if c.TLSCert == nil {
-		return errors.New("no mTLS certificate provided")
+	// Check TLS key and certificate are either both present, or both absent.
+	if c.TLSKey == nil && c.TLSCert != nil {
+		return errors.New("mTLS certificate provided but mTLS private key not provided")
+	} else if c.TLSKey != nil && c.TLSCert == nil {
+		return errors.New("mTLS certificate not provided but mTLS private key provided")
 	}
 
 	return nil
@@ -148,22 +160,26 @@ func NewConfigFromFile(filename string) (*Config, error) {
 	}
 
 	var newconf = &Config{
-		URL:       fileconf.URL,
-		APIKey:    fileconf.APIKey,
-		APISecret: fileconf.APISecret,
-		Timeout:   time.Second * time.Duration(fileconf.Timeout),
+		URL:                fileconf.URL,
+		APIKey:             fileconf.APIKey,
+		APISecret:          fileconf.APISecret,
+		ExtraHeaders:       fileconf.ExtraHeaders,
+		InsecureSkipVerify: fileconf.InsecureSkipVerify,
+		Timeout:            time.Second * time.Duration(fileconf.Timeout),
 	}
 
-	// Get mTLS private key from file.
-
-	if newconf.TLSKey, err = pkifile.PrivateKeyFromFileWithPassword(fileconf.KeyFile, fileconf.KeyPassphrase); err != nil {
-		return nil, fmt.Errorf("couldn't get mTLS private key: %v", err)
+	// Get mTLS private key from file, if provided.
+	if fileconf.KeyFile != "" {
+		if newconf.TLSKey, err = pkifile.PrivateKeyFromFileWithPassword(fileconf.KeyFile, fileconf.KeyPassphrase); err != nil {
+			return nil, fmt.Errorf("couldn't get mTLS private key: %v", err)
+		}
 	}
 
 	// Get mTLS certificate from file.
-
-	if newconf.TLSCert, err = pkifile.CertFromFile(fileconf.CertFile); err != nil {
-		return nil, fmt.Errorf("couldn't get mTLS certificate: %v", err)
+	if fileconf.CertFile != "" {
+		if newconf.TLSCert, err = pkifile.CertFromFile(fileconf.CertFile); err != nil {
+			return nil, fmt.Errorf("couldn't get mTLS certificate: %v", err)
+		}
 	}
 
 	if err = newconf.Validate(); err != nil {
@@ -184,22 +200,26 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 	}
 
 	var newconf = Config{
-		URL:       jsonConfig.URL,
-		APIKey:    jsonConfig.APIKey,
-		APISecret: jsonConfig.APISecret,
-		Timeout:   time.Second * time.Duration(jsonConfig.Timeout),
+		URL:                jsonConfig.URL,
+		APIKey:             jsonConfig.APIKey,
+		APISecret:          jsonConfig.APISecret,
+		ExtraHeaders:       jsonConfig.ExtraHeaders,
+		InsecureSkipVerify: jsonConfig.InsecureSkipVerify,
+		Timeout:            time.Second * time.Duration(jsonConfig.Timeout),
 	}
 
 	// Get mTLS private key from file.
-
-	if newconf.TLSKey, err = pkifile.PrivateKeyFromFileWithPassword(jsonConfig.KeyFile, jsonConfig.KeyPassphrase); err != nil {
-		return fmt.Errorf("couldn't get mTLS private key: %v", err)
+	if jsonConfig.KeyFile != "" {
+		if newconf.TLSKey, err = pkifile.PrivateKeyFromFileWithPassword(jsonConfig.KeyFile, jsonConfig.KeyPassphrase); err != nil {
+			return fmt.Errorf("couldn't get mTLS private key: %v", err)
+		}
 	}
 
 	// Get mTLS certificate from file.
-
-	if newconf.TLSCert, err = pkifile.CertFromFile(jsonConfig.CertFile); err != nil {
-		return fmt.Errorf("couldn't get mTLS certificate: %v", err)
+	if jsonConfig.CertFile != "" {
+		if newconf.TLSCert, err = pkifile.CertFromFile(jsonConfig.CertFile); err != nil {
+			return fmt.Errorf("couldn't get mTLS certificate: %v", err)
+		}
 	}
 
 	if err = newconf.Validate(); err != nil {

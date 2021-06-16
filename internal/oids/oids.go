@@ -38,10 +38,8 @@ func StringToOID(s string) (asn1.ObjectIdentifier, error) {
 	var oid = asn1.ObjectIdentifier{}
 
 	for _, n := range strings.Split(strings.TrimSpace(s), ".") {
-		var value int
-		var err error
-
-		if value, err = strconv.Atoi(n); err != nil {
+		var value, err = strconv.Atoi(n)
+		if err != nil {
 			return nil, err
 		}
 

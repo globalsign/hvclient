@@ -19,6 +19,8 @@ import (
 )
 
 func TestFileIsEncryptedPEMBlock(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []struct {
 		filename  string
 		encrypted bool
@@ -33,14 +35,22 @@ func TestFileIsEncryptedPEMBlock(t *testing.T) {
 		{"testdata/ec_priv_enc.key", true},
 	}
 
-	for n, tc := range testcases {
-		if got := pkifile.FileIsEncryptedPEMBlock(tc.filename); got != tc.encrypted {
-			t.Errorf("case %d, got %t, want %t", n+1, got, tc.encrypted)
-		}
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.filename, func(t *testing.T) {
+			t.Parallel()
+
+			if got := pkifile.FileIsEncryptedPEMBlock(tc.filename); got != tc.encrypted {
+				t.Fatalf("got %t, want %t", got, tc.encrypted)
+			}
+		})
 	}
 }
 
 func TestPrivateKeyFromFileWithPassword(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []struct {
 		filename, password string
 		key                interface{}
@@ -51,22 +61,25 @@ func TestPrivateKeyFromFileWithPassword(t *testing.T) {
 		{"testdata/ec_priv_enc.key", "somesecret", &ecdsa.PrivateKey{}},
 	}
 
-	for n, tc := range testcases {
-		var key interface{}
-		var err error
+	for _, tc := range testcases {
+		var tc = tc
 
-		if key, err = pkifile.PrivateKeyFromFileWithPassword(tc.filename, tc.password); err != nil {
-			t.Errorf("case %d, couldn't get private key from file: %v", n+1, err)
-			continue
-		}
+		t.Run(tc.filename, func(t *testing.T) {
+			var key, err = pkifile.PrivateKeyFromFileWithPassword(tc.filename, tc.password)
+			if err != nil {
+				t.Fatalf("couldn't get private key from file: %v", err)
+			}
 
-		if reflect.TypeOf(key) != reflect.TypeOf(tc.key) {
-			t.Errorf("case %d, got %v, want %v", n+1, reflect.TypeOf(key), reflect.TypeOf(tc.key))
-		}
+			if reflect.TypeOf(key) != reflect.TypeOf(tc.key) {
+				t.Fatalf("got %T, want %T", key, tc.key)
+			}
+		})
 	}
 }
 
 func TestPrivateKeyFromFileWithPasswordBad(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []struct {
 		filename, password string
 	}{
@@ -79,14 +92,23 @@ func TestPrivateKeyFromFileWithPasswordBad(t *testing.T) {
 		{"testdata/ec_priv_enc.key", "wrongsecret"},
 	}
 
-	for n, tc := range testcases {
-		if _, err := pkifile.PrivateKeyFromFileWithPassword(tc.filename, tc.password); err == nil {
-			t.Errorf("case %d, unexpectedly got private key from file", n+1)
-		}
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.filename, func(t *testing.T) {
+			t.Parallel()
+
+			var _, err = pkifile.PrivateKeyFromFileWithPassword(tc.filename, tc.password)
+			if err == nil {
+				t.Fatalf("unexpectedly got private key from file")
+			}
+		})
 	}
 }
 
 func TestPublicKeyFromFile(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []struct {
 		filename, password string
 		key                interface{}
@@ -96,22 +118,27 @@ func TestPublicKeyFromFile(t *testing.T) {
 		{"testdata/ec_pub.key", "", &ecdsa.PublicKey{}},
 	}
 
-	for n, tc := range testcases {
-		var key interface{}
-		var err error
+	for _, tc := range testcases {
+		var tc = tc
 
-		if key, err = pkifile.PublicKeyFromFile(tc.filename); err != nil {
-			t.Errorf("case %d, couldn't get public key from file: %v", n+1, err)
-			continue
-		}
+		t.Run(tc.filename, func(t *testing.T) {
+			t.Parallel()
 
-		if reflect.TypeOf(key) != reflect.TypeOf(tc.key) {
-			t.Errorf("case %d, got %v, want %v", n+1, reflect.TypeOf(key), reflect.TypeOf(tc.key))
-		}
+			var key, err = pkifile.PublicKeyFromFile(tc.filename)
+			if err != nil {
+				t.Fatalf("couldn't get public key from file: %v", err)
+			}
+
+			if reflect.TypeOf(key) != reflect.TypeOf(tc.key) {
+				t.Fatalf("got %T, want %T", key, tc.key)
+			}
+		})
 	}
 }
 
 func TestPublicKeyFromFileBad(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []string{
 		"testdata/no_such_file.key",
 		"testdata/rsa_priv.key",
@@ -119,56 +146,99 @@ func TestPublicKeyFromFileBad(t *testing.T) {
 	}
 
 	for n, tc := range testcases {
-		if _, err := pkifile.PublicKeyFromFile(tc); err == nil {
-			t.Errorf("case %d, unexpectedly got public key from file", n+1)
-		}
+		var tc = tc
+
+		t.Run(tc, func(t *testing.T) {
+			t.Parallel()
+
+			var _, err = pkifile.PublicKeyFromFile(tc)
+			if err == nil {
+				t.Fatalf("case %d, unexpectedly got public key from file", n+1)
+			}
+		})
 	}
 }
 
 func TestCSRFromFile(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []string{
 		"testdata/request.p10",
 	}
 
 	for n, tc := range testcases {
-		if _, err := pkifile.CSRFromFile(tc); err != nil {
-			t.Errorf("case %d, couldn't get CSR from file: %v", n+1, err)
-		}
+		var tc = tc
+
+		t.Run(tc, func(t *testing.T) {
+			t.Parallel()
+
+			var _, err = pkifile.CSRFromFile(tc)
+			if err != nil {
+				t.Fatalf("case %d, couldn't get CSR from file: %v", n+1, err)
+			}
+		})
 	}
 }
 
 func TestCSRFromFileBad(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []string{
 		"testdata/no_such_file.p10",
 	}
 
 	for n, tc := range testcases {
-		if _, err := pkifile.CSRFromFile(tc); err == nil {
-			t.Errorf("case %d, unexpectedly got CSR from file", n+1)
-		}
+		var tc = tc
+
+		t.Run(tc, func(t *testing.T) {
+			t.Parallel()
+
+			var _, err = pkifile.CSRFromFile(tc)
+			if err == nil {
+				t.Fatalf("case %d, unexpectedly got CSR from file", n+1)
+			}
+		})
 	}
 }
 
 func TestCertFromFile(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []string{
 		"testdata/cert.pem",
 	}
 
 	for n, tc := range testcases {
-		if _, err := pkifile.CertFromFile(tc); err != nil {
-			t.Errorf("case %d, couldn't get cert from file: %v", n+1, err)
-		}
+		var tc = tc
+
+		t.Run(tc, func(t *testing.T) {
+			t.Parallel()
+
+			var _, err = pkifile.CertFromFile(tc)
+			if err != nil {
+				t.Fatalf("case %d, couldn't get cert from file: %v", n+1, err)
+			}
+		})
 	}
 }
 
 func TestCertFromFileBad(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []string{
 		"testdata/no_such_file.cert",
 	}
 
 	for n, tc := range testcases {
-		if _, err := pkifile.CertFromFile(tc); err == nil {
-			t.Errorf("case %d, unexpectedly got cert from file", n+1)
-		}
+		var tc = tc
+
+		t.Run(tc, func(t *testing.T) {
+			t.Parallel()
+
+			var _, err = pkifile.CertFromFile(tc)
+			if err == nil {
+				t.Fatalf("case %d, unexpectedly got cert from file", n+1)
+			}
+		})
 	}
 }

@@ -3,16 +3,20 @@ package hvclient_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/globalsign/hvclient"
+	"github.com/globalsign/hvclient/internal/httputils"
 	"github.com/go-chi/chi"
 )
 
 const (
+	mockQuota             = 42
 	sslClientSerialHeader = "X-SSL-Client-Serial"
 )
 
@@ -25,10 +29,17 @@ func newMockServer(t *testing.T) *httptest.Server {
 
 	r.Route("/login", func(r chi.Router) {
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-			// Read and parse request body.
-			var data, err = ioutil.ReadAll(r.Body)
+			var err = httputils.VerifyRequestContentType(r, httputils.ContentTypeJSON)
 			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
+				writeMockError(w, http.StatusUnsupportedMediaType)
+				return
+			}
+
+			// Read and parse request body.
+			var data []byte
+			data, err = ioutil.ReadAll(r.Body)
+			if err != nil {
+				writeMockError(w, http.StatusInternalServerError)
 				return
 			}
 
@@ -38,32 +49,48 @@ func newMockServer(t *testing.T) *httptest.Server {
 			}
 			err = json.Unmarshal(data, &loginRequest)
 			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
+				writeMockError(w, http.StatusBadRequest)
 				return
 			}
 
 			// Trivially verify the expected SSL client serial header.
 			var serial = r.Header.Get(sslClientSerialHeader)
 			if serial != "mock_serial" {
-				w.WriteHeader(http.StatusUnauthorized)
+				writeMockError(w, http.StatusUnauthorized)
 				return
 			}
 
 			// Trivially verify the expected API key.
 			if loginRequest.APIKey != "mock_key" {
-				w.WriteHeader(http.StatusUnauthorized)
+				writeMockError(w, http.StatusUnauthorized)
 				return
 			}
 
 			// Write a mock token.
+			w.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeJSON)
 			w.Write([]byte(`{"access_token":"mock_token"}`))
+		})
+	})
+
+	r.Route("/quotas", func(r chi.Router) {
+		r.Route("/issuance", func(r chi.Router) {
+			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeJSON)
+				w.Write([]byte(fmt.Sprintf(`{"value":%d}`, mockQuota)))
+			})
 		})
 	})
 
 	return httptest.NewServer(r)
 }
 
-func TestClientHTTPTrivial(t *testing.T) {
+func writeMockError(w http.ResponseWriter, status int) {
+	w.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeProblemJSON)
+	w.WriteHeader(status)
+	w.Write([]byte(fmt.Sprintf(`{"description":"%s"}`, http.StatusText(status))))
+}
+
+func TestClientLocalNew(t *testing.T) {
 	t.Parallel()
 
 	var testcases = []struct {
@@ -121,14 +148,47 @@ func TestClientHTTPTrivial(t *testing.T) {
 					t.Fatalf("failed to create client: %v", err)
 				}
 			} else {
-				if apiErr, ok := err.(hvclient.APIError); !ok {
+				var apiErr hvclient.APIError
+				if !errors.As(err, &apiErr) {
 					t.Fatalf("failed to create client: %v", err)
-				} else {
-					if apiErr.StatusCode != tc.status {
-						t.Fatalf("got status code %d, want %d", apiErr.StatusCode, tc.status)
-					}
+				}
+
+				if apiErr.StatusCode != tc.status {
+					t.Fatalf("got status code %d, want %d", apiErr.StatusCode, tc.status)
 				}
 			}
 		})
+	}
+}
+
+func TestClientLocalQuotasIssuance(t *testing.T) {
+	t.Parallel()
+
+	var testServer = newMockServer(t)
+	defer testServer.Close()
+
+	var ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	var client, err = hvclient.NewClient(ctx, &hvclient.Config{
+		URL:       testServer.URL,
+		APIKey:    "mock_key",
+		APISecret: "mock_secret",
+		ExtraHeaders: map[string]string{
+			sslClientSerialHeader: "mock_serial",
+		},
+	})
+	if err != nil {
+		t.Fatalf("failed to create new client: %v", err)
+	}
+
+	var got int64
+	got, err = client.QuotaIssuance(ctx)
+	if err != nil {
+		t.Fatalf("failed to get issuance quota: %v", err)
+	}
+
+	if got != mockQuota {
+		t.Fatalf("got quota %d, want %d", got, mockQuota)
 	}
 }

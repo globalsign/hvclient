@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/globalsign/hvclient/internal/httputils"
 )
 
 var apiErrorTestCases = []struct {
@@ -60,6 +62,7 @@ func TestAPIErrorNew(t *testing.T) {
 			t.Parallel()
 
 			var resp = httptest.NewRecorder()
+			resp.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeProblemJSON)
 			resp.WriteHeader(tc.statusCode)
 			resp.Write([]byte(tc.body))
 
@@ -80,6 +83,7 @@ func TestAPIErrorString(t *testing.T) {
 			t.Parallel()
 
 			var resp = httptest.NewRecorder()
+			resp.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeProblemJSON)
 			resp.WriteHeader(tc.statusCode)
 			resp.Write([]byte(tc.body))
 

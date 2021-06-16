@@ -38,9 +38,7 @@ var (
 func TestRelogin(t *testing.T) {
 	t.Parallel()
 
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), testTimeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	var err error
@@ -50,20 +48,20 @@ func TestRelogin(t *testing.T) {
 		t.Fatalf("couldn't get client: %v", err)
 	}
 
-	var oldToken = clnt.readLoginToken()
+	var oldToken = clnt.tokenRead()
 
 	if _, err = clnt.Policy(ctx); err != nil {
 		t.Fatalf("couldn't get response: %v", err)
 	}
 
 	clnt.token = expiredToken
-	clnt.lastLoggedIn = time.Time{}
+	clnt.lastLogin = time.Time{}
 
 	if _, err = clnt.Policy(ctx); err != nil {
 		t.Fatalf("couldn't get response: %v", err)
 	}
 
-	var newToken = clnt.readLoginToken()
+	var newToken = clnt.tokenRead()
 
 	if oldToken == newToken {
 		t.Errorf("old and new tokens unexpectedly compare equal")

@@ -21,20 +21,11 @@ import (
 // apiRequest represents an HVCA API call request generator. The exported
 // API functions create a new API request object for each API call and pass it
 // to Client.makeRequest. API request objects represent a single individual API
-// call, and are not normally intended to be reused. A single API request
-// object should not be used for concurrent calls to Client.makeRequest, as
-// the object may be modified in the event of a new or expired login.
+// call, and are not normally intended to be reused.
 type apiRequest interface {
-
 	// newHTTPRequest creates a new HTTP request for the particular API call.
 	// Normally this method should only be called by Client.makeRequest.
 	newHTTPRequest(url string) (*http.Request, error)
-
-	// updateToken updated the token in the request object following a new login.
-	// Normally this method should only be called by Client.makeRequest. The
-	// effect is that the updated bearer token will be used by the next call
-	// to newHTTPRequest.
-	updateToken(token string)
 }
 
 // certRequest represents an HVCA POST /certificates API call.
@@ -151,14 +142,6 @@ type loginRequest struct {
 }
 
 const (
-
-	// authHeaderName is the name for the HTTP header containing the bearer token.
-	authHeaderName = "authorization"
-
-	// tokenPrefix is, for the value of the HTTP header containing the bearer token,
-	// the part which precedes the token value itself.
-	tokenPrefix = "bearer "
-
 	// HVCA API endpoints.
 	endpointCertificates = "/certificates"
 	endpointClaims       = "/claims/domains"
@@ -179,11 +162,6 @@ func (r *certRequest) newHTTPRequest(url string) (*http.Request, error) {
 	)
 }
 
-// updateToken updates the token in the request, typically after an expired login.
-func (r *certRequest) updateToken(token string) {
-	r.token = token
-}
-
 // newHTTPRequest creates an HTTP request for an HVCA GET /certificates/{certificate} API call.
 func (r *certRetrieveRequest) newHTTPRequest(url string) (*http.Request, error) {
 	return newHTTPRequest(
@@ -191,11 +169,6 @@ func (r *certRetrieveRequest) newHTTPRequest(url string) (*http.Request, error) 
 		url+endpointCertificates+"/"+r.serialNumber,
 		r,
 	)
-}
-
-// updateToken updates the token in the request, typically after an expired login.
-func (r *certRetrieveRequest) updateToken(token string) {
-	r.token = token
 }
 
 // newHTTPRequest creates an HTTP request for an HVCA DELETE /certificates/{certificate} API call.
@@ -207,11 +180,6 @@ func (r *certRevokeRequest) newHTTPRequest(url string) (*http.Request, error) {
 	)
 }
 
-// updateToken updates the token in the request, typically after an expired login.
-func (r *certRevokeRequest) updateToken(token string) {
-	r.token = token
-}
-
 // newHTTPRequest creates an HTTP request for an HVCA GET /counters/certificates/issued API call.
 func (r *counterCertsIssuedRequest) newHTTPRequest(url string) (*http.Request, error) {
 	return newHTTPRequest(
@@ -221,11 +189,6 @@ func (r *counterCertsIssuedRequest) newHTTPRequest(url string) (*http.Request, e
 	)
 }
 
-// updateToken updates the token in the request, typically after an expired login.
-func (r *counterCertsIssuedRequest) updateToken(token string) {
-	r.token = token
-}
-
 // newHTTPRequest creates an HTTP request for an HVCA GET /counters/certificates/revoked API call.
 func (r *counterCertsRevokedRequest) newHTTPRequest(url string) (*http.Request, error) {
 	return newHTTPRequest(
@@ -233,11 +196,6 @@ func (r *counterCertsRevokedRequest) newHTTPRequest(url string) (*http.Request, 
 		url+endpointCounters+"/revoked",
 		r,
 	)
-}
-
-// updateToken updates the token in the request, typically after an expired login.
-func (r *counterCertsRevokedRequest) updateToken(token string) {
-	r.token = token
 }
 
 // newHTTPRequest creates an HTTP request for an HVCA GET /stats/expiring API call.
@@ -263,11 +221,6 @@ func (r *statsExpiringRequest) newHTTPRequest(url string) (*http.Request, error)
 	)
 }
 
-// updateToken updates the token in the request, typically after an expired login.
-func (r *statsExpiringRequest) updateToken(token string) {
-	r.token = token
-}
-
 // newHTTPRequest creates an HTTP request for an HVCA GET /stats/issued API call.
 func (r *statsIssuedRequest) newHTTPRequest(url string) (*http.Request, error) {
 	url = fmt.Sprintf("%s%s/issued?page=%d", url, endpointStats, r.page)
@@ -289,11 +242,6 @@ func (r *statsIssuedRequest) newHTTPRequest(url string) (*http.Request, error) {
 		url,
 		r,
 	)
-}
-
-// updateToken updates the token in the request, typically after an expired login.
-func (r *statsIssuedRequest) updateToken(token string) {
-	r.token = token
 }
 
 // newHTTPRequest creates an HTTP request for an HVCA GET /stats/revoked API call.
@@ -319,11 +267,6 @@ func (r *statsRevokedRequest) newHTTPRequest(url string) (*http.Request, error) 
 	)
 }
 
-// updateToken updates the token in the request, typically after an expired login.
-func (r *statsRevokedRequest) updateToken(token string) {
-	r.token = token
-}
-
 // newHTTPRequest creates an HTTP request for an HVCA GET /quotas/issuance API call.
 func (r *quotaRequest) newHTTPRequest(url string) (*http.Request, error) {
 	return newHTTPRequest(
@@ -331,11 +274,6 @@ func (r *quotaRequest) newHTTPRequest(url string) (*http.Request, error) {
 		url+endpointQuota,
 		r,
 	)
-}
-
-// updateToken updates the token in the request, typically after an expired login.
-func (r *quotaRequest) updateToken(token string) {
-	r.token = token
 }
 
 // newHTTPRequest creates an HTTP request for an HVCA GET /trustchain API call.
@@ -347,11 +285,6 @@ func (r *trustChainRequest) newHTTPRequest(url string) (*http.Request, error) {
 	)
 }
 
-// updateToken updates the token in the request, typically after an expired login.
-func (r *trustChainRequest) updateToken(token string) {
-	r.token = token
-}
-
 // newHTTPRequest creates an HTTP request for an HVCA GET /validationpolicy API call.
 func (r *policyRequest) newHTTPRequest(url string) (*http.Request, error) {
 	return newHTTPRequest(
@@ -359,11 +292,6 @@ func (r *policyRequest) newHTTPRequest(url string) (*http.Request, error) {
 		url+endpointPolicy,
 		r,
 	)
-}
-
-// updateToken updates the token in the request, typically after an expired login.
-func (r *policyRequest) updateToken(token string) {
-	r.token = token
 }
 
 // newHTTPRequest creates an HTTP request for an HVCA GET /claims/domains API call.
@@ -381,11 +309,6 @@ func (r *claimsDomainsRequest) newHTTPRequest(url string) (*http.Request, error)
 	)
 }
 
-// updateToken updates the token in the request, typically after an expired login.
-func (r *claimsDomainsRequest) updateToken(token string) {
-	r.token = token
-}
-
 // newHTTPRequest creates an HTTP request for an HVCA POST /claims/domains/{domain} API call.
 func (r *claimSubmitRequest) newHTTPRequest(url string) (*http.Request, error) {
 	return newHTTPRequest(
@@ -393,11 +316,6 @@ func (r *claimSubmitRequest) newHTTPRequest(url string) (*http.Request, error) {
 		url+endpointClaims+"/"+r.domain,
 		r,
 	)
-}
-
-// updateToken updates the token in the request, typically after an expired login.
-func (r *claimSubmitRequest) updateToken(token string) {
-	r.token = token
 }
 
 // newHTTPRequest creates an HTTP request for a GET HVCA claims/domains/{claimID} API call.
@@ -409,11 +327,6 @@ func (r *claimRetrieveRequest) newHTTPRequest(url string) (*http.Request, error)
 	)
 }
 
-// updateToken updates the token in the request, typically after an expired login.
-func (r *claimRetrieveRequest) updateToken(token string) {
-	r.token = token
-}
-
 // newHTTPRequest creates an HTTP request for an HVCA DELETE /claims/domains/{claimID} API call.
 func (r *claimDeleteRequest) newHTTPRequest(url string) (*http.Request, error) {
 	return newHTTPRequest(
@@ -421,11 +334,6 @@ func (r *claimDeleteRequest) newHTTPRequest(url string) (*http.Request, error) {
 		url+endpointClaims+"/"+r.id,
 		r,
 	)
-}
-
-// updateToken updates the token in the request, typically after an expired login.
-func (r *claimDeleteRequest) updateToken(token string) {
-	r.token = token
 }
 
 // newHTTPRequest creates an HTTP request for an HVCA POST /claims/domains/{domain}/dns API call.
@@ -437,11 +345,6 @@ func (r *claimDNSRequest) newHTTPRequest(url string) (*http.Request, error) {
 	)
 }
 
-// updateToken updates the token in the request, typically after an expired login.
-func (r *claimDNSRequest) updateToken(token string) {
-	r.token = token
-}
-
 // newHTTPRequest creates an HTTP request for an HVCA POST /claims/domains/{domain}/reassert API call.
 func (r *claimReassertRequest) newHTTPRequest(url string) (*http.Request, error) {
 	return newHTTPRequest(
@@ -449,11 +352,6 @@ func (r *claimReassertRequest) newHTTPRequest(url string) (*http.Request, error)
 		url+endpointClaims+"/"+r.id+"/reassert",
 		r,
 	)
-}
-
-// updateToken updates the token in the request, typically after an expired login.
-func (r *claimReassertRequest) updateToken(token string) {
-	r.token = token
 }
 
 // newHTTPRequest creates an HTTP request for an HVCA POST /login API call.
@@ -465,11 +363,6 @@ func (r *loginRequest) newHTTPRequest(url string) (*http.Request, error) {
 	)
 }
 
-// updateToken does nothing from a Login object, since it doesn't have a token.
-func (r *loginRequest) updateToken(token string) {
-	// Do nothing
-}
-
 // newHTTPRequest encapsulates common functionality for creating HTTP requests for
 // concrete request types. The method paramater should be one of GET, DELETE or POST.
 // the url parameter should be the URL for the API call, excluding any required query
@@ -479,7 +372,6 @@ func newHTTPRequest(method, url string, b apiRequest) (*http.Request, error) {
 	// Create an io.Reader containing the body of the request, if the request
 	// contains a "body" field. If it doesn't create an io.Reader containing
 	// the empty string.
-
 	var body io.Reader
 	if v := reflect.ValueOf(b).Elem().FieldByName("body"); v.IsValid() {
 		body = bytes.NewReader(v.Bytes())
@@ -488,23 +380,10 @@ func newHTTPRequest(method, url string, b apiRequest) (*http.Request, error) {
 	}
 
 	// Create an http.Request object.
-
-	var err error
-
-	var request *http.Request
-	if request, err = http.NewRequest(method, url, body); err != nil {
+	var request, err = http.NewRequest(method, url, body)
+	if err != nil {
 		return nil, err
 	}
-
-	// Add the appropriate HTTP headers, including an authorization field
-	// containing the bearer token if the API request object contains a
-	// "token" field.
-
-	if v := reflect.ValueOf(b).Elem().FieldByName("token"); v.IsValid() {
-		request.Header.Add(authHeaderName, tokenPrefix+v.String())
-	}
-
-	request.Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	return request, nil
 }

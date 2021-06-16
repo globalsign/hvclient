@@ -264,30 +264,6 @@ func TestRequestNewHTTPRequest(t *testing.T) {
 	}
 }
 
-func TestRequestToken(t *testing.T) {
-	t.Parallel()
-
-	for _, tc := range requestTestCases {
-		var tc = tc
-
-		if tc.notoken {
-			continue
-		}
-
-		t.Run(tc.method+tc.endpoint, func(t *testing.T) {
-			t.Parallel()
-
-			var req = tc.constructor()
-
-			checkAuthorizationHeader(t, req, tokenValue)
-
-			req.updateToken(newTokenValue)
-
-			checkAuthorizationHeader(t, req, newTokenValue)
-		})
-	}
-}
-
 func TestRequestReadBody(t *testing.T) {
 	t.Parallel()
 

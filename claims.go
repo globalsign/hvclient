@@ -27,9 +27,9 @@ type ClaimStatus int
 
 // ClaimLogEntry is a domain claim verification log entry.
 type ClaimLogEntry struct {
-	Status      ClaimLogEntryStatus // Success or error
-	Description string              // Log entry description
-	TimeStamp   time.Time           // Time of log entry
+	Status      ClaimLogEntryStatus
+	Description string
+	TimeStamp   time.Time
 }
 
 // jsonClaimLogEntry is used internally for JSON marshalling/unmarshalling.
@@ -43,16 +43,15 @@ type jsonClaimLogEntry struct {
 // verification log entry.
 type ClaimLogEntryStatus int
 
-// Claim is a domain claim, as returned by a /claims/domains/{claimID}
-// API call.
+// Claim is a domain claim.
 type Claim struct {
-	ID        string          // Claim ID
-	Status    ClaimStatus     // Pending or verified
-	Domain    string          // The domain being claimed
-	CreatedAt time.Time       // Time this claim was created
-	ExpiresAt time.Time       // Time this claim expires
-	AssertBy  time.Time       // Time by which this claim must be asserted
-	Log       []ClaimLogEntry // List of verification log entries for the claim
+	ID        string
+	Status    ClaimStatus
+	Domain    string
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	AssertBy  time.Time
+	Log       []ClaimLogEntry
 }
 
 // jsonClaim is used internally for JSON marshalling/unmarshalling.
@@ -66,11 +65,11 @@ type jsonClaim struct {
 	Log       []ClaimLogEntry `json:"log"`
 }
 
-// ClaimAssertionInfo is the response from a /claims/domains API call.
+// ClaimAssertionInfo contains information for making a domain claim.
 type ClaimAssertionInfo struct {
-	Token    string    // Token to be used for the assertion
-	AssertBy time.Time // Time by which this claim must be asserte
-	ID       string    // ID of the claim
+	Token    string
+	AssertBy time.Time
+	ID       string
 }
 
 // jsonClaimAssertionInfo is used internally for JSON marshalling/unmarshalling.

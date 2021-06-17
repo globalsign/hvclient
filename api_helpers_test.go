@@ -152,8 +152,8 @@ func TestBasePathHeaderFailure(t *testing.T) {
 		add  []string
 	}{
 		{
-			"Location",
-			[]string{},
+			name: "Location",
+			add:  []string{},
 		},
 	}
 
@@ -188,9 +188,9 @@ func TestIntegerHeader(t *testing.T) {
 		add  []string
 	}{
 		{
-			"Total-Count",
-			5,
-			[]string{"5", "gasoline"},
+			name: "Total-Count",
+			add:  []string{"5", "gasoline"},
+			want: 5,
 		},
 	}
 
@@ -229,12 +229,12 @@ func TestIntegerHeaderFailure(t *testing.T) {
 		add  []string
 	}{
 		{
-			"Location",
-			[]string{},
+			name: "Location",
+			add:  []string{},
 		},
 		{
-			"Total-Count",
-			[]string{"armchair", "7"},
+			name: "Total-Count",
+			add:  []string{"armchair", "7"},
 		},
 	}
 

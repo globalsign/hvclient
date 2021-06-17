@@ -225,7 +225,7 @@ type TypeAndValuePolicy struct {
 // typeAndValuePolicies is used internally for JSON marshalling/unmarshalling.
 type typeAndValuePolicies []TypeAndValuePolicy
 
-//  customExtensionsPolicies is used internally for JSON marshalling/unmarshalling.
+// customExtensionsPolicies is used internally for JSON marshalling/unmarshalling.
 type customExtensionsPolicies []CustomExtensionsPolicy
 
 // ValueType is a value_type field in a validation policy.

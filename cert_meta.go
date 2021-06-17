@@ -20,8 +20,7 @@ import (
 	"time"
 )
 
-// CertMeta is the certificate metadata returned by one of the
-// HVCA GET /stats API calls.
+// CertMeta contains certificate metadata.
 type CertMeta struct {
 	SerialNumber string    // Certificate serial number
 	NotBefore    time.Time // Certificate not valid before this time

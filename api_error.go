@@ -24,7 +24,7 @@ import (
 	"github.com/globalsign/hvclient/internal/httputils"
 )
 
-// APIError is an error returned by the HVCA HTTP API
+// APIError is an error returned by the HVCA HTTP API.
 type APIError struct {
 	StatusCode  int
 	Description string

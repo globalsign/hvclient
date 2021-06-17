@@ -82,7 +82,7 @@ type Validity struct {
 }
 
 // DN is a list of Distinguished Name attributes to include in a
-// certificate. See RFC 5280 #4.1.2.6.
+// certificate. See RFC 5280 4.1.2.6.
 type DN struct {
 	Country            string         `json:"country,omitempty"`
 	State              string         `json:"state,omitempty"`
@@ -107,7 +107,7 @@ type OIDAndString struct {
 }
 
 // SAN is a list of Subject Alternative Name attributes to include in a
-// certificate. See RFC 5280 #4.2.1.6.
+// certificate. See RFC 5280 4.2.1.6.
 type SAN struct {
 	DNSNames    []string
 	Emails      []string
@@ -128,7 +128,7 @@ type DA struct {
 }
 
 // QualifiedStatements is a list of qualified statements to include in a
-// certificate. See RFC 3739 #3.2.6.
+// certificate. See RFC 3739 3.2.6.
 type QualifiedStatements struct {
 	Semantics         Semantics
 	QCCompliance      bool
@@ -139,14 +139,14 @@ type QualifiedStatements struct {
 }
 
 // Semantics is the OID and optional name authorities for a qualified
-// certificate statement. See RFC 3739 #3.2.6.1.
+// certificate statement. See RFC 3739 3.2.6.1.
 type Semantics struct {
 	OID             asn1.ObjectIdentifier
 	NameAuthorities []string
 }
 
-// MSExtension contains values to populate a Microsoft template extension
-// (91.3.6.1.4.1.311.21.7) with.
+// MSExtension contains values with which to populate a Microsoft template
+// extension (91.3.6.1.4.1.311.21.7) with.
 type MSExtension struct {
 	OID          asn1.ObjectIdentifier
 	MajorVersion int
@@ -373,7 +373,6 @@ func (r Request) MarshalJSON() ([]byte, error) {
 		publicKey = string(pem.EncodeToMemory(block))
 
 		// Remove trailing newline from string, if present.
-
 		if publicKey[len(publicKey)-1] == '\n' {
 			publicKey = publicKey[:len(publicKey)-1]
 		}
@@ -404,7 +403,6 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 	}
 
 	// Unmarshal the custom extensions if any are present.
-
 	var exts []OIDAndString
 
 	if len(jsonreq.CustomExtensions) > 0 {
@@ -413,14 +411,12 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 		if err = json.Unmarshal(jsonreq.CustomExtensions, &elems); err != nil {
 			// Unmarshalling to a map[string]string appears to never trigger
 			// an error, but retain the error check just in case.
-
 			return err
 		}
 
 		// Build sorted list of keys. This is not necessary for HVCA, but
 		// ensures a predictable order in the JSON encoding which facilitates
 		// testing. Performance impact is negligible.
-
 		var keys = make([]string, 0, len(elems))
 		for key := range elems {
 			keys = append(keys, key)
@@ -441,14 +437,12 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 	}
 
 	// Convert extended key usages.
-
 	var ekus = make([]asn1.ObjectIdentifier, 0, len(jsonreq.EKUs))
 	for _, oid := range jsonreq.EKUs {
 		ekus = append(ekus, asn1.ObjectIdentifier(oid))
 	}
 
 	// Store the result in the object.
-
 	*r = Request{
 		Validity:            jsonreq.Validity,
 		Subject:             jsonreq.Subject,

@@ -33,13 +33,13 @@ func TestCertMetaMarshalJSON(t *testing.T) {
 		want  []byte
 	}{
 		{
-			"One",
-			hvclient.CertMeta{
+			name: "OK",
+			entry: hvclient.CertMeta{
 				SerialNumber: "1234",
 				NotBefore:    time.Unix(1477958400, 0),
 				NotAfter:     time.Unix(1478958400, 0),
 			},
-			[]byte(`{"serial_number":"1234","not_before":1477958400,"not_after":1478958400}`),
+			want: []byte(`{"serial_number":"1234","not_before":1477958400,"not_after":1478958400}`),
 		},
 	}
 
@@ -70,9 +70,9 @@ func TestCertMetaUnmarshalJSON(t *testing.T) {
 		want hvclient.CertMeta
 	}{
 		{
-			"One",
-			[]byte(`{"serial_number":"1234","not_before":1477958400,"not_after":1478958400}`),
-			hvclient.CertMeta{
+			name: "OK",
+			json: []byte(`{"serial_number":"1234","not_before":1477958400,"not_after":1478958400}`),
+			want: hvclient.CertMeta{
 				SerialNumber: "1234",
 				NotBefore:    time.Unix(1477958400, 0),
 				NotAfter:     time.Unix(1478958400, 0),

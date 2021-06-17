@@ -92,33 +92,6 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newCounterCertsIssuedRequest()
-		},
-		http.MethodGet,
-		"/counters/certificates/issued",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
-			return newCounterCertsRevokedRequest()
-		},
-		http.MethodGet,
-		"/counters/certificates/revoked",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
-			return newQuotaRequest()
-		},
-		http.MethodGet,
-		"/quotas/issuance",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
 			return newStatsExpiringRequest(2, 20,
 				time.Unix(1550264300, 0), time.Unix(1550374300, 0))
 		},

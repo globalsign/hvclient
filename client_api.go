@@ -18,6 +18,12 @@ import (
 	"github.com/globalsign/hvclient/internal/httputils"
 )
 
+// counter is a reponse body from any HVCA request which returns a
+// single count.
+type counter struct {
+	Value int64 `json:"value"`
+}
+
 const (
 	// certSNHeaderName is the name of the HTTP header in which the
 	// URL of a certificate can be found.
@@ -34,13 +40,14 @@ const (
 
 // HVCA API endpoints.
 const (
-	endpointCertificates = "/certificates"
-	endpointClaims       = "/claims/domains"
-	endpointCounters     = "/counters/certificates"
-	endpointQuota        = "/quotas/issuance"
-	endpointStats        = "/stats"
-	endpointTrustChain   = "/trustchain"
-	endpointPolicy       = "/validationpolicy"
+	endpointCertificates                = "/certificates"
+	endpointClaims                      = "/claims/domains"
+	endpointCountersCertificatesIssued  = "/counters/certificates/issued"
+	endpointCountersCertificatesRevoked = "/counters/certificates/revoked"
+	endpointQuotasIssuance              = "/quotas/issuance"
+	endpointStats                       = "/stats"
+	endpointTrustChain                  = "/trustchain"
+	endpointPolicy                      = "/validationpolicy"
 )
 
 // CertificateRequest requests a new certificate based on a Request object.
@@ -134,29 +141,58 @@ func (c *Client) Policy(ctx context.Context) (*Policy, error) {
 // CounterCertsIssued returns the number of certificates issued
 // by the calling account.
 func (c *Client) CounterCertsIssued(ctx context.Context) (int64, error) {
-	return c.counter(ctx, newCounterCertsIssuedRequest())
+	var count counter
+	var _, err = c.makeRequest(
+		ctx,
+		nil,
+		endpointCountersCertificatesIssued,
+		http.MethodGet,
+		nil,
+		&count,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	return count.Value, nil
 }
 
 // CounterCertsRevoked returns the number of certificates revoked
 // by the calling account.
 func (c *Client) CounterCertsRevoked(ctx context.Context) (int64, error) {
-	return c.counter(ctx, newCounterCertsRevokedRequest())
+	var count counter
+	var _, err = c.makeRequest(
+		ctx,
+		nil,
+		endpointCountersCertificatesRevoked,
+		http.MethodGet,
+		nil,
+		&count,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	return count.Value, nil
 }
 
 // QuotaIssuance returns the remaining quota of certificate
 // issuances for the calling account.
 func (c *Client) QuotaIssuance(ctx context.Context) (int64, error) {
-	return c.counter(ctx, newQuotaRequest())
-}
-
-func (c *Client) counter(ctx context.Context, r apiRequest) (int64, error) {
-	var response, err = c.makeRequest(ctx, r, "", "", nil, nil)
+	var count counter
+	var _, err = c.makeRequest(
+		ctx,
+		nil,
+		endpointQuotasIssuance,
+		http.MethodGet,
+		nil,
+		&count,
+	)
 	if err != nil {
 		return 0, err
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
-	return counterFromResponse(response)
+	return count.Value, nil
 }
 
 // StatsExpiring returns a slice of the certificates which expired or which

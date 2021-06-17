@@ -28,12 +28,6 @@ type apiRequest interface {
 	newHTTPRequest(url string) (*http.Request, error)
 }
 
-// counterCertsIssuedRequest represents an HVCA GET /counters/certificates/issued API call.
-type counterCertsIssuedRequest struct{}
-
-// counterCertsRevokedRequest represents an HVCA GET /counters/certificates/revoked API call.
-type counterCertsRevokedRequest struct{}
-
 // statsExpiringRequest represents an HVCA GET /stats/expiring API call.
 type statsExpiringRequest struct {
 	page    int
@@ -57,9 +51,6 @@ type statsRevokedRequest struct {
 	from    time.Time
 	to      time.Time
 }
-
-// quotaRequest represents an HVCA GET /quotas/issuance API call.
-type quotaRequest struct{}
 
 // claimsDomainsRequest represents an HVCA GET /claims/domains API call.
 type claimsDomainsRequest struct {
@@ -91,24 +82,6 @@ type claimDNSRequest struct {
 // claimReassertRequest represents an HVCA POST /claims/domains/{domain}/reassert API call.
 type claimReassertRequest struct {
 	id string
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA GET /counters/certificates/issued API call.
-func (r *counterCertsIssuedRequest) newHTTPRequest(url string) (*http.Request, error) {
-	return newHTTPRequest(
-		http.MethodGet,
-		url+endpointCounters+"/issued",
-		r,
-	)
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA GET /counters/certificates/revoked API call.
-func (r *counterCertsRevokedRequest) newHTTPRequest(url string) (*http.Request, error) {
-	return newHTTPRequest(
-		http.MethodGet,
-		url+endpointCounters+"/revoked",
-		r,
-	)
 }
 
 // newHTTPRequest creates an HTTP request for an HVCA GET /stats/expiring API call.
@@ -176,15 +149,6 @@ func (r *statsRevokedRequest) newHTTPRequest(url string) (*http.Request, error) 
 	return newHTTPRequest(
 		http.MethodGet,
 		url,
-		r,
-	)
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA GET /quotas/issuance API call.
-func (r *quotaRequest) newHTTPRequest(url string) (*http.Request, error) {
-	return newHTTPRequest(
-		http.MethodGet,
-		url+endpointQuota,
 		r,
 	)
 }
@@ -283,16 +247,6 @@ func newHTTPRequest(method, url string, b apiRequest) (*http.Request, error) {
 	return request, nil
 }
 
-// newCounterCertsIssuedRequest creates a new HVCA GET /counters/certificates/issued API call.
-func newCounterCertsIssuedRequest() *counterCertsIssuedRequest {
-	return &counterCertsIssuedRequest{}
-}
-
-// newCounterCertsRevokedRequest creates a new HVCA GET /counters/certificates/revoked API call.
-func newCounterCertsRevokedRequest() *counterCertsRevokedRequest {
-	return &counterCertsRevokedRequest{}
-}
-
 // newStatsExpiringRequest creates a new HVCA GET /stats/expiring API call.
 func newStatsExpiringRequest(page, perPage int, from, to time.Time) *statsExpiringRequest {
 	return &statsExpiringRequest{
@@ -321,11 +275,6 @@ func newStatsRevokedRequest(page, perPage int, from, to time.Time) *statsRevoked
 		from:    from,
 		to:      to,
 	}
-}
-
-// newQuotaRequest creates a new HVCA GET /quotas/issuance API call.
-func newQuotaRequest() *quotaRequest {
-	return &quotaRequest{}
 }
 
 // newClaimsDomainsRequest creates a new HVCA GET /claims/domains API call.

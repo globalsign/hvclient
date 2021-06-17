@@ -57,19 +57,6 @@ func intHeaderFromResponse(r *http.Response, name string) (int64, error) {
 	return n, nil
 }
 
-// counterFromResponse retrieves a counter value from an HTTP response.
-func counterFromResponse(r *http.Response) (int64, error) {
-	var data *struct {
-		Count int64 `json:"value"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		return 0, err
-	}
-
-	return data.Count, nil
-}
-
 // certMetasFromResponse extracts a slice of certificate metadata from an HTTP response.
 func certMetasFromResponse(r *http.Response) ([]CertMeta, int64, error) {
 	var metas []CertMeta

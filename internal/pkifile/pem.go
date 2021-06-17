@@ -20,16 +20,12 @@ var errExtraneousPEMData = errors.New("extraneous data in PEM file")
 
 // PEMBlockFromFile reads a PEM-encoded file and returns a pem.Block.
 func PEMBlockFromFile(filename string) (*pem.Block, error) {
-	var err error
-	var data []byte
-	if data, err = ioutil.ReadFile(filename); err != nil {
+	var data, err = ioutil.ReadFile(filename)
+	if err != nil {
 		return nil, err
 	}
 
-	var block *pem.Block
-	var rest []byte
-	block, rest = pem.Decode(data)
-
+	var block, rest = pem.Decode(data)
 	if len(rest) != 0 {
 		return nil, errExtraneousPEMData
 	}
@@ -40,10 +36,8 @@ func PEMBlockFromFile(filename string) (*pem.Block, error) {
 // FileIsEncryptedPEMBlock checks if the specified file is an encrypted
 // PEM block.
 func FileIsEncryptedPEMBlock(filename string) bool {
-	var block *pem.Block
-	var err error
-
-	if block, err = PEMBlockFromFile(filename); err != nil {
+	var block, err = PEMBlockFromFile(filename)
+	if err != nil {
 		return false
 	}
 
@@ -59,10 +53,8 @@ func FileIsEncryptedPEMBlock(filename string) bool {
 // necessary. If the file does not contain a PEM-encoded private key, an error
 // is returned.
 func PrivateKeyFromFileWithPassword(filename, password string) (interface{}, error) {
-	var block *pem.Block
-	var err error
-
-	if block, err = PEMBlockFromFile(filename); err != nil {
+	var block, err = PEMBlockFromFile(filename)
+	if err != nil {
 		return nil, err
 	}
 
@@ -91,10 +83,8 @@ func PrivateKeyFromFileWithPassword(filename, password string) (interface{}, err
 // private key it contains. If the file does not contain a PEM-encoded public
 // key, an error is returned.
 func PublicKeyFromFile(filename string) (interface{}, error) {
-	var block *pem.Block
-	var err error
-
-	if block, err = PEMBlockFromFile(filename); err != nil {
+	var block, err = PEMBlockFromFile(filename)
+	if err != nil {
 		return nil, err
 	}
 
@@ -113,10 +103,8 @@ func PublicKeyFromFile(filename string) (interface{}, error) {
 // signing request it contains. If the file does not contain a PEM-encoded
 // PKCS#10 certificate signing request, an error is returned.
 func CSRFromFile(filename string) (*x509.CertificateRequest, error) {
-	var block *pem.Block
-	var err error
-
-	if block, err = PEMBlockFromFile(filename); err != nil {
+	var block, err = PEMBlockFromFile(filename)
+	if err != nil {
 		return nil, err
 	}
 
@@ -127,10 +115,8 @@ func CSRFromFile(filename string) (*x509.CertificateRequest, error) {
 // it contains. If the file does not contain a PEM-encoded X509 certificate,
 // an error is returned.
 func CertFromFile(filename string) (*x509.Certificate, error) {
-	var block *pem.Block
-	var err error
-
-	if block, err = PEMBlockFromFile(filename); err != nil {
+	var block, err = PEMBlockFromFile(filename)
+	if err != nil {
 		return nil, err
 	}
 

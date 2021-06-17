@@ -72,9 +72,8 @@ func TestConfigNewFromFile(t *testing.T) {
 		t.Run(filepath.Base(tc.filename), func(t *testing.T) {
 			t.Parallel()
 
-			var got *config.Config
-			var err error
-			if got, err = config.NewFromFile(tc.filename); err != nil {
+			var got, err = config.NewFromFile(tc.filename)
+			if err != nil {
 				t.Fatalf("couldn't get configuration from file: %v", err)
 			}
 
@@ -99,7 +98,8 @@ func TestConfigNewFromFileError(t *testing.T) {
 		t.Run(filepath.Base(tc), func(t *testing.T) {
 			t.Parallel()
 
-			if _, err := config.NewFromFile(tc); err == nil {
+			var _, err = config.NewFromFile(tc)
+			if err == nil {
 				t.Errorf("unexpectedly got configuration from file")
 			}
 		})

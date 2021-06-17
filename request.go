@@ -225,7 +225,6 @@ const dobLayout = `2006-01-02`
 // Equal checks if two certificate requests are equivalent.
 func (r Request) Equal(other Request) bool {
 	// Check for equality of extended key usages.
-
 	if len(r.EKUs) != len(other.EKUs) {
 		return false
 	}
@@ -237,7 +236,6 @@ func (r Request) Equal(other Request) bool {
 	}
 
 	// Check for equality of custom extensions.
-
 	if len(r.CustomExtensions) != len(other.CustomExtensions) {
 		return false
 	}
@@ -249,7 +247,6 @@ func (r Request) Equal(other Request) bool {
 	}
 
 	// Check for equality of other fields.
-
 	return r.Validity.Equal(other.Validity) &&
 		r.Subject.Equal(other.Subject) &&
 		r.SAN.Equal(other.SAN) &&
@@ -261,9 +258,7 @@ func (r Request) Equal(other Request) bool {
 // MarshalJSON returns the JSON encoding of a certificate request.
 func (r Request) MarshalJSON() ([]byte, error) {
 	// Marshal the custom extensions if any are present.
-
 	var raw json.RawMessage
-
 	if len(r.CustomExtensions) > 0 {
 		raw = json.RawMessage("{")
 
@@ -272,11 +267,9 @@ func (r Request) MarshalJSON() ([]byte, error) {
 
 			if i+1 == len(r.CustomExtensions) {
 				// Close object encoding if this is the last extension.
-
 				item = fmt.Sprintf(`"%s":"%s"}`, ext.OID.String(), ext.Value)
 			} else {
 				// Otherwise add a trailing comma.
-
 				item = fmt.Sprintf(`"%s":"%s",`, ext.OID.String(), ext.Value)
 			}
 
@@ -285,14 +278,12 @@ func (r Request) MarshalJSON() ([]byte, error) {
 	}
 
 	// Convert extended key usages.
-
 	var ekus = make([]jsonOID, len(r.EKUs))
 	for i := range r.EKUs {
 		ekus[i] = jsonOID(r.EKUs[i])
 	}
 
 	// Convert PKCS#10 certificate request, if present.
-
 	var publicKey string
 	var publicKeySig string
 	var err error
@@ -400,10 +391,9 @@ func (r Request) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON parses a JSON-encoded certificate request and stores the
 // result in the object.
 func (r *Request) UnmarshalJSON(b []byte) error {
-	var err error
-
 	var jsonreq *jsonRequest
-	if err = json.Unmarshal(b, &jsonreq); err != nil {
+	var err = json.Unmarshal(b, &jsonreq)
+	if err != nil {
 		return err
 	}
 
@@ -432,8 +422,8 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 		sort.Strings(keys)
 
 		for _, key := range keys {
-			var oid asn1.ObjectIdentifier
-			if oid, err = oids.StringToOID(key); err != nil {
+			var oid, err = oids.StringToOID(key)
+			if err != nil {
 				return err
 			}
 
@@ -476,13 +466,11 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 func (r *Request) PKCS10() (*x509.CertificateRequest, error) {
 	// We need a private key to sign the CSR, so abandon immediately if
 	// the request doesn't contain one.
-
 	if r.PrivateKey == nil {
 		return nil, errors.New("no private key in request")
 	}
 
 	// Build up the CSR template.
-
 	var csrtemplate = &x509.CertificateRequest{}
 
 	if r.Subject != nil {
@@ -497,9 +485,8 @@ func (r *Request) PKCS10() (*x509.CertificateRequest, error) {
 	}
 
 	if len(r.EKUs) > 0 {
-		var value []byte
-		var err error
-		if value, err = asn1.Marshal(r.EKUs); err != nil {
+		var value, err = asn1.Marshal(r.EKUs)
+		if err != nil {
 			return nil, fmt.Errorf("couldn't marshal extended key usages: %v", err)
 		}
 
@@ -507,7 +494,6 @@ func (r *Request) PKCS10() (*x509.CertificateRequest, error) {
 		// extensions should be marked critical, so we'll err on the side
 		// of omitting the critical flag. The CA is free to add a critical
 		// flag if the policy so dicates.
-
 		csrtemplate.ExtraExtensions = append(
 			csrtemplate.ExtraExtensions,
 			pkix.Extension{
@@ -518,19 +504,18 @@ func (r *Request) PKCS10() (*x509.CertificateRequest, error) {
 	}
 
 	// Create and marshal the PKCS#10 certificate signing request.
-
-	var data []byte
-	var err error
-	if data, err = x509.CreateCertificateRequest(
+	var data, err = x509.CreateCertificateRequest(
 		rand.Reader,
 		csrtemplate,
 		r.PrivateKey,
-	); err != nil {
+	)
+	if err != nil {
 		return nil, fmt.Errorf("couldn't create PKCS#10 CSR: %v", err)
 	}
 
 	var csr *x509.CertificateRequest
-	if csr, err = x509.ParseCertificateRequest(data); err != nil {
+	csr, err = x509.ParseCertificateRequest(data)
+	if err != nil {
 		return nil, fmt.Errorf("couldn't parse certificate request: %v", err)
 	}
 
@@ -540,13 +525,8 @@ func (r *Request) PKCS10() (*x509.CertificateRequest, error) {
 // Equal checks if two validity objects are equivalent.
 func (v *Validity) Equal(other *Validity) bool {
 	// Check for nil in both objects.
-
 	if v == nil {
-		if other == nil {
-			return true
-		}
-
-		return false
+		return other == nil
 	}
 
 	if other == nil {
@@ -554,7 +534,6 @@ func (v *Validity) Equal(other *Validity) bool {
 	}
 
 	// Check for equality of fields.
-
 	return v.NotBefore.Equal(other.NotBefore) &&
 		v.NotAfter.Equal(other.NotAfter)
 }
@@ -576,7 +555,6 @@ func (v *Validity) UnmarshalJSON(b []byte) error {
 	}
 
 	// Store result in object.
-
 	*v = Validity{
 		NotBefore: time.Unix(jsonobj.NotBefore, 0),
 		NotAfter:  time.Unix(jsonobj.NotAfter, 0),
@@ -588,13 +566,8 @@ func (v *Validity) UnmarshalJSON(b []byte) error {
 // Equal checks if two subject distinguished names are equivalent.
 func (n *DN) Equal(other *DN) bool {
 	// Check for nil in both objects.
-
 	if n == nil {
-		if other == nil {
-			return true
-		}
-
-		return false
+		return other == nil
 	}
 
 	if other == nil {
@@ -602,7 +575,6 @@ func (n *DN) Equal(other *DN) bool {
 	}
 
 	// Check equality of organizational units.
-
 	if len(n.OrganizationalUnit) != len(other.OrganizationalUnit) {
 		return false
 	}
@@ -614,7 +586,6 @@ func (n *DN) Equal(other *DN) bool {
 	}
 
 	// Check equality of extra attributes.
-
 	if len(n.ExtraAttributes) != len(other.ExtraAttributes) {
 		return false
 	}
@@ -626,7 +597,6 @@ func (n *DN) Equal(other *DN) bool {
 	}
 
 	// Check equality of other fields.
-
 	return n.Country == other.Country &&
 		n.State == other.State &&
 		n.Locality == other.Locality &&
@@ -643,13 +613,11 @@ func (n *DN) Equal(other *DN) bool {
 // PKIXName converts a subject distinguished name into a pkix.Name object.
 func (n *DN) PKIXName() pkix.Name {
 	// Initialize name with common name.
-
 	var name = pkix.Name{
 		CommonName: n.CommonName,
 	}
 
 	// Copy across fields with single values.
-
 	for _, field := range []struct {
 		value    string
 		location *[]string
@@ -666,7 +634,6 @@ func (n *DN) PKIXName() pkix.Name {
 	}
 
 	// Copy organizational units, if there are any.
-
 	if len(n.OrganizationalUnit) > 0 {
 		name.OrganizationalUnit = n.OrganizationalUnit
 	}
@@ -691,7 +658,6 @@ func (n *DN) PKIXName() pkix.Name {
 	}
 
 	// Convert and add extra attributes to extra names.
-
 	for _, ea := range n.ExtraAttributes {
 		name.ExtraNames = append(name.ExtraNames, ea.AttributeTypeAndValue())
 	}
@@ -708,14 +674,14 @@ func (o jsonOID) MarshalJSON() ([]byte, error) {
 // the result in the object.
 func (o *jsonOID) UnmarshalJSON(b []byte) error {
 	var oidvalue string
-	var err error
-
-	if err = json.Unmarshal(b, &oidvalue); err != nil {
+	var err = json.Unmarshal(b, &oidvalue)
+	if err != nil {
 		return err
 	}
 
 	var newOID asn1.ObjectIdentifier
-	if newOID, err = oids.StringToOID(oidvalue); err != nil {
+	newOID, err = oids.StringToOID(oidvalue)
+	if err != nil {
 		return err
 	}
 
@@ -747,7 +713,6 @@ func (o *OIDAndString) UnmarshalJSON(b []byte) error {
 	}
 
 	// Store the result in the object.
-
 	*o = OIDAndString{
 		OID:   asn1.ObjectIdentifier(jsonObj.Type),
 		Value: jsonObj.Value,
@@ -768,13 +733,8 @@ func (o OIDAndString) AttributeTypeAndValue() pkix.AttributeTypeAndValue {
 // Equal checks if two subject alternative names lists are equivalent.
 func (s *SAN) Equal(other *SAN) bool {
 	// Check for nil in both objects.
-
 	if s == nil {
-		if other == nil {
-			return true
-		}
-
-		return false
+		return other == nil
 	}
 
 	if other == nil {
@@ -782,7 +742,6 @@ func (s *SAN) Equal(other *SAN) bool {
 	}
 
 	// Check equality of DNS names.
-
 	if len(s.DNSNames) != len(other.DNSNames) {
 		return false
 	}
@@ -794,7 +753,6 @@ func (s *SAN) Equal(other *SAN) bool {
 	}
 
 	// Check equality of email addresses.
-
 	if len(s.Emails) != len(other.Emails) {
 		return false
 	}
@@ -806,7 +764,6 @@ func (s *SAN) Equal(other *SAN) bool {
 	}
 
 	// Check equality of IP addresses.
-
 	if len(s.IPAddresses) != len(other.IPAddresses) {
 		return false
 	}
@@ -818,7 +775,6 @@ func (s *SAN) Equal(other *SAN) bool {
 	}
 
 	// Check equality of URIs.
-
 	if len(s.URIs) != len(other.URIs) {
 		return false
 	}
@@ -830,7 +786,6 @@ func (s *SAN) Equal(other *SAN) bool {
 	}
 
 	// Check equality of other names.
-
 	if len(s.OtherNames) != len(other.OtherNames) {
 		return false
 	}
@@ -847,14 +802,12 @@ func (s *SAN) Equal(other *SAN) bool {
 // MarshalJSON returns the JSON encoding of a subject alternative names list.
 func (s *SAN) MarshalJSON() ([]byte, error) {
 	// Convert IP addresses.
-
 	var ips = make([]string, 0, len(s.IPAddresses))
 	for _, ip := range s.IPAddresses {
 		ips = append(ips, ip.String())
 	}
 
 	// Convert URIs.
-
 	var uris = make([]string, 0, len(s.URIs))
 	for _, uri := range s.URIs {
 		uris = append(uris, uri.String())
@@ -872,27 +825,23 @@ func (s *SAN) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON parses a JSON-encoded subject alternative names list and
 // stores the result in the object.
 func (s *SAN) UnmarshalJSON(b []byte) error {
-	var err error
-
-	var jsonsan *jsonSAN
-	if err = json.Unmarshal(b, &jsonsan); err != nil {
+	var jsonsan jsonSAN
+	var err = json.Unmarshal(b, &jsonsan)
+	if err != nil {
 		return err
 	}
 
 	// Convert IP addresses.
-
 	var ips = make([]net.IP, 0, len(jsonsan.IPAddresses))
 	for _, ip := range jsonsan.IPAddresses {
 		ips = append(ips, net.ParseIP(ip))
 	}
 
 	// Convert URIs.
-
 	var uris = make([]*url.URL, 0, len(jsonsan.URIs))
 	for _, strURI := range jsonsan.URIs {
-		var uri *url.URL
-
-		if uri, err = url.Parse(strURI); err != nil {
+		var uri, err = url.Parse(strURI)
+		if err != nil {
 			return err
 		}
 
@@ -900,7 +849,6 @@ func (s *SAN) UnmarshalJSON(b []byte) error {
 	}
 
 	// Store result in object.
-
 	*s = SAN{
 		DNSNames:    jsonsan.DNSNames,
 		Emails:      jsonsan.Emails,
@@ -915,13 +863,8 @@ func (s *SAN) UnmarshalJSON(b []byte) error {
 // Equal checks if two subject directory attributes lists are equivalent.
 func (d *DA) Equal(other *DA) bool {
 	// Check for nil in both objects.
-
 	if d == nil {
-		if other == nil {
-			return true
-		}
-
-		return false
+		return other == nil
 	}
 
 	if other == nil {
@@ -929,7 +872,6 @@ func (d *DA) Equal(other *DA) bool {
 	}
 
 	// Check equality of country of citizenship.
-
 	if len(d.CountryOfCitizenship) != len(other.CountryOfCitizenship) {
 		return false
 	}
@@ -941,7 +883,6 @@ func (d *DA) Equal(other *DA) bool {
 	}
 
 	// Check equality of country of residence.
-
 	if len(d.CountryOfResidence) != len(other.CountryOfResidence) {
 		return false
 	}
@@ -953,7 +894,6 @@ func (d *DA) Equal(other *DA) bool {
 	}
 
 	// Check equality of extra attributes.
-
 	if len(d.ExtraAttributes) != len(other.ExtraAttributes) {
 		return false
 	}
@@ -965,7 +905,6 @@ func (d *DA) Equal(other *DA) bool {
 	}
 
 	// Check equality of other fields.
-
 	return d.Gender == other.Gender &&
 		d.DateOfBirth.Equal(other.DateOfBirth) &&
 		d.PlaceOfBirth == other.PlaceOfBirth
@@ -987,22 +926,20 @@ func (d *DA) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON parses a JSON-encoded subject directory attributes list and
 // stores the result in the object.
 func (d *DA) UnmarshalJSON(b []byte) error {
-	var err error
-
-	var jsonda *jsonDA
-	if err = json.Unmarshal(b, &jsonda); err != nil {
+	var jsonda jsonDA
+	var err = json.Unmarshal(b, &jsonda)
+	if err != nil {
 		return err
 	}
 
 	// Parse the DateOfBirth field.
-
 	var dob time.Time
-	if dob, err = time.Parse(dobLayout, jsonda.DateOfBirth); err != nil {
+	dob, err = time.Parse(dobLayout, jsonda.DateOfBirth)
+	if err != nil {
 		return err
 	}
 
 	// Store the result in the object.
-
 	*d = DA{
 		Gender:               jsonda.Gender,
 		DateOfBirth:          time.Date(dob.Year(), dob.Month(), dob.Day(), 12, 0, 0, 0, dob.Location()),
@@ -1018,13 +955,8 @@ func (d *DA) UnmarshalJSON(b []byte) error {
 // Equal checks if two qualified statements lists are equivalent.
 func (q *QualifiedStatements) Equal(other *QualifiedStatements) bool {
 	// Check for nil in both objects.
-
 	if q == nil {
-		if other == nil {
-			return true
-		}
-
-		return false
+		return other == nil
 	}
 
 	if other == nil {
@@ -1032,7 +964,6 @@ func (q *QualifiedStatements) Equal(other *QualifiedStatements) bool {
 	}
 
 	// Check equality of PKI disclosure statements.
-
 	if len(q.QCPDs) != len(other.QCPDs) {
 		return false
 	}
@@ -1044,7 +975,6 @@ func (q *QualifiedStatements) Equal(other *QualifiedStatements) bool {
 	}
 
 	// Check equality of other fields.
-
 	return q.Semantics.Equal(other.Semantics) &&
 		q.QCCompliance == other.QCCompliance &&
 		q.QCSSCDCompliance == other.QCSSCDCompliance &&
@@ -1057,14 +987,12 @@ func (q *QualifiedStatements) MarshalJSON() ([]byte, error) {
 	var raw json.RawMessage
 
 	// Marshal the PKI disclosure statements if any are present.
-
 	if len(q.QCPDs) > 0 {
 		raw = json.RawMessage(`{`)
 
 		// Build sorted list of keys. This is not necessary for HVCA, but
 		// ensures a predictable order in the JSON encoding which facilitates
 		// testing. Performance impact is negligible.
-
 		var keys = make([]string, 0, len(q.QCPDs))
 		for key := range q.QCPDs {
 			keys = append(keys, key)
@@ -1072,17 +1000,14 @@ func (q *QualifiedStatements) MarshalJSON() ([]byte, error) {
 		sort.Strings(keys)
 
 		// Manually encode JSON for each key-value.
-
 		for i, key := range keys {
 			var item string
 
 			if i+1 == len(keys) {
 				// Close object encoding if this is the last key.
-
 				item = fmt.Sprintf(`"%s":"%s"}`, key, q.QCPDs[key])
 			} else {
 				// Otherwise add a trailing comma.
-
 				item = fmt.Sprintf(`"%s":"%s",`, key, q.QCPDs[key])
 			}
 
@@ -1103,28 +1028,23 @@ func (q *QualifiedStatements) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON parses a JSON-encoded qualified statements list and stores
 // the result in the object.
 func (q *QualifiedStatements) UnmarshalJSON(b []byte) error {
-	var err error
-
-	var jsonqs *jsonQS
-	if err = json.Unmarshal(b, &jsonqs); err != nil {
+	var jsonqs jsonQS
+	var err = json.Unmarshal(b, &jsonqs)
+	if err != nil {
 		return err
 	}
 
 	// Unmarshal the PKI disclosure statements if any are present.
-
 	var pds map[string]string
-
 	if len(jsonqs.QCPDs) > 0 {
 		if err = json.Unmarshal(jsonqs.QCPDs, &pds); err != nil {
 			// Unmarshalling to a map[string]string appears to never trigger
 			// an error, but retain the error check just in case.
-
 			return err
 		}
 	}
 
 	// Store the result in the object.
-
 	*q = QualifiedStatements{
 		Semantics:         jsonqs.Semantics,
 		QCCompliance:      jsonqs.QCCompliance,
@@ -1140,7 +1060,6 @@ func (q *QualifiedStatements) UnmarshalJSON(b []byte) error {
 // Equal checks if two semantics objects are equivalent.
 func (s Semantics) Equal(other Semantics) bool {
 	// Check equality of name authorities.
-
 	if len(s.NameAuthorities) != len(other.NameAuthorities) {
 		return false
 	}
@@ -1152,7 +1071,6 @@ func (s Semantics) Equal(other Semantics) bool {
 	}
 
 	// Check equality of OID.
-
 	return s.OID.Equal(other.OID)
 }
 
@@ -1168,13 +1086,11 @@ func (s Semantics) MarshalJSON() ([]byte, error) {
 // in the object.
 func (s *Semantics) UnmarshalJSON(b []byte) error {
 	var jsonObj = jsonSemantics{}
-
 	if err := json.Unmarshal(b, &jsonObj); err != nil {
 		return err
 	}
 
 	// Store result in object.
-
 	*s = Semantics{
 		OID:             asn1.ObjectIdentifier(jsonObj.OID),
 		NameAuthorities: jsonObj.NameAuthorities,
@@ -1186,13 +1102,8 @@ func (s *Semantics) UnmarshalJSON(b []byte) error {
 // Equal checks if two MS template extensions are equivalent.
 func (m *MSExtension) Equal(other *MSExtension) bool {
 	// Check for nil in both objects.
-
 	if m == nil {
-		if other == nil {
-			return true
-		}
-
-		return false
+		return other == nil
 	}
 
 	if other == nil {
@@ -1200,7 +1111,6 @@ func (m *MSExtension) Equal(other *MSExtension) bool {
 	}
 
 	// Check for equality of fields.
-
 	return m.OID.Equal(other.OID) &&
 		m.MajorVersion == other.MajorVersion &&
 		m.MinorVersion == other.MinorVersion
@@ -1224,7 +1134,6 @@ func (m *MSExtension) UnmarshalJSON(b []byte) error {
 	}
 
 	// Store the result in the object.
-
 	*m = MSExtension{
 		OID:          asn1.ObjectIdentifier(jsonext.OID),
 		MajorVersion: jsonext.MajorVersion,
@@ -1237,10 +1146,8 @@ func (m *MSExtension) UnmarshalJSON(b []byte) error {
 // publicKeyBytesAndString key extracts and returns the raw DER bytes and a
 // PEM-encoded string representation of a public key.
 func publicKeyBytesAndString(key interface{}) ([]byte, string, error) {
-	var keyBytes []byte
-	var err error
-
-	if keyBytes, err = x509.MarshalPKIXPublicKey(key); err != nil {
+	var keyBytes, err = x509.MarshalPKIXPublicKey(key)
+	if err != nil {
 		return nil, "", fmt.Errorf("type was: %T: %v", key, err)
 	}
 
@@ -1250,7 +1157,6 @@ func publicKeyBytesAndString(key interface{}) ([]byte, string, error) {
 	}))
 
 	// Remove trailing newline from string, if present.
-
 	if keyString[len(keyString)-1] == '\n' {
 		keyString = keyString[:len(keyString)-1]
 	}

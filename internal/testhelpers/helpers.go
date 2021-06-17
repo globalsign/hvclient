@@ -27,10 +27,8 @@ import (
 func MustGetPublicKeyFromFile(t *testing.T, filename string) interface{} {
 	t.Helper()
 
-	var key interface{}
-	var err error
-
-	if key, err = pkifile.PublicKeyFromFile(filename); err != nil {
+	var key, err = pkifile.PublicKeyFromFile(filename)
+	if err != nil {
 		t.Fatalf("couldn't get public key from file: %v", err)
 	}
 
@@ -42,10 +40,8 @@ func MustGetPublicKeyFromFile(t *testing.T, filename string) interface{} {
 func MustGetPrivateKeyFromFile(t *testing.T, filename string) interface{} {
 	t.Helper()
 
-	var key interface{}
-	var err error
-
-	if key, err = pkifile.PrivateKeyFromFileWithPassword(filename, ""); err != nil {
+	var key, err = pkifile.PrivateKeyFromFileWithPassword(filename, "")
+	if err != nil {
 		t.Fatalf("couldn't get private key from file: %v", err)
 	}
 
@@ -57,10 +53,8 @@ func MustGetPrivateKeyFromFile(t *testing.T, filename string) interface{} {
 func MustGetPrivateKeyFromFileWithPassword(t *testing.T, filename, password string) interface{} {
 	t.Helper()
 
-	var key interface{}
-	var err error
-
-	if key, err = pkifile.PrivateKeyFromFileWithPassword(filename, password); err != nil {
+	var key, err = pkifile.PrivateKeyFromFileWithPassword(filename, password)
+	if err != nil {
 		t.Fatalf("couldn't get private key from file: %v", err)
 	}
 
@@ -72,10 +66,8 @@ func MustGetPrivateKeyFromFileWithPassword(t *testing.T, filename, password stri
 func MustGetCSRFromFile(t *testing.T, filename string) *x509.CertificateRequest {
 	t.Helper()
 
-	var cert *x509.CertificateRequest
-	var err error
-
-	if cert, err = pkifile.CSRFromFile(filename); err != nil {
+	var cert, err = pkifile.CSRFromFile(filename)
+	if err != nil {
 		t.Fatalf("couldn't get certificate request from file: %v", err)
 	}
 
@@ -87,10 +79,8 @@ func MustGetCSRFromFile(t *testing.T, filename string) *x509.CertificateRequest 
 func MustGetCertFromFile(t *testing.T, filename string) *x509.Certificate {
 	t.Helper()
 
-	var cert *x509.Certificate
-	var err error
-
-	if cert, err = pkifile.CertFromFile(filename); err != nil {
+	var cert, err = pkifile.CertFromFile(filename)
+	if err != nil {
 		t.Fatalf("couldn't get certificate from file: %v", err)
 	}
 
@@ -102,10 +92,8 @@ func MustGetCertFromFile(t *testing.T, filename string) *x509.Certificate {
 func MustParseURI(t *testing.T, s string) *url.URL {
 	t.Helper()
 
-	var uri *url.URL
-	var err error
-
-	if uri, err = url.Parse(s); err != nil {
+	var uri, err = url.Parse(s)
+	if err != nil {
 		t.Fatalf("couldn't parse URL: %v", err)
 	}
 
@@ -117,13 +105,10 @@ func MustParseURI(t *testing.T, s string) *url.URL {
 func MustParseCSR(t *testing.T, reqPEM string) *x509.CertificateRequest {
 	t.Helper()
 
-	var block *pem.Block
-	block, _ = pem.Decode([]byte(reqPEM))
+	var block, _ = pem.Decode([]byte(reqPEM))
 
-	var csr *x509.CertificateRequest
-	var err error
-
-	if csr, err = x509.ParseCertificateRequest(block.Bytes); err != nil {
+	var csr, err = x509.ParseCertificateRequest(block.Bytes)
+	if err != nil {
 		t.Fatalf("couldn't parse certificate request: %v", err)
 	}
 
@@ -135,13 +120,10 @@ func MustParseCSR(t *testing.T, reqPEM string) *x509.CertificateRequest {
 func MustParseCert(t *testing.T, certPEM string) *x509.Certificate {
 	t.Helper()
 
-	var block *pem.Block
-	block, _ = pem.Decode([]byte(certPEM))
+	var block, _ = pem.Decode([]byte(certPEM))
 
-	var csr *x509.Certificate
-	var err error
-
-	if csr, err = x509.ParseCertificate(block.Bytes); err != nil {
+	var csr, err = x509.ParseCertificate(block.Bytes)
+	if err != nil {
 		t.Fatalf("couldn't parse certificate: %v", err)
 	}
 
@@ -153,13 +135,10 @@ func MustParseCert(t *testing.T, certPEM string) *x509.Certificate {
 func MustParseRSAPrivateKey(t *testing.T, keyPEM string) *rsa.PrivateKey {
 	t.Helper()
 
-	var block *pem.Block
-	block, _ = pem.Decode([]byte(keyPEM))
+	var block, _ = pem.Decode([]byte(keyPEM))
 
-	var key *rsa.PrivateKey
-	var err error
-
-	if key, err = x509.ParsePKCS1PrivateKey(block.Bytes); err != nil {
+	var key, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
 		t.Fatalf("couldn't parse RSA private key: %v", err)
 	}
 
@@ -177,13 +156,10 @@ func MustExtractRSAPublicKey(t *testing.T, keyPEM string) *rsa.PublicKey {
 func MustParseECPrivateKey(t *testing.T, keyPEM string) *ecdsa.PrivateKey {
 	t.Helper()
 
-	var block *pem.Block
-	block, _ = pem.Decode([]byte(keyPEM))
+	var block, _ = pem.Decode([]byte(keyPEM))
 
-	var key *ecdsa.PrivateKey
-	var err error
-
-	if key, err = x509.ParseECPrivateKey(block.Bytes); err != nil {
+	var key, err = x509.ParseECPrivateKey(block.Bytes)
+	if err != nil {
 		t.Fatalf("couldn't parse ECDSA private key: %v", err)
 	}
 

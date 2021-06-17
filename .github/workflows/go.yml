@@ -28,3 +28,26 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+    - name: Vet
+      run: go vet -v ./...
+
+    - name: Lint
+      uses: golangci/golangci-lint-action@v2
+      with:
+        # Required: the version of golangci-lint is required and must be specified
+        # without patch version: we always use the latest patch version.
+        version: v1.29
+        
+        # Optional: golangci-lint command line arguments.
+        #  - SA1019 reports deprecated packages
+        args: --exclude SA1019
+
+        # Optional: if set to true then the action will use pre-installed Go.
+        skip-go-installation: true
+
+        # Optional: if set to true then the action don't cache or restore ~/go/pkg.
+        skip-pkg-cache: true
+
+        # Optional: if set to true then the action don't cache or restore ~/.cache/go-build.
+        skip-build-cache: true

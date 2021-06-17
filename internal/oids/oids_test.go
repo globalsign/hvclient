@@ -11,7 +11,6 @@ package oids_test
 
 import (
 	"encoding/asn1"
-	"reflect"
 	"testing"
 
 	"github.com/globalsign/hvclient/internal/oids"
@@ -44,14 +43,12 @@ func TestStringToOID(t *testing.T) {
 		t.Run(tc.value, func(t *testing.T) {
 			t.Parallel()
 
-			var got asn1.ObjectIdentifier
-			var err error
-
-			if got, err = oids.StringToOID(tc.value); err != nil {
+			var got, err = oids.StringToOID(tc.value)
+			if err != nil {
 				t.Fatalf("couldn't convert string to OID: %v", err)
 			}
 
-			if !reflect.DeepEqual(got, tc.want) {
+			if !got.Equal(tc.want) {
 				t.Errorf("got %v, want %v", got, tc.want)
 			}
 		})

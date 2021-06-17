@@ -370,8 +370,7 @@ func (p Policy) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON parses a JSON-encoded validation policy and stores the result
 // in the object.
 func (p *Policy) UnmarshalJSON(b []byte) error {
-	var data *jsonPolicy
-
+	var data jsonPolicy
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
@@ -415,8 +414,7 @@ func (p SubjectDNPolicy) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON parses a JSON-encoded subject distinguished name policy and
 // stores the result in the object.
 func (p *SubjectDNPolicy) UnmarshalJSON(b []byte) error {
-	var data *jsonSubjectDNPolicy
-
+	var data jsonSubjectDNPolicy
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
@@ -455,8 +453,7 @@ func (p SANPolicy) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON parses a JSON-encoded subject alternative names policy and
 // stores the result in the object.
 func (p *SANPolicy) UnmarshalJSON(b []byte) error {
-	var data *jsonSANPolicy
-
+	var data jsonSANPolicy
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
@@ -488,8 +485,7 @@ func (p SubjectDAPolicy) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON parses a JSON-encoded subject directory attributes names
 // policy and stores the result in the object.
 func (p *SubjectDAPolicy) UnmarshalJSON(b []byte) error {
-	var data *jsonSubjectDAPolicy
-
+	var data jsonSubjectDAPolicy
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
@@ -517,10 +513,8 @@ func (p typeAndValuePolicies) MarshalJSON() ([]byte, error) {
 
 		result = append(result, []byte(fmt.Sprintf(`"%s":`, val.OID.String()))...)
 
-		var this []byte
-		var err error
-
-		if this, err = json.Marshal(val); err != nil {
+		var this, err = json.Marshal(val)
+		if err != nil {
 			return nil, err
 		}
 
@@ -536,18 +530,16 @@ func (p typeAndValuePolicies) MarshalJSON() ([]byte, error) {
 // and stores the result in the object.
 func (p *typeAndValuePolicies) UnmarshalJSON(b []byte) error {
 	var data map[string]TypeAndValuePolicy
-	var err error
-
-	if err = json.Unmarshal(b, &data); err != nil {
+	var err = json.Unmarshal(b, &data)
+	if err != nil {
 		return err
 	}
 
 	var result typeAndValuePolicies
 
 	for key, value := range data {
-		var oid asn1.ObjectIdentifier
-
-		if oid, err = oids.StringToOID(key); err != nil {
+		var oid, err = oids.StringToOID(key)
+		if err != nil {
 			return err
 		}
 
@@ -582,10 +574,8 @@ func (p customExtensionsPolicies) MarshalJSON() ([]byte, error) {
 
 		result = append(result, []byte(fmt.Sprintf(`"%s":`, ext.OID.String()))...)
 
-		var this []byte
-		var err error
-
-		if this, err = json.Marshal(ext); err != nil {
+		var this, err = json.Marshal(ext)
+		if err != nil {
 			return nil, err
 		}
 
@@ -601,18 +591,16 @@ func (p customExtensionsPolicies) MarshalJSON() ([]byte, error) {
 // and stores the result in the object.
 func (p *customExtensionsPolicies) UnmarshalJSON(b []byte) error {
 	var data map[string]CustomExtensionsPolicy
-	var err error
-
-	if err = json.Unmarshal(b, &data); err != nil {
+	var err = json.Unmarshal(b, &data)
+	if err != nil {
 		return err
 	}
 
 	var result customExtensionsPolicies
 
 	for key, value := range data {
-		var oid asn1.ObjectIdentifier
-
-		if oid, err = oids.StringToOID(key); err != nil {
+		var oid, err = oids.StringToOID(key)
+		if err != nil {
 			return err
 		}
 
@@ -661,16 +649,13 @@ func (v ValueType) MarshalJSON() ([]byte, error) {
 // in the object.
 func (v *ValueType) UnmarshalJSON(b []byte) error {
 	var data string
-	var err error
-
-	if err = json.Unmarshal(b, &data); err != nil {
+	var err = json.Unmarshal(b, &data)
+	if err != nil {
 		return err
 	}
 
-	var ok bool
-	var value ValueType
-
-	if value, ok = valueTypeValues[strings.ToUpper(data)]; !ok {
+	var value, ok = valueTypeValues[strings.ToUpper(data)]
+	if !ok {
 		return fmt.Errorf("unknown value_type value %q", data)
 	}
 
@@ -706,16 +691,13 @@ func (p Presence) MarshalJSON() ([]byte, error) {
 // the object.
 func (p *Presence) UnmarshalJSON(b []byte) error {
 	var data string
-	var err error
-
-	if err = json.Unmarshal(b, &data); err != nil {
+	var err = json.Unmarshal(b, &data)
+	if err != nil {
 		return err
 	}
 
-	var ok bool
-	var value Presence
-
-	if value, ok = presenceValues[strings.ToUpper(data)]; !ok {
+	var value, ok = presenceValues[strings.ToUpper(data)]
+	if !ok {
 		return fmt.Errorf("unknown presence value %q", data)
 	}
 
@@ -751,16 +733,13 @@ func (t KeyType) MarshalJSON() ([]byte, error) {
 // the object.
 func (t *KeyType) UnmarshalJSON(b []byte) error {
 	var data string
-	var err error
-
-	if err = json.Unmarshal(b, &data); err != nil {
+	var err = json.Unmarshal(b, &data)
+	if err != nil {
 		return err
 	}
 
-	var ok bool
-	var value KeyType
-
-	if value, ok = keyTypeValues[strings.ToUpper(data)]; !ok {
+	var value, ok = keyTypeValues[strings.ToUpper(data)]
+	if !ok {
 		return fmt.Errorf("unknown key type value %q", data)
 	}
 
@@ -796,16 +775,13 @@ func (f KeyFormat) MarshalJSON() ([]byte, error) {
 // the object.
 func (f *KeyFormat) UnmarshalJSON(b []byte) error {
 	var data string
-	var err error
-
-	if err = json.Unmarshal(b, &data); err != nil {
+	var err = json.Unmarshal(b, &data)
+	if err != nil {
 		return err
 	}
 
-	var ok bool
-	var value KeyFormat
-
-	if value, ok = keyFormatValues[strings.ToUpper(data)]; !ok {
+	var value, ok = keyFormatValues[strings.ToUpper(data)]
+	if !ok {
 		return fmt.Errorf("unknown key format value %q", data)
 	}
 
@@ -841,16 +817,13 @@ func (v OptionalStaticPresence) MarshalJSON() ([]byte, error) {
 // stores the result in the object.
 func (v *OptionalStaticPresence) UnmarshalJSON(b []byte) error {
 	var data string
-	var err error
-
-	if err = json.Unmarshal(b, &data); err != nil {
+	var err = json.Unmarshal(b, &data)
+	if err != nil {
 		return err
 	}
 
-	var ok bool
-	var value OptionalStaticPresence
-
-	if value, ok = optionalStaticPresenceValues[strings.ToUpper(data)]; !ok {
+	var value, ok = optionalStaticPresenceValues[strings.ToUpper(data)]
+	if !ok {
 		return fmt.Errorf("unknown optional static presence value %q", data)
 	}
 

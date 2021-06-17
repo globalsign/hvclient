@@ -10,9 +10,9 @@ Proprietary and confidential.
 package hvclient_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -83,14 +83,12 @@ func TestCertInfoMarshalJSON(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var got []byte
-			var err error
-
-			if got, err = json.Marshal(tc.info); err != nil {
+			var got, err = json.Marshal(tc.info)
+			if err != nil {
 				t.Fatalf("couldn't marshal JSON: %v", err)
 			}
 
-			if !reflect.DeepEqual(got, tc.want) {
+			if !bytes.Equal(got, tc.want) {
 				t.Errorf("got %s, want %s", string(got), string(tc.want))
 			}
 		})
@@ -164,9 +162,8 @@ func TestCertInfoUnmarshalJSON(t *testing.T) {
 			t.Parallel()
 
 			var got hvclient.CertInfo
-			var err error
-
-			if err = json.Unmarshal(tc.data, &got); err != nil {
+			var err = json.Unmarshal(tc.data, &got)
+			if err != nil {
 				t.Fatalf("couldn't unmarshal JSON: %v", err)
 			}
 
@@ -225,6 +222,8 @@ func TestCertInfoUnmarshalJSONFailure(t *testing.T) {
 }
 
 func TestCertStatusStringInvalidValue(t *testing.T) {
+	t.Parallel()
+
 	var want = "ERROR: UNKNOWN STATUS"
 
 	if got := hvclient.CertStatus(0).String(); got != want {

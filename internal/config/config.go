@@ -16,7 +16,6 @@ import (
 
 // Config contains settings from an HVClient configuration file.
 type Config struct {
-
 	// URL is the URL (including port) to the HVCA server.
 	URL string `json:"url"`
 
@@ -52,15 +51,14 @@ type Config struct {
 
 // NewFromFile creates a new Config object from a configuration file.
 func NewFromFile(filename string) (*Config, error) {
-	var err error
-
-	var data []byte
-	if data, err = ioutil.ReadFile(filename); err != nil {
+	var data, err = ioutil.ReadFile(filename)
+	if err != nil {
 		return nil, err
 	}
 
 	var newConfig *Config
-	if err = json.Unmarshal(data, &newConfig); err != nil {
+	err = json.Unmarshal(data, &newConfig)
+	if err != nil {
 		return nil, err
 	}
 

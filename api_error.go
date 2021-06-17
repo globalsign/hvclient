@@ -12,49 +12,50 @@ package hvclient
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+
+	"github.com/globalsign/hvclient/internal/httputils"
 )
 
 // APIError is an error returned by the HVCA HTTP API
 type APIError struct {
-	StatusCode  int    // HTTP status code returned by HVCA
-	Description string // Description of the error
+	StatusCode  int
+	Description string
 }
 
-var (
-	// loginExpiredError indicates an expired login token.
-	loginExpiredError = APIError{StatusCode: 401, Description: "Token is expired"}
-
-	// signatureInvalidError also indicates an expired login token.
-	signatureInvalidError = APIError{StatusCode: 401, Description: "Signature is invalid"}
-)
+// hvcaError is the format of an HVCA error HTTP response body.
+type hvcaError struct {
+	Description string `json:"description"`
+}
 
 // Error returns a string representation of the error.
 func (e APIError) Error() string {
 	return fmt.Sprintf("%d: %s", e.StatusCode, e.Description)
 }
 
-// newAPIError creates a new APIError object.
-func newAPIError(response *http.Response) APIError {
-	var data *struct {
-		Description string `json:"description"`
+// newAPIError creates a new APIError object from an HTTP response.
+func newAPIError(r *http.Response) APIError {
+	// All HVCA error response bodies have a problem+json content type, so
+	// return a generic error if that's not the content type we have.
+	var err = httputils.VerifyResponseContentType(r, httputils.ContentTypeProblemJSON)
+	if err != nil {
+		return APIError{StatusCode: r.StatusCode, Description: "unknown API error"}
 	}
 
-	if err := json.NewDecoder(response.Body).Decode(&data); err != nil {
-		return APIError{
-			StatusCode:  response.StatusCode,
-			Description: "unknown API error",
-		}
+	// Read and unmarshal the response body. Return a generic error on
+	// any failure.
+	var data []byte
+	data, err = ioutil.ReadAll(r.Body)
+	if err != nil {
+		return APIError{StatusCode: r.StatusCode, Description: "unknown API error"}
 	}
 
-	return APIError{
-		StatusCode:  response.StatusCode,
-		Description: data.Description,
+	var hvErr hvcaError
+	err = json.Unmarshal(data, &hvErr)
+	if err != nil {
+		return APIError{StatusCode: r.StatusCode, Description: "unknown API error"}
 	}
-}
 
-// isExpiredLoginError checks if an API error results from an expired login
-// token.
-func isExpiredTokenError(err APIError) bool {
-	return err == loginExpiredError || err == signatureInvalidError
+	return APIError{StatusCode: r.StatusCode, Description: hvErr.Description}
 }

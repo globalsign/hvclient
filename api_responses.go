@@ -33,10 +33,8 @@ func headerFromResponse(r *http.Response, name string) (string, error) {
 // header in an HTTP response. If there is more than one header value, only
 // the first is returned.
 func basePathHeaderFromResponse(r *http.Response, name string) (string, error) {
-	var location string
-	var err error
-
-	if location, err = headerFromResponse(r, name); err != nil {
+	var location, err = headerFromResponse(r, name)
+	if err != nil {
 		return "", err
 	}
 
@@ -47,15 +45,14 @@ func basePathHeaderFromResponse(r *http.Response, name string) (string, error) {
 // response. If there is more than one header value, only the first is
 // returned.
 func intHeaderFromResponse(r *http.Response, name string) (int64, error) {
-	var s string
-	var err error
-
-	if s, err = headerFromResponse(r, name); err != nil {
+	var s, err = headerFromResponse(r, name)
+	if err != nil {
 		return 0, err
 	}
 
 	var n int64
-	if n, err = strconv.ParseInt(s, 10, 64); err != nil {
+	n, err = strconv.ParseInt(s, 10, 64)
+	if err != nil {
 		return 0, err
 	}
 
@@ -101,13 +98,14 @@ func certInfoFromResponse(r *http.Response) (*CertInfo, error) {
 func certMetasFromResponse(r *http.Response) ([]CertMeta, int64, error) {
 	var metas []CertMeta
 
-	var err error
-	if err := json.NewDecoder(r.Body).Decode(&metas); err != nil {
+	var err = json.NewDecoder(r.Body).Decode(&metas)
+	if err != nil {
 		return nil, 0, err
 	}
 
 	var count int64
-	if count, err = intHeaderFromResponse(r, totalCountHeaderName); err != nil {
+	count, err = intHeaderFromResponse(r, totalCountHeaderName)
+	if err != nil {
 		return nil, 0, err
 	}
 
@@ -123,8 +121,7 @@ func policyFromResponse(r *http.Response) (*Policy, error) {
 	// we create a TeeReader to allow us to do this.
 
 	var buf bytes.Buffer
-	var tee io.Reader
-	tee = io.TeeReader(r.Body, &buf)
+	var tee = io.TeeReader(r.Body, &buf)
 
 	if err := json.NewDecoder(tee).Decode(&pol); err != nil {
 		return nil, err
@@ -140,15 +137,16 @@ func claimsFromResponse(r *http.Response) ([]Claim, int64, error) {
 
 	var clms []Claim
 
-	var err error
-	if err = json.NewDecoder(r.Body).Decode(&clms); err != nil {
+	var err = json.NewDecoder(r.Body).Decode(&clms)
+	if err != nil {
 		return nil, 0, err
 	}
 
 	// Parse total count from HTTP header.
 
 	var totalCount int64
-	if totalCount, err = intHeaderFromResponse(r, totalCountHeaderName); err != nil {
+	totalCount, err = intHeaderFromResponse(r, totalCountHeaderName)
+	if err != nil {
 		return nil, 0, err
 	}
 
@@ -162,15 +160,16 @@ func claimAssertionInfoFromResponse(r *http.Response) (*ClaimAssertionInfo, erro
 
 	var clm *ClaimAssertionInfo
 
-	var err error
-	if err = json.NewDecoder(r.Body).Decode(&clm); err != nil {
+	var err = json.NewDecoder(r.Body).Decode(&clm)
+	if err != nil {
 		return nil, err
 	}
 
 	// Get claim location from HTTP header.
 
 	var location string
-	if location, err = basePathHeaderFromResponse(r, claimLocationHeaderName); err != nil {
+	location, err = basePathHeaderFromResponse(r, claimLocationHeaderName)
+	if err != nil {
 		return nil, err
 	}
 

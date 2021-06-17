@@ -10,10 +10,8 @@ Proprietary and confidential.
 package hvclient
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -88,24 +86,6 @@ func certMetasFromResponse(r *http.Response) ([]CertMeta, int64, error) {
 	}
 
 	return metas, count, nil
-}
-
-// policyFromResponse extracts a validation policy from an HTTP response.
-func policyFromResponse(r *http.Response) (*Policy, error) {
-	var pol *Policy
-
-	// We need to read the HTTP response body twice - once to unmarshal the
-	// JSON data, and again to read the raw JSON into the Policy object - so
-	// we create a TeeReader to allow us to do this.
-
-	var buf bytes.Buffer
-	var tee = io.TeeReader(r.Body, &buf)
-
-	if err := json.NewDecoder(tee).Decode(&pol); err != nil {
-		return nil, err
-	}
-
-	return pol, nil
 }
 
 // claimsFromResponse returns a list and total count of domain claims from

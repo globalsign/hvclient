@@ -12,7 +12,6 @@ package hvclient
 import (
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -412,82 +411,6 @@ func TestCertMetasFailure(t *testing.T) {
 
 			if got, _, err := certMetasFromResponse(response); err == nil {
 				t.Fatalf("unexpectedly got cert metas: %v", got)
-			}
-		})
-	}
-}
-
-func TestPolicy(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []struct {
-		name string
-		body string
-		want Policy
-	}{
-		{
-			"A",
-			`{"validity":{"secondsmin":10,"secondsmax":20}}`,
-			Policy{
-				Validity: &ValidityPolicy{
-					SecondsMin: 10,
-					SecondsMax: 20,
-				},
-			},
-		},
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			var recorder = httptest.NewRecorder()
-			recorder.WriteHeader(http.StatusOK)
-			_, _ = recorder.Write([]byte(tc.body))
-
-			var response = recorder.Result()
-
-			var got, err = policyFromResponse(response)
-			if err != nil {
-				t.Fatalf("couldn't get policy: %v", err)
-			}
-
-			if !reflect.DeepEqual(got.Validity, tc.want.Validity) {
-				t.Errorf("got %v, want %v", got.Validity, tc.want.Validity)
-			}
-		})
-	}
-}
-
-func TestPolicyFailure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []struct {
-		name string
-		body string
-	}{
-		{
-			"BadJSON",
-			`{"bad json`,
-		},
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			var recorder = httptest.NewRecorder()
-			recorder.WriteHeader(http.StatusOK)
-			_, _ = recorder.Write([]byte(tc.body))
-
-			var response = recorder.Result()
-
-			if got, err := policyFromResponse(response); err == nil {
-				t.Fatalf("unexpectedly got policy: %v", got)
 			}
 		})
 	}

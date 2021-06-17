@@ -177,15 +177,6 @@ var requestTestCases = []struct {
 		"",
 		false,
 	},
-	{
-		func() apiRequest {
-			return newPolicyRequest()
-		},
-		http.MethodGet,
-		"/validationpolicy",
-		"",
-		false,
-	},
 }
 
 func TestRequestNewHTTPRequest(t *testing.T) {

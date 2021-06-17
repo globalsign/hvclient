@@ -115,18 +115,20 @@ func (c *Client) TrustChain(ctx context.Context) ([]string, error) {
 
 // Policy returns the calling account's validation policy.
 func (c *Client) Policy(ctx context.Context) (*Policy, error) {
-	var response, err = c.makeRequest(
+	var pol Policy
+	var _, err = c.makeRequest(
 		ctx,
-		newPolicyRequest(),
-		"", "", nil,
 		nil,
+		endpointPolicy,
+		http.MethodGet,
+		nil,
+		&pol,
 	)
 	if err != nil {
 		return nil, err
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
-	return policyFromResponse(response)
+	return &pol, nil
 }
 
 // CounterCertsIssued returns the number of certificates issued

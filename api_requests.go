@@ -61,9 +61,6 @@ type statsRevokedRequest struct {
 // quotaRequest represents an HVCA GET /quotas/issuance API call.
 type quotaRequest struct{}
 
-// policyRequest represents an HVCA GET /validationpolicy API call.
-type policyRequest struct{}
-
 // claimsDomainsRequest represents an HVCA GET /claims/domains API call.
 type claimsDomainsRequest struct {
 	page    int
@@ -188,15 +185,6 @@ func (r *quotaRequest) newHTTPRequest(url string) (*http.Request, error) {
 	return newHTTPRequest(
 		http.MethodGet,
 		url+endpointQuota,
-		r,
-	)
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA GET /validationpolicy API call.
-func (r *policyRequest) newHTTPRequest(url string) (*http.Request, error) {
-	return newHTTPRequest(
-		http.MethodGet,
-		url+endpointPolicy,
 		r,
 	)
 }
@@ -338,11 +326,6 @@ func newStatsRevokedRequest(page, perPage int, from, to time.Time) *statsRevoked
 // newQuotaRequest creates a new HVCA GET /quotas/issuance API call.
 func newQuotaRequest() *quotaRequest {
 	return &quotaRequest{}
-}
-
-// newPolicyRequest creates a new HVCA GET /validationpolicy API call.
-func newPolicyRequest() *policyRequest {
-	return &policyRequest{}
 }
 
 // newClaimsDomainsRequest creates a new HVCA GET /claims/domains API call.

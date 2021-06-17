@@ -48,7 +48,7 @@ const (
 // serial number of the certificate to be issued. After a short delay, the
 // certificate itself may be retrieved via the CertificateRetrieve method.
 func (c *Client) CertificateRequest(ctx context.Context, hvcareq *Request) (string, error) {
-	var response, err = c.makeRequest(
+	var r, err = c.makeRequest(
 		ctx,
 		nil,
 		endpointCertificates,
@@ -59,25 +59,26 @@ func (c *Client) CertificateRequest(ctx context.Context, hvcareq *Request) (stri
 	if err != nil {
 		return "", err
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
-	return basePathHeaderFromResponse(response, certSNHeaderName)
+	return basePathHeaderFromResponse(r, certSNHeaderName)
 }
 
 // CertificateRetrieve retrieves the certificate with the specified serial number.
 func (c *Client) CertificateRetrieve(ctx context.Context, serialNumber string) (*CertInfo, error) {
-	var response, err = c.makeRequest(
+	var r CertInfo
+	var _, err = c.makeRequest(
 		ctx,
-		newCertRetrieveRequest(serialNumber),
-		"", "", nil,
 		nil,
+		endpointCertificates+"/"+serialNumber,
+		http.MethodGet,
+		nil,
+		&r,
 	)
 	if err != nil {
 		return nil, err
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
-	return certInfoFromResponse(response)
+	return &r, nil
 }
 
 // CertificateRevoke revokes the certificate with the specified serial number.

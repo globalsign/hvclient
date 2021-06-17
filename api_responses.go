@@ -83,17 +83,6 @@ func stringSliceFromResponse(r *http.Response) ([]string, error) {
 	return s, nil
 }
 
-// certInfoFromResponse extracts certificate metadata from an HTTP response.
-func certInfoFromResponse(r *http.Response) (*CertInfo, error) {
-	var data *CertInfo
-
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
 // certMetasFromResponse extracts a slice of certificate metadata from an HTTP response.
 func certMetasFromResponse(r *http.Response) ([]CertMeta, int64, error) {
 	var metas []CertMeta

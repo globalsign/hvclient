@@ -17,8 +17,7 @@ import (
 )
 
 const (
-	bodyValue = `{"field":"value"}`
-	testURL   = "http://example.com"
+	testURL = "http://example.com"
 )
 
 var requestTestCases = []struct {
@@ -28,15 +27,6 @@ var requestTestCases = []struct {
 	body        string
 	notoken     bool
 }{
-	{
-		func() apiRequest {
-			return newCertRetrieveRequest("1234")
-		},
-		http.MethodGet,
-		"/certificates/1234",
-		"",
-		false,
-	},
 	{
 		func() apiRequest {
 			return newCertRevokeRequest("1234")

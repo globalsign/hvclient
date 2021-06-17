@@ -28,11 +28,6 @@ type apiRequest interface {
 	newHTTPRequest(url string) (*http.Request, error)
 }
 
-// certRetrieveRequest represents an HVCA GET /certificates/{certificate} API call.
-type certRetrieveRequest struct {
-	serialNumber string
-}
-
 // certRevokeRequest represents an HVCA DELETE /certificates/{certificate} API call.
 type certRevokeRequest struct {
 	serialNumber string
@@ -107,15 +102,6 @@ type claimDNSRequest struct {
 // claimReassertRequest represents an HVCA POST /claims/domains/{domain}/reassert API call.
 type claimReassertRequest struct {
 	id string
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA GET /certificates/{certificate} API call.
-func (r *certRetrieveRequest) newHTTPRequest(url string) (*http.Request, error) {
-	return newHTTPRequest(
-		http.MethodGet,
-		url+endpointCertificates+"/"+r.serialNumber,
-		r,
-	)
 }
 
 // newHTTPRequest creates an HTTP request for an HVCA DELETE /certificates/{certificate} API call.
@@ -333,11 +319,6 @@ func newHTTPRequest(method, url string, b apiRequest) (*http.Request, error) {
 	}
 
 	return request, nil
-}
-
-// newCertRetrieveRequest creates a new HVCA GET /certificates/{certificate} API call.
-func newCertRetrieveRequest(serialNumber string) *certRetrieveRequest {
-	return &certRetrieveRequest{serialNumber: serialNumber}
 }
 
 // newCertRevokeRequest creates a new HVCA DELETE /certificates/{certificate} API call.

@@ -10,41 +10,12 @@ Proprietary and confidential.
 package hvclient
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 )
-
-const testPEM = `-----BEGIN CERTIFICATE-----
-MIIEfDCCA2SgAwIBAgIQAQFUXN5AxSVL5HP1tk0wtTANBgkqhkiG9w0BAQsFADBS
-MQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTEoMCYGA1UE
-AxMfR2xvYmFsU2lnbiBOb24tUHVibGljIEhWQ0EgRGVtbzAeFw0xOTAyMjMwMDA2
-MjJaFw0xOTA1MjQwMDA2MjJaMEExCzAJBgNVBAYTAlVTMR8wHQYDVQQKDBZHbG9i
-YWxTaWduIEVuZ2luZWVyaW5nMREwDwYDVQQDDAhKb2huIERvZTCCASIwDQYJKoZI
-hvcNAQEBBQADggEPADCCAQoCggEBALNRZ4p8qQMf5+Dh8aWj3jCyQH4ZR2uHPMI5
-EbpoT0VIZXCk+3+L5YEWjTv3YzlGT1dZDtYfKrY0c53xWb4DWx9aBhm0ascE9Kp5
-gsoaebb+63KD7IAQElR+7dfuSwAFNBkhkxMEzQ7yIIdbFd7sO77p6mY4BSpxtzjQ
-FcjWBvzK/ai5+9s3tw52Ucq75I5ddnXcjAkZTrM0DCKb2aADxQDchObvZjJjFEAk
-CX7+dW+/1WaiUqlfrwlZGU27QNmpxt8ycqGgcguvhDK1zfLtZXgt0B7ilFNfAf+I
-xQmmtdjAXrXqWt7+A0klPnOdzu+Jl86xW3PCAsQ4KtSA9BL9s08CAwEAAaOCAV0w
-ggFZMAkGA1UdEwQCMAAwHwYDVR0jBBgwFoAUZ0sH6Qnx8XsyzL2FHE4nDc6hzGww
-HQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMBMB0GA1UdDgQWBBQWquFPQ0LI
-IdhTFRosF9c2muLajTAOBgNVHQ8BAf8EBAMCA6gwgZYGCCsGAQUFBwEBBIGJMIGG
-MDwGCCsGAQUFBzABhjBodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9jYS9nc25w
-aHZjYWRlbW9zaGEyZzMwRgYIKwYBBQUHMAKGOmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
-c2lnbi5jb20vY2FjZXJ0L2dzbnBodmNhZGVtb3NoYTJnMy5jcnQwRAYDVR0fBD0w
-OzA5oDegNYYzaHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9jYS9nc25waHZjYWRl
-bW9zaGEyZzMuY3JsMA0GCSqGSIb3DQEBCwUAA4IBAQA9u+JNLBTwqUBj7X1BxUyG
-QuHRyOeiVzY4YRNWplW3tkwzizX0UZruLoMyJ9DQqNNWYGALrynaEKDcVnVZnzRf
-BLX1C08WVb37EHYeu/wyh3bhu3sSRmbjuYxduyDDdhye3urbHUkMDjCjGuE6r45l
-pzODa/yMds7Dt/s0GzE6kGGqeAXcZiT9CNiTKfgSykGPQmI5MSVxWRu6eXZKQ9M1
-awPX0kDyz7BCnA7g6TgOMSLpIpmS+sk0gPbn0L8aSbsr+rVXeuvflMvX6s+83O90
-C5KcdB2n5alI+o4AXFf5Gv4L4isofggpTtUNioHZvXCJE0jpuhgZmcGUWvJe6GfH
------END CERTIFICATE-----`
 
 func TestHeader(t *testing.T) {
 	t.Parallel()
@@ -426,96 +397,6 @@ func TestStringSliceFailure(t *testing.T) {
 
 			if got, err := stringSliceFromResponse(response); err == nil {
 				t.Fatalf("unexpectedly got string slice: %v", got)
-			}
-		})
-	}
-}
-
-func TestCertInfo(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []struct {
-		name string
-		body string
-		want CertInfo
-	}{
-		{
-			"A",
-			fmt.Sprintf(`{"certificate":"%s","status":"ISSUED","updated_at":1550284892}`,
-				strings.Replace(testPEM, "\n", "\\n", -1)),
-			CertInfo{
-				PEM:       testPEM,
-				Status:    StatusIssued,
-				UpdatedAt: time.Unix(1550284892, 0),
-			},
-		},
-		{
-			"B",
-			fmt.Sprintf(`{"certificate":"%s","status":"REVOKED","updated_at":1550284892}`,
-				strings.Replace(testPEM, "\n", "\\n", -1)),
-			CertInfo{
-				PEM:       testPEM,
-				Status:    StatusRevoked,
-				UpdatedAt: time.Unix(1550284892, 0),
-			},
-		},
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			var recorder = httptest.NewRecorder()
-			recorder.WriteHeader(http.StatusOK)
-			_, _ = recorder.Write([]byte(tc.body))
-
-			var response = recorder.Result()
-
-			var got, err = certInfoFromResponse(response)
-			if err != nil {
-				t.Fatalf("couldn't get cert info: %v", err)
-			}
-
-			if !got.Equal(tc.want) {
-				t.Errorf("got %v, want %v", got, tc.want)
-			}
-		})
-	}
-}
-
-func TestCertInfoFailure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []struct {
-		name string
-		body string
-	}{
-		{
-			"BadJSON",
-			`{"bad json`,
-		},
-		{
-			"BadStatus",
-			`{"certificate":"more data","status":"VAPORIZED","updated_at":1550284892}`,
-		},
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			var recorder = httptest.NewRecorder()
-			recorder.WriteHeader(http.StatusOK)
-			_, _ = recorder.Write([]byte(tc.body))
-
-			var response = recorder.Result()
-
-			if got, err := certInfoFromResponse(response); err == nil {
-				t.Fatalf("unexpectedly got cert info: %v", got)
 			}
 		})
 	}

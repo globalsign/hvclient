@@ -48,7 +48,7 @@ func (c *Client) CertificateRequest(ctx context.Context, hvcareq *Request) (stri
 	var response *http.Response
 	response, err = c.makeRequest(
 		ctx,
-		newCertRequest(c.tokenRead(), body),
+		newCertRequest(body),
 		nil,
 	)
 	if err != nil {
@@ -63,7 +63,7 @@ func (c *Client) CertificateRequest(ctx context.Context, hvcareq *Request) (stri
 func (c *Client) CertificateRetrieve(ctx context.Context, serialNumber string) (*CertInfo, error) {
 	var response, err = c.makeRequest(
 		ctx,
-		newCertRetrieveRequest(c.tokenRead(), serialNumber),
+		newCertRetrieveRequest(serialNumber),
 		nil,
 	)
 	if err != nil {
@@ -78,7 +78,7 @@ func (c *Client) CertificateRetrieve(ctx context.Context, serialNumber string) (
 func (c *Client) CertificateRevoke(ctx context.Context, serialNumber string) error {
 	var response, err = c.makeRequest(
 		ctx,
-		newCertRevokeRequest(c.tokenRead(), serialNumber),
+		newCertRevokeRequest(serialNumber),
 		nil,
 	)
 	if err != nil {
@@ -94,7 +94,7 @@ func (c *Client) CertificateRevoke(ctx context.Context, serialNumber string) err
 func (c *Client) TrustChain(ctx context.Context) ([]string, error) {
 	var response, err = c.makeRequest(
 		ctx,
-		newTrustChainRequest(c.tokenRead()),
+		newTrustChainRequest(),
 		nil,
 	)
 	if err != nil {
@@ -109,7 +109,7 @@ func (c *Client) TrustChain(ctx context.Context) ([]string, error) {
 func (c *Client) Policy(ctx context.Context) (*Policy, error) {
 	var response, err = c.makeRequest(
 		ctx,
-		newPolicyRequest(c.tokenRead()),
+		newPolicyRequest(),
 		nil,
 	)
 	if err != nil {
@@ -123,19 +123,19 @@ func (c *Client) Policy(ctx context.Context) (*Policy, error) {
 // CounterCertsIssued returns the number of certificates issued
 // by the calling account.
 func (c *Client) CounterCertsIssued(ctx context.Context) (int64, error) {
-	return c.counter(ctx, newCounterCertsIssuedRequest(c.tokenRead()))
+	return c.counter(ctx, newCounterCertsIssuedRequest())
 }
 
 // CounterCertsRevoked returns the number of certificates revoked
 // by the calling account.
 func (c *Client) CounterCertsRevoked(ctx context.Context) (int64, error) {
-	return c.counter(ctx, newCounterCertsRevokedRequest(c.tokenRead()))
+	return c.counter(ctx, newCounterCertsRevokedRequest())
 }
 
 // QuotaIssuance returns the remaining quota of certificate
 // issuances for the calling account.
 func (c *Client) QuotaIssuance(ctx context.Context) (int64, error) {
-	return c.counter(ctx, newQuotaRequest(c.tokenRead()))
+	return c.counter(ctx, newQuotaRequest())
 }
 
 func (c *Client) counter(ctx context.Context, r apiRequest) (int64, error) {
@@ -161,7 +161,7 @@ func (c *Client) StatsExpiring(
 	page, perPage int,
 	notBefore, notAfter time.Time,
 ) ([]CertMeta, int64, error) {
-	return c.certsMeta(ctx, newStatsExpiringRequest(c.tokenRead(), page, perPage, notBefore, notAfter))
+	return c.certsMeta(ctx, newStatsExpiringRequest(page, perPage, notBefore, notAfter))
 }
 
 // StatsIssued returns a slice of the certificates which were issued during
@@ -177,7 +177,7 @@ func (c *Client) StatsIssued(
 	page, perPage int,
 	notBefore, notAfter time.Time,
 ) ([]CertMeta, int64, error) {
-	return c.certsMeta(ctx, newStatsIssuedRequest(c.tokenRead(), page, perPage, notBefore, notAfter))
+	return c.certsMeta(ctx, newStatsIssuedRequest(page, perPage, notBefore, notAfter))
 }
 
 // StatsRevoked returns a slice of the certificates which were revoked during
@@ -193,7 +193,7 @@ func (c *Client) StatsRevoked(
 	page, perPage int,
 	notBefore, notAfter time.Time,
 ) ([]CertMeta, int64, error) {
-	return c.certsMeta(ctx, newStatsRevokedRequest(c.tokenRead(), page, perPage, notBefore, notAfter))
+	return c.certsMeta(ctx, newStatsRevokedRequest(page, perPage, notBefore, notAfter))
 }
 
 func (c *Client) certsMeta(ctx context.Context, r apiRequest) ([]CertMeta, int64, error) {
@@ -217,7 +217,7 @@ func (c *Client) certsMeta(ctx context.Context, r apiRequest) ([]CertMeta, int64
 func (c *Client) ClaimsDomains(ctx context.Context, page, perPage int, status ClaimStatus) ([]Claim, int64, error) {
 	var response, err = c.makeRequest(
 		ctx,
-		newClaimsDomainsRequest(c.tokenRead(), page, perPage, status),
+		newClaimsDomainsRequest(page, perPage, status),
 		nil,
 	)
 	if err != nil {
@@ -233,7 +233,7 @@ func (c *Client) ClaimsDomains(ctx context.Context, page, perPage int, status Cl
 func (c *Client) ClaimSubmit(ctx context.Context, domain string) (*ClaimAssertionInfo, error) {
 	var response, err = c.makeRequest(
 		ctx,
-		newClaimSubmitRequest(c.tokenRead(), domain),
+		newClaimSubmitRequest(domain),
 		nil,
 	)
 	if err != nil {
@@ -248,7 +248,7 @@ func (c *Client) ClaimSubmit(ctx context.Context, domain string) (*ClaimAssertio
 func (c *Client) ClaimRetrieve(ctx context.Context, id string) (*Claim, error) {
 	var response, err = c.makeRequest(
 		ctx,
-		newClaimRetrieveRequest(c.tokenRead(), id),
+		newClaimRetrieveRequest(id),
 		nil,
 	)
 	if err != nil {
@@ -263,7 +263,7 @@ func (c *Client) ClaimRetrieve(ctx context.Context, id string) (*Claim, error) {
 func (c *Client) ClaimDelete(ctx context.Context, id string) error {
 	var response, err = c.makeRequest(
 		ctx,
-		newClaimDeleteRequest(c.tokenRead(), id),
+		newClaimDeleteRequest(id),
 		nil,
 	)
 	if err != nil {
@@ -281,7 +281,7 @@ func (c *Client) ClaimDelete(ctx context.Context, id string) error {
 func (c *Client) ClaimDNS(ctx context.Context, id string) (bool, error) {
 	var response, err = c.makeRequest(
 		ctx,
-		newClaimDNSRequest(c.tokenRead(), id),
+		newClaimDNSRequest(id),
 		nil,
 	)
 	if err != nil {
@@ -304,7 +304,7 @@ func (c *Client) ClaimDNS(ctx context.Context, id string) (bool, error) {
 func (c *Client) ClaimReassert(ctx context.Context, id string) (*ClaimAssertionInfo, error) {
 	var response, err = c.makeRequest(
 		ctx,
-		newClaimReassertRequest(c.tokenRead(), id),
+		newClaimReassertRequest(id),
 		nil,
 	)
 	if err != nil {

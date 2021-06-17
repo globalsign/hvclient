@@ -17,10 +17,8 @@ import (
 )
 
 const (
-	bodyValue     = `{"field":"value"}`
-	testURL       = "http://example.com"
-	tokenValue    = "tokenvalue"
-	newTokenValue = "newtokenvalue"
+	bodyValue = `{"field":"value"}`
+	testURL   = "http://example.com"
 )
 
 var requestTestCases = []struct {
@@ -32,7 +30,7 @@ var requestTestCases = []struct {
 }{
 	{
 		func() apiRequest {
-			return newCertRequest(tokenValue, []byte(bodyValue))
+			return newCertRequest([]byte(bodyValue))
 		},
 		http.MethodPost,
 		"/certificates",
@@ -41,7 +39,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newCertRetrieveRequest(tokenValue, "1234")
+			return newCertRetrieveRequest("1234")
 		},
 		http.MethodGet,
 		"/certificates/1234",
@@ -50,7 +48,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newCertRevokeRequest(tokenValue, "1234")
+			return newCertRevokeRequest("1234")
 		},
 		http.MethodDelete,
 		"/certificates/1234",
@@ -59,7 +57,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newClaimDeleteRequest(tokenValue, "1234")
+			return newClaimDeleteRequest("1234")
 		},
 		http.MethodDelete,
 		"/claims/domains/1234",
@@ -68,7 +66,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newClaimDNSRequest(tokenValue, "1234")
+			return newClaimDNSRequest("1234")
 		},
 		http.MethodPost,
 		"/claims/domains/1234/dns",
@@ -77,7 +75,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newClaimReassertRequest(tokenValue, "1234")
+			return newClaimReassertRequest("1234")
 		},
 		http.MethodPost,
 		"/claims/domains/1234/reassert",
@@ -86,7 +84,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newClaimRetrieveRequest(tokenValue, "1234")
+			return newClaimRetrieveRequest("1234")
 		},
 		http.MethodGet,
 		"/claims/domains/1234",
@@ -95,7 +93,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newClaimSubmitRequest(tokenValue, "donkey.com")
+			return newClaimSubmitRequest("donkey.com")
 		},
 		http.MethodPost,
 		"/claims/domains/donkey.com",
@@ -104,7 +102,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newClaimsDomainsRequest(tokenValue, 1, 20, StatusPending)
+			return newClaimsDomainsRequest(1, 20, StatusPending)
 		},
 		http.MethodGet,
 		"/claims/domains?status=PENDING&page=1&per_page=20",
@@ -113,7 +111,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newClaimsDomainsRequest(tokenValue, 2, 0, StatusVerified)
+			return newClaimsDomainsRequest(2, 0, StatusVerified)
 		},
 		http.MethodGet,
 		"/claims/domains?status=VERIFIED&page=2",
@@ -122,7 +120,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newCounterCertsIssuedRequest(tokenValue)
+			return newCounterCertsIssuedRequest()
 		},
 		http.MethodGet,
 		"/counters/certificates/issued",
@@ -131,7 +129,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newCounterCertsRevokedRequest(tokenValue)
+			return newCounterCertsRevokedRequest()
 		},
 		http.MethodGet,
 		"/counters/certificates/revoked",
@@ -140,7 +138,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newQuotaRequest(tokenValue)
+			return newQuotaRequest()
 		},
 		http.MethodGet,
 		"/quotas/issuance",
@@ -149,7 +147,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newStatsExpiringRequest(tokenValue, 2, 20,
+			return newStatsExpiringRequest(2, 20,
 				time.Unix(1550264300, 0), time.Unix(1550374300, 0))
 		},
 		http.MethodGet,
@@ -159,7 +157,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newStatsExpiringRequest(tokenValue, 3, 0,
+			return newStatsExpiringRequest(3, 0,
 				time.Time{}, time.Time{})
 		},
 		http.MethodGet,
@@ -169,7 +167,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newStatsIssuedRequest(tokenValue, 2, 20,
+			return newStatsIssuedRequest(2, 20,
 				time.Unix(1550264300, 0), time.Unix(1550374300, 0))
 		},
 		http.MethodGet,
@@ -179,7 +177,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newStatsIssuedRequest(tokenValue, 3, 0,
+			return newStatsIssuedRequest(3, 0,
 				time.Time{}, time.Time{})
 		},
 		http.MethodGet,
@@ -189,7 +187,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newStatsRevokedRequest(tokenValue, 2, 20,
+			return newStatsRevokedRequest(2, 20,
 				time.Unix(1550264300, 0), time.Unix(1550374300, 0))
 		},
 		http.MethodGet,
@@ -199,7 +197,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newStatsRevokedRequest(tokenValue, 3, 0,
+			return newStatsRevokedRequest(3, 0,
 				time.Time{}, time.Time{})
 		},
 		http.MethodGet,
@@ -209,7 +207,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newTrustChainRequest(tokenValue)
+			return newTrustChainRequest()
 		},
 		http.MethodGet,
 		"/trustchain",
@@ -218,7 +216,7 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newPolicyRequest(tokenValue)
+			return newPolicyRequest()
 		},
 		http.MethodGet,
 		"/validationpolicy",
@@ -324,7 +322,7 @@ func TestIsLoginRequest(t *testing.T) {
 		},
 		{
 			"False",
-			newCertRetrieveRequest("some token", "some serial numer"),
+			newCertRetrieveRequest("some serial numer"),
 			false,
 		},
 	}
@@ -345,10 +343,8 @@ func TestIsLoginRequest(t *testing.T) {
 func checkAuthorizationHeader(t *testing.T, req apiRequest, value string) {
 	t.Helper()
 
-	var err error
-
-	var httpReq *http.Request
-	if httpReq, err = req.newHTTPRequest(testURL); err != nil {
+	var httpReq, err = req.newHTTPRequest(testURL)
+	if err != nil {
 		t.Fatalf("couldn't get HTTP request: %v", err)
 	}
 	defer httpReq.Body.Close()

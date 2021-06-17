@@ -14,16 +14,17 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
-
-	"github.com/globalsign/hvclient/internal/httputils"
 )
 
 // counter is a reponse body from any HVCA request which returns a
 // single count.
 type counter struct {
 	Value int64 `json:"value"`
+}
+
+type claimsDNSRequest struct {
+	Domain string `json:"authorization_domain,omitempty"`
 }
 
 const (
@@ -43,7 +44,6 @@ const (
 // HVCA API endpoints.
 const (
 	endpointCertificates                = "/certificates"
-	endpointClaims                      = "/claims/domains"
 	endpointClaimsDomains               = "/claims/domains"
 	endpointCountersCertificatesIssued  = "/counters/certificates/issued"
 	endpointCountersCertificatesRevoked = "/counters/certificates/revoked"
@@ -53,6 +53,8 @@ const (
 	endpointStatsRevoked                = "/stats/revoked"
 	endpointTrustChain                  = "/trustchain"
 	endpointPolicy                      = "/validationpolicy"
+	pathDNS                             = "/dns"
+	pathReassert                        = "/reassert"
 )
 
 // CertificateRequest requests a new certificate based on a Request object.
@@ -62,7 +64,6 @@ const (
 func (c *Client) CertificateRequest(ctx context.Context, hvcareq *Request) (string, error) {
 	var r, err = c.makeRequest(
 		ctx,
-		nil,
 		endpointCertificates,
 		http.MethodPost,
 		hvcareq,
@@ -80,7 +81,6 @@ func (c *Client) CertificateRetrieve(ctx context.Context, serialNumber string) (
 	var r CertInfo
 	var _, err = c.makeRequest(
 		ctx,
-		nil,
 		endpointCertificates+"/"+url.QueryEscape(serialNumber),
 		http.MethodGet,
 		nil,
@@ -97,7 +97,6 @@ func (c *Client) CertificateRetrieve(ctx context.Context, serialNumber string) (
 func (c *Client) CertificateRevoke(ctx context.Context, serialNumber string) error {
 	var _, err = c.makeRequest(
 		ctx,
-		nil,
 		endpointCertificates+"/"+url.QueryEscape(serialNumber),
 		http.MethodDelete,
 		nil,
@@ -112,7 +111,6 @@ func (c *Client) TrustChain(ctx context.Context) ([]string, error) {
 	var chain []string
 	var _, err = c.makeRequest(
 		ctx,
-		nil,
 		endpointTrustChain,
 		http.MethodGet,
 		nil,
@@ -130,7 +128,6 @@ func (c *Client) Policy(ctx context.Context) (*Policy, error) {
 	var pol Policy
 	var _, err = c.makeRequest(
 		ctx,
-		nil,
 		endpointPolicy,
 		http.MethodGet,
 		nil,
@@ -167,7 +164,7 @@ func (c *Client) countersCommon(
 	path string,
 ) (int64, error) {
 	var count counter
-	var _, err = c.makeRequest(ctx, nil, path, http.MethodGet, nil, &count)
+	var _, err = c.makeRequest(ctx, path, http.MethodGet, nil, &count)
 	if err != nil {
 		return 0, err
 	}
@@ -233,7 +230,6 @@ func (c *Client) statsCommon(
 	var stats []CertMeta
 	var r, err = c.makeRequest(
 		ctx,
-		nil,
 		path+paginationString(page, perPage, notBefore, notAfter),
 		http.MethodGet,
 		nil,
@@ -252,29 +248,6 @@ func (c *Client) statsCommon(
 	return stats, count, nil
 }
 
-// paginationString builds a query string for paginated API requests.
-func paginationString(
-	page, perPage int,
-	from, to time.Time,
-) string {
-	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("?page=%d", page))
-
-	if perPage > 0 {
-		builder.WriteString(fmt.Sprintf("&per_page=%d", perPage))
-	}
-
-	if !from.IsZero() {
-		builder.WriteString(fmt.Sprintf("&from=%d", from.Unix()))
-	}
-
-	if !to.IsZero() {
-		builder.WriteString(fmt.Sprintf("&to=%d", to.Unix()))
-	}
-
-	return builder.String()
-}
-
 // ClaimsDomains returns a slice of either pending or verified domain claims
 // along with the total count of domain claims in either category. The total
 // count may be higher than the number of claims in the slice if the total
@@ -291,7 +264,6 @@ func (c *Client) ClaimsDomains(
 	var claims []Claim
 	var r, err = c.makeRequest(
 		ctx,
-		nil,
 		endpointClaimsDomains+
 			paginationString(page, perPage, time.Time{}, time.Time{})+
 			fmt.Sprintf("&status=%s", status),
@@ -318,7 +290,6 @@ func (c *Client) ClaimSubmit(ctx context.Context, domain string) (*ClaimAssertio
 	var info ClaimAssertionInfo
 	var r, err = c.makeRequest(
 		ctx,
-		nil,
 		endpointClaimsDomains+"/"+url.QueryEscape(domain),
 		http.MethodPost,
 		nil,
@@ -344,7 +315,6 @@ func (c *Client) ClaimRetrieve(ctx context.Context, id string) (*Claim, error) {
 	var claim Claim
 	var _, err = c.makeRequest(
 		ctx,
-		nil,
 		endpointClaimsDomains+"/"+url.QueryEscape(id),
 		http.MethodGet,
 		nil,
@@ -361,7 +331,6 @@ func (c *Client) ClaimRetrieve(ctx context.Context, id string) (*Claim, error) {
 func (c *Client) ClaimDelete(ctx context.Context, id string) error {
 	var _, err = c.makeRequest(
 		ctx,
-		nil,
 		endpointClaimsDomains+"/"+url.QueryEscape(id),
 		http.MethodDelete,
 		nil,
@@ -374,17 +343,32 @@ func (c *Client) ClaimDelete(ctx context.Context, id string) error {
 // token has been placed in the relevant DNS records. A return value of false
 // indicates that the assertion request was created. A return value of true
 // indicates that domain control was verified.
-func (c *Client) ClaimDNS(ctx context.Context, id string) (bool, error) {
+func (c *Client) ClaimDNS(
+	ctx context.Context,
+	id string,
+	authDomain string,
+) (bool, error) {
+	var body interface{}
+
+	// The HVCA API documentation indicates that the request body is
+	// required, but practice suggests that it is not. The request does
+	// definitely fail if the empty string is provided as the authorization
+	// domain, however, so we'll only include the body in the request if
+	// an authorization domain was provided.
+	if authDomain != "" {
+		body = claimsDNSRequest{Domain: authDomain}
+	}
+
 	var response, err = c.makeRequest(
 		ctx,
-		newClaimDNSRequest(id),
-		"", "", nil,
+		endpointClaimsDomains+"/"+url.QueryEscape(id)+pathDNS,
+		http.MethodPost,
+		body,
 		nil,
 	)
 	if err != nil {
 		return false, err
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
 	switch response.StatusCode {
 	case http.StatusCreated:
@@ -399,16 +383,25 @@ func (c *Client) ClaimDNS(ctx context.Context, id string) (bool, error) {
 // ClaimReassert reasserts an existing domain claim, for example if the
 // assert-by time of a previous assertion request has expired.
 func (c *Client) ClaimReassert(ctx context.Context, id string) (*ClaimAssertionInfo, error) {
-	var response, err = c.makeRequest(
+	var info ClaimAssertionInfo
+	var r, err = c.makeRequest(
 		ctx,
-		newClaimReassertRequest(id),
-		"", "", nil,
+		endpointClaimsDomains+"/"+url.QueryEscape(id)+pathReassert,
+		http.MethodPost,
 		nil,
+		&info,
 	)
 	if err != nil {
 		return nil, err
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
-	return claimAssertionInfoFromResponse(response)
+	var location string
+	location, err = basePathHeaderFromResponse(r, claimLocationHeaderName)
+	if err != nil {
+		return nil, err
+	}
+
+	info.ID = location
+
+	return &info, err
 }

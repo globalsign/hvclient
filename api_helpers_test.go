@@ -24,14 +24,14 @@ func TestHeader(t *testing.T) {
 		add        []string
 	}{
 		{
-			"Location",
-			"Here",
-			[]string{"Here", "There", "Everywhere"},
+			name: "Location",
+			add:  []string{"Here", "There", "Everywhere"},
+			want: "Here",
 		},
 		{
-			"Things",
-			"Curtains",
-			[]string{"Curtains"},
+			name: "Things",
+			add:  []string{"Curtains"},
+			want: "Curtains",
 		},
 	}
 
@@ -70,8 +70,8 @@ func TestHeaderFailure(t *testing.T) {
 		add  []string
 	}{
 		{
-			"Location",
-			[]string{},
+			name: "Location",
+			add:  []string{},
 		},
 	}
 
@@ -105,9 +105,9 @@ func TestBasePathHeader(t *testing.T) {
 		add        []string
 	}{
 		{
-			"Location",
-			"Here",
-			[]string{"/path/to/Here", "/path/to/There"},
+			name: "Location",
+			want: "Here",
+			add:  []string{"/path/to/Here", "/path/to/There"},
 		},
 	}
 
@@ -254,24 +254,45 @@ func TestIntegerHeaderFailure(t *testing.T) {
 	}
 }
 
-func TestClaimAssertionInfoFromResponse(t *testing.T) {
+func TestPaginationString(t *testing.T) {
 	t.Parallel()
 
 	var testcases = []struct {
-		name     string
-		body     string
-		location string
-		want     ClaimAssertionInfo
+		name    string
+		page    int
+		perPage int
+		from    time.Time
+		to      time.Time
+		want    string
 	}{
 		{
-			"One",
-			`{"token":"1234","assert_by":1477958500}`,
-			"/path/to/claim",
-			ClaimAssertionInfo{
-				Token:    "1234",
-				AssertBy: time.Unix(1477958500, 0),
-				ID:       "claim",
-			},
+			name:    "All",
+			page:    12,
+			perPage: 50,
+			from:    time.Date(2019, 1, 14, 5, 13, 22, 0, time.UTC),
+			to:      time.Date(2019, 2, 14, 5, 13, 22, 0, time.UTC),
+			want:    "?page=12&per_page=50&from=1547442802&to=1550121202",
+		},
+		{
+			name: "NoPerPage",
+			page: 12,
+			from: time.Date(2019, 1, 14, 5, 13, 22, 0, time.UTC),
+			to:   time.Date(2019, 2, 14, 5, 13, 22, 0, time.UTC),
+			want: "?page=12&from=1547442802&to=1550121202",
+		},
+		{
+			name:    "NoFrom",
+			page:    12,
+			perPage: 50,
+			to:      time.Date(2019, 2, 14, 5, 13, 22, 0, time.UTC),
+			want:    "?page=12&per_page=50&to=1550121202",
+		},
+		{
+			name:    "NoTo",
+			page:    12,
+			perPage: 50,
+			from:    time.Date(2019, 1, 14, 5, 13, 22, 0, time.UTC),
+			want:    "?page=12&per_page=50&from=1547442802",
 		},
 	}
 
@@ -281,56 +302,9 @@ func TestClaimAssertionInfoFromResponse(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var recorder = httptest.NewRecorder()
-			recorder.WriteHeader(http.StatusOK)
-			_, _ = recorder.Write([]byte(tc.body))
-
-			var response = recorder.Result()
-			response.Header.Add("Location", tc.location)
-
-			var got, err = claimAssertionInfoFromResponse(response)
-			if err != nil {
-				t.Fatalf("couldn't get claim assertion info: %v", err)
-			}
-
-			if !got.Equal(tc.want) {
-				t.Errorf("got %v, want %v", got, tc.want)
-			}
-		})
-	}
-}
-
-func TestClaimAssertionInfoFromResponseFailure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []struct {
-		name string
-		body string
-	}{
-		{
-			"BadJson",
-			`[{"token":false}]`,
-		},
-		{
-			"NoLocation",
-			`{"token":"1234","assert_by":1477958500}`,
-		},
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			var recorder = httptest.NewRecorder()
-			recorder.WriteHeader(http.StatusOK)
-			_, _ = recorder.Write([]byte(tc.body))
-
-			var response = recorder.Result()
-
-			if got, err := claimAssertionInfoFromResponse(response); err == nil {
-				t.Fatalf("unexpectedly got claim assertion info: %v", got)
+			var got = paginationString(tc.page, tc.perPage, tc.from, tc.to)
+			if got != tc.want {
+				t.Fatalf("got %s, want %s", got, tc.want)
 			}
 		})
 	}

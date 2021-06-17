@@ -1045,18 +1045,21 @@ func TestClaimDNSFailure(t *testing.T) {
 	t.Parallel()
 
 	var testcases = []struct {
-		name string
-		id   string
-		err  error
+		name       string
+		id         string
+		authDomain string
+		err        error
 	}{
 		{
 			"NonExistent",
 			testClaimNonexistentID,
+			"",
 			testAPIErrorNotFound,
 		},
 		{
 			"BadID",
 			testClaimBadID,
+			"",
 			testAPIErrorInvalidIDLength,
 		},
 	}
@@ -1071,7 +1074,7 @@ func TestClaimDNSFailure(t *testing.T) {
 			defer cancel()
 
 			var err error
-			if _, err = testClient.ClaimDNS(ctx, tc.id); err == nil {
+			if _, err = testClient.ClaimDNS(ctx, tc.id, tc.authDomain); err == nil {
 				t.Fatalf("unexpectedly succeeded")
 			}
 
@@ -1090,7 +1093,7 @@ func TestClaimDNSAlreadySubmitted(t *testing.T) {
 
 	var err error
 	var clm bool
-	if clm, err = testClient.ClaimDNS(ctx, testClaimPendingID); err != nil {
+	if clm, err = testClient.ClaimDNS(ctx, testClaimPendingID, ""); err != nil {
 		t.Fatalf("couldn't reassert domain claim: %v", err)
 	}
 

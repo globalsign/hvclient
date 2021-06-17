@@ -51,7 +51,6 @@ func (c *Client) login(ctx context.Context) error {
 	var resp loginResponse
 	var _, err = c.makeRequest(
 		ctx,
-		nil,
 		endpointLogin,
 		http.MethodPost,
 		req,

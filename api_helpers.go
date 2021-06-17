@@ -10,11 +10,12 @@ Proprietary and confidential.
 package hvclient
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
+	"time"
 )
 
 // headerFromResponse retrieves the value of a header from an HTTP response. If there
@@ -57,29 +58,26 @@ func intHeaderFromResponse(r *http.Response, name string) (int64, error) {
 	return n, nil
 }
 
-// claimAssertionInfoFromResponse extracts claim assertion information from
-// an HTTP response.
-func claimAssertionInfoFromResponse(r *http.Response) (*ClaimAssertionInfo, error) {
-	// Parse HTTP response body.
+// paginationString builds a query string for paginated API requests.
+// perPage, from and to are optional.
+func paginationString(
+	page, perPage int,
+	from, to time.Time,
+) string {
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("?page=%d", page))
 
-	var clm *ClaimAssertionInfo
-
-	var err = json.NewDecoder(r.Body).Decode(&clm)
-	if err != nil {
-		return nil, err
+	if perPage > 0 {
+		builder.WriteString(fmt.Sprintf("&per_page=%d", perPage))
 	}
 
-	// Get claim location from HTTP header.
-
-	var location string
-	location, err = basePathHeaderFromResponse(r, claimLocationHeaderName)
-	if err != nil {
-		return nil, err
+	if !from.IsZero() {
+		builder.WriteString(fmt.Sprintf("&from=%d", from.Unix()))
 	}
 
-	clm.ID = location
+	if !to.IsZero() {
+		builder.WriteString(fmt.Sprintf("&to=%d", to.Unix()))
+	}
 
-	// Return claim assertion information.
-
-	return clm, nil
+	return builder.String()
 }

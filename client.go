@@ -67,7 +67,6 @@ const (
 // is responsible for closing the response body on success.
 func (c *Client) makeRequest(
 	ctx context.Context,
-	req apiRequest,
 	path string,
 	method string,
 	in interface{},
@@ -78,31 +77,19 @@ func (c *Client) makeRequest(
 
 	// Loop so we can retry requests if necessary.
 	for {
-		var request *http.Request
-		var err error
-
-		if path == "" {
-			request, err = req.newHTTPRequest(c.url.String())
+		var body io.Reader
+		if in != nil {
+			var data, err = json.Marshal(in)
 			if err != nil {
-				return nil, fmt.Errorf("failed to create new HTTP request: %w", err)
+				return nil, fmt.Errorf("failed to marshal request body: %w", err)
 			}
 
-			request = request.WithContext(ctx)
-		} else {
-			var body io.Reader
-			if in != nil {
-				var data, err = json.Marshal(in)
-				if err != nil {
-					return nil, fmt.Errorf("failed to marshal request body: %w", err)
-				}
+			body = bytes.NewReader(data)
+		}
 
-				body = bytes.NewReader(data)
-			}
-
-			request, err = http.NewRequestWithContext(ctx, method, c.url.String()+path, body)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create new HTTP request: %w", err)
-			}
+		var request, err = http.NewRequestWithContext(ctx, method, c.url.String()+path, body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create new HTTP request: %w", err)
 		}
 
 		// Add any extra headers to the request first, so they can't override
@@ -134,13 +121,12 @@ func (c *Client) makeRequest(
 		if response, err = c.httpClient.Do(request); err != nil {
 			return nil, fmt.Errorf("failed to execute HTTP request: %w", err)
 		}
+		defer httputils.ConsumeAndCloseResponseBody(response)
 
 		// HVCA doesn't return any 3XX HTTP status codes, so treat everything outside
 		// of the 2XX range as an error. Also treat 202 status codes as "errors",
 		// because we want to retry in that event.
 		if response.StatusCode < 200 || response.StatusCode > 299 || response.StatusCode == http.StatusAccepted {
-			defer httputils.ConsumeAndCloseResponseBody(response)
-
 			var apiErr = newAPIError(response)
 
 			// Depending on the status code, we may want to retry the request.
@@ -193,14 +179,10 @@ func (c *Client) makeRequest(
 		break
 	}
 
-	if path != "" {
-		defer httputils.ConsumeAndCloseResponseBody(response)
-	}
-
+	// Return early if we're not expected a response body.
 	if out == nil {
 		return response, nil
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
 	// All response bodies from successful HVCA requests have a JSON content
 	// type, so verify that's what we have before reading the body.

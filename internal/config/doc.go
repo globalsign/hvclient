@@ -1,27 +1,20 @@
 /*
-Copyright (C) GMO GlobalSign, Inc. 2019 - All Rights Reserved.
+Copyright (c) 2019-2021 GMO GlobalSign Pte. Ltd.
 
-Unauthorized copying of this file, via any medium is strictly prohibited.
-No distribution/modification of whole or part thereof is allowed.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
 
-Proprietary and confidential.
+https://opensource.org/licenses/MIT
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 /*
 Package config contains functionality for extracting configuration
 options from a JSON-encoded configuration file.
-
-The configuration file should conform to the following format:
-
-    {
-        "hvca_url": "https://emea.api.hvca.globalsign.com:8443",
-        "hvca_version": "v2",
-        "api_key": "9999999999999999",
-        "api_secret": "ffffffffffffffffffffffffffffffffffffffff",
-        "cert_file": "/fully/qualified/path/to/tls/certificate.pem",
-        "key_file": "/fully/qualified/path/to/tls/key.pem",
-        "key_passphrase": "my_secret_passphrase",
-        "timeout": 5
-    }
 */
 package config

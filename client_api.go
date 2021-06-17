@@ -13,6 +13,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/globalsign/hvclient/internal/httputils"
@@ -45,7 +46,9 @@ const (
 	endpointCountersCertificatesIssued  = "/counters/certificates/issued"
 	endpointCountersCertificatesRevoked = "/counters/certificates/revoked"
 	endpointQuotasIssuance              = "/quotas/issuance"
-	endpointStats                       = "/stats"
+	endpointStatsExpiring               = "/stats/expiring"
+	endpointStatsIssued                 = "/stats/issued"
+	endpointStatsRevoked                = "/stats/revoked"
 	endpointTrustChain                  = "/trustchain"
 	endpointPolicy                      = "/validationpolicy"
 )
@@ -141,53 +144,28 @@ func (c *Client) Policy(ctx context.Context) (*Policy, error) {
 // CounterCertsIssued returns the number of certificates issued
 // by the calling account.
 func (c *Client) CounterCertsIssued(ctx context.Context) (int64, error) {
-	var count counter
-	var _, err = c.makeRequest(
-		ctx,
-		nil,
-		endpointCountersCertificatesIssued,
-		http.MethodGet,
-		nil,
-		&count,
-	)
-	if err != nil {
-		return 0, err
-	}
-
-	return count.Value, nil
+	return c.countersCommon(ctx, endpointCountersCertificatesIssued)
 }
 
 // CounterCertsRevoked returns the number of certificates revoked
 // by the calling account.
 func (c *Client) CounterCertsRevoked(ctx context.Context) (int64, error) {
-	var count counter
-	var _, err = c.makeRequest(
-		ctx,
-		nil,
-		endpointCountersCertificatesRevoked,
-		http.MethodGet,
-		nil,
-		&count,
-	)
-	if err != nil {
-		return 0, err
-	}
-
-	return count.Value, nil
+	return c.countersCommon(ctx, endpointCountersCertificatesRevoked)
 }
 
 // QuotaIssuance returns the remaining quota of certificate
 // issuances for the calling account.
 func (c *Client) QuotaIssuance(ctx context.Context) (int64, error) {
+	return c.countersCommon(ctx, endpointQuotasIssuance)
+}
+
+// countersCommon is the common method for all /counters and /quotas endpoints.
+func (c *Client) countersCommon(
+	ctx context.Context,
+	path string,
+) (int64, error) {
 	var count counter
-	var _, err = c.makeRequest(
-		ctx,
-		nil,
-		endpointQuotasIssuance,
-		http.MethodGet,
-		nil,
-		&count,
-	)
+	var _, err = c.makeRequest(ctx, nil, path, http.MethodGet, nil, &count)
 	if err != nil {
 		return 0, err
 	}
@@ -198,7 +176,7 @@ func (c *Client) QuotaIssuance(ctx context.Context) (int64, error) {
 // StatsExpiring returns a slice of the certificates which expired or which
 // will expire during the specified time window, along with the total count
 // of those certificates. The total count may be higher than the number of
-// certificate in the slice if the total count is higher than the specified
+// certificates in the slice if the total count is higher than the specified
 // number of certificates per page. The HVCA API enforces a maximum number of
 // certificates per page. If the total count is higher than the number of
 // certificates in the slice, the remaining certificates may be retrieved
@@ -208,12 +186,12 @@ func (c *Client) StatsExpiring(
 	page, perPage int,
 	notBefore, notAfter time.Time,
 ) ([]CertMeta, int64, error) {
-	return c.certsMeta(ctx, newStatsExpiringRequest(page, perPage, notBefore, notAfter))
+	return c.statsCommon(ctx, endpointStatsExpiring, page, perPage, notBefore, notAfter)
 }
 
 // StatsIssued returns a slice of the certificates which were issued during
 // the specified time window, along with the total count of those certificates.
-// The total count may be higher than the number of certificate in the slice if
+// The total count may be higher than the number of certificates in the slice if
 // the total count is higher than the specified number of certificates per
 // page. The HVCA API enforces a maximum number of certificates per page. If
 // the total count is higher than the number of certificates in the slice, the
@@ -224,12 +202,12 @@ func (c *Client) StatsIssued(
 	page, perPage int,
 	notBefore, notAfter time.Time,
 ) ([]CertMeta, int64, error) {
-	return c.certsMeta(ctx, newStatsIssuedRequest(page, perPage, notBefore, notAfter))
+	return c.statsCommon(ctx, endpointStatsIssued, page, perPage, notBefore, notAfter)
 }
 
 // StatsRevoked returns a slice of the certificates which were revoked during
 // the specified time window, along with the total count of those certificates.
-// The total count may be higher than the number of certificate in the slice if
+// The total count may be higher than the number of certificates in the slice if
 // the total count is higher than the specified number of certificates per
 // page. The HVCA API enforces a maximum number of certificates per page. If
 // the total count is higher than the number of certificates in the slice, the
@@ -240,17 +218,59 @@ func (c *Client) StatsRevoked(
 	page, perPage int,
 	notBefore, notAfter time.Time,
 ) ([]CertMeta, int64, error) {
-	return c.certsMeta(ctx, newStatsRevokedRequest(page, perPage, notBefore, notAfter))
+	return c.statsCommon(ctx, endpointStatsRevoked, page, perPage, notBefore, notAfter)
 }
 
-func (c *Client) certsMeta(ctx context.Context, r apiRequest) ([]CertMeta, int64, error) {
-	var response, err = c.makeRequest(ctx, r, "", "", nil, nil)
+// statsCommon is the common method for all /stats endpoints.
+func (c *Client) statsCommon(
+	ctx context.Context,
+	path string,
+	page, perPage int,
+	notBefore, notAfter time.Time,
+) ([]CertMeta, int64, error) {
+	var stats []CertMeta
+	var r, err = c.makeRequest(
+		ctx,
+		nil,
+		path+paginationString(page, perPage, notBefore, notAfter),
+		http.MethodGet,
+		nil,
+		&stats,
+	)
 	if err != nil {
 		return nil, 0, err
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
-	return certMetasFromResponse(response)
+	var count int64
+	count, err = intHeaderFromResponse(r, totalCountHeaderName)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return stats, count, nil
+}
+
+// paginationString builds a query string for paginated API requests.
+func paginationString(
+	page, perPage int,
+	from, to time.Time,
+) string {
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("?page=%d", page))
+
+	if perPage > 0 {
+		builder.WriteString(fmt.Sprintf("&per_page=%d", perPage))
+	}
+
+	if !from.IsZero() {
+		builder.WriteString(fmt.Sprintf("&from=%d", from.Unix()))
+	}
+
+	if !to.IsZero() {
+		builder.WriteString(fmt.Sprintf("&to=%d", to.Unix()))
+	}
+
+	return builder.String()
 }
 
 // ClaimsDomains returns a slice of either pending or verified domain claims

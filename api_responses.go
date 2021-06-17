@@ -57,24 +57,6 @@ func intHeaderFromResponse(r *http.Response, name string) (int64, error) {
 	return n, nil
 }
 
-// certMetasFromResponse extracts a slice of certificate metadata from an HTTP response.
-func certMetasFromResponse(r *http.Response) ([]CertMeta, int64, error) {
-	var metas []CertMeta
-
-	var err = json.NewDecoder(r.Body).Decode(&metas)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var count int64
-	count, err = intHeaderFromResponse(r, totalCountHeaderName)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return metas, count, nil
-}
-
 // claimsFromResponse returns a list and total count of domain claims from
 // an HTTP response.
 func claimsFromResponse(r *http.Response) ([]Claim, int64, error) {

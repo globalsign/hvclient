@@ -221,7 +221,7 @@ func (c *Client) makeRequest(
 		return nil, fmt.Errorf("failed to unmarshal HTTP response body: %w", err)
 	}
 
-	return nil, nil
+	return response, nil
 }
 
 // DefaultTimeout returns the timeout specified in the configuration object or

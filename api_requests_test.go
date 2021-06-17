@@ -13,7 +13,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"testing"
-	"time"
 )
 
 const (
@@ -87,66 +86,6 @@ var requestTestCases = []struct {
 		},
 		http.MethodGet,
 		"/claims/domains?status=VERIFIED&page=2",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
-			return newStatsExpiringRequest(2, 20,
-				time.Unix(1550264300, 0), time.Unix(1550374300, 0))
-		},
-		http.MethodGet,
-		"/stats/expiring?page=2&per_page=20&from=1550264300&to=1550374300",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
-			return newStatsExpiringRequest(3, 0,
-				time.Time{}, time.Time{})
-		},
-		http.MethodGet,
-		"/stats/expiring?page=3",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
-			return newStatsIssuedRequest(2, 20,
-				time.Unix(1550264300, 0), time.Unix(1550374300, 0))
-		},
-		http.MethodGet,
-		"/stats/issued?page=2&per_page=20&from=1550264300&to=1550374300",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
-			return newStatsIssuedRequest(3, 0,
-				time.Time{}, time.Time{})
-		},
-		http.MethodGet,
-		"/stats/issued?page=3",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
-			return newStatsRevokedRequest(2, 20,
-				time.Unix(1550264300, 0), time.Unix(1550374300, 0))
-		},
-		http.MethodGet,
-		"/stats/revoked?page=2&per_page=20&from=1550264300&to=1550374300",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
-			return newStatsRevokedRequest(3, 0,
-				time.Time{}, time.Time{})
-		},
-		http.MethodGet,
-		"/stats/revoked?page=3",
 		"",
 		false,
 	},

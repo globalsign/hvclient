@@ -15,7 +15,6 @@ import (
 	"io"
 	"net/http"
 	"reflect"
-	"time"
 )
 
 // apiRequest represents an HVCA API call request generator. The exported
@@ -26,30 +25,6 @@ type apiRequest interface {
 	// newHTTPRequest creates a new HTTP request for the particular API call.
 	// Normally this method should only be called by Client.makeRequest.
 	newHTTPRequest(url string) (*http.Request, error)
-}
-
-// statsExpiringRequest represents an HVCA GET /stats/expiring API call.
-type statsExpiringRequest struct {
-	page    int
-	perPage int
-	from    time.Time
-	to      time.Time
-}
-
-// statsIssuedRequest represents an HVCA GET /stats/issued API call.
-type statsIssuedRequest struct {
-	page    int
-	perPage int
-	from    time.Time
-	to      time.Time
-}
-
-// statsRevokedRequest represents an HVCA GET /stats/revoked API call.
-type statsRevokedRequest struct {
-	page    int
-	perPage int
-	from    time.Time
-	to      time.Time
 }
 
 // claimsDomainsRequest represents an HVCA GET /claims/domains API call.
@@ -82,75 +57,6 @@ type claimDNSRequest struct {
 // claimReassertRequest represents an HVCA POST /claims/domains/{domain}/reassert API call.
 type claimReassertRequest struct {
 	id string
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA GET /stats/expiring API call.
-func (r *statsExpiringRequest) newHTTPRequest(url string) (*http.Request, error) {
-	url = fmt.Sprintf("%s%s/expiring?page=%d", url, endpointStats, r.page)
-
-	if r.perPage > 0 {
-		url += fmt.Sprintf("&per_page=%d", r.perPage)
-	}
-
-	if !r.from.IsZero() {
-		url += fmt.Sprintf("&from=%d", r.from.Unix())
-	}
-
-	if !r.to.IsZero() {
-		url += fmt.Sprintf("&to=%d", r.to.Unix())
-	}
-
-	return newHTTPRequest(
-		http.MethodGet,
-		url,
-		r,
-	)
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA GET /stats/issued API call.
-func (r *statsIssuedRequest) newHTTPRequest(url string) (*http.Request, error) {
-	url = fmt.Sprintf("%s%s/issued?page=%d", url, endpointStats, r.page)
-
-	if r.perPage > 0 {
-		url += fmt.Sprintf("&per_page=%d", r.perPage)
-	}
-
-	if !r.from.IsZero() {
-		url += fmt.Sprintf("&from=%d", r.from.Unix())
-	}
-
-	if !r.to.IsZero() {
-		url += fmt.Sprintf("&to=%d", r.to.Unix())
-	}
-
-	return newHTTPRequest(
-		http.MethodGet,
-		url,
-		r,
-	)
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA GET /stats/revoked API call.
-func (r *statsRevokedRequest) newHTTPRequest(url string) (*http.Request, error) {
-	url = fmt.Sprintf("%s%s/revoked?page=%d", url, endpointStats, r.page)
-
-	if r.perPage > 0 {
-		url += fmt.Sprintf("&per_page=%d", r.perPage)
-	}
-
-	if !r.from.IsZero() {
-		url += fmt.Sprintf("&from=%d", r.from.Unix())
-	}
-
-	if !r.to.IsZero() {
-		url += fmt.Sprintf("&to=%d", r.to.Unix())
-	}
-
-	return newHTTPRequest(
-		http.MethodGet,
-		url,
-		r,
-	)
 }
 
 // newHTTPRequest creates an HTTP request for an HVCA GET /claims/domains API call.
@@ -245,36 +151,6 @@ func newHTTPRequest(method, url string, b apiRequest) (*http.Request, error) {
 	}
 
 	return request, nil
-}
-
-// newStatsExpiringRequest creates a new HVCA GET /stats/expiring API call.
-func newStatsExpiringRequest(page, perPage int, from, to time.Time) *statsExpiringRequest {
-	return &statsExpiringRequest{
-		page:    page,
-		perPage: perPage,
-		from:    from,
-		to:      to,
-	}
-}
-
-// newStatsIssuedRequest creates a new HVCA GET /stats/issued API call.
-func newStatsIssuedRequest(page, perPage int, from, to time.Time) *statsIssuedRequest {
-	return &statsIssuedRequest{
-		page:    page,
-		perPage: perPage,
-		from:    from,
-		to:      to,
-	}
-}
-
-// newStatsRevokedRequest creates a new HVCA GET /stats/revoked API call.
-func newStatsRevokedRequest(page, perPage int, from, to time.Time) *statsRevokedRequest {
-	return &statsRevokedRequest{
-		page:    page,
-		perPage: perPage,
-		from:    from,
-		to:      to,
-	}
 }
 
 // newClaimsDomainsRequest creates a new HVCA GET /claims/domains API call.

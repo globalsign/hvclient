@@ -35,10 +35,12 @@ jobs:
     - name: Lint
       uses: golangci/golangci-lint-action@v2
       with:
-        # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
+        # Required: the version of golangci-lint is required and must be specified
+        # without patch version: we always use the latest patch version.
         version: v1.29
         
         # Optional: golangci-lint command line arguments.
+        #  - SA1019 reports deprecated packages
         args: --exclude SA1019
 
         # Optional: if set to true then the action will use pre-installed Go.

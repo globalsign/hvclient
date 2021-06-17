@@ -10,13 +10,16 @@ Proprietary and confidential.
 package hvclient
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -39,14 +42,13 @@ import (
 //
 // It is safe to make concurrent API calls from a single client object.
 type Client struct {
-	config       *Config
-	url          *url.URL
-	loginRequest *loginRequest
-	httpClient   *http.Client
-	token        string
-	lastLogin    time.Time
-	tokenMtx     sync.RWMutex
-	loginMtx     sync.Mutex
+	config     *Config
+	url        *url.URL
+	httpClient *http.Client
+	token      string
+	lastLogin  time.Time
+	tokenMtx   sync.RWMutex
+	loginMtx   sync.Mutex
 }
 
 const (
@@ -59,11 +61,13 @@ const (
 )
 
 // makeRequest sends an API request to the HVCA server. If out is non-nil,
-// the HTTP response body will be unmarshalled into it. Otherwise, the caller
-// is responsible for closing the response body on success.
+// the HTTP response body will be unmarshalled into it. In all code paths,
+// the response body will be fully consumed and closed before returning.
 func (c *Client) makeRequest(
 	ctx context.Context,
-	req apiRequest,
+	path string,
+	method string,
+	in interface{},
 	out interface{},
 ) (*http.Response, error) {
 	var retriesRemaining = numberOfRetries
@@ -71,12 +75,27 @@ func (c *Client) makeRequest(
 
 	// Loop so we can retry requests if necessary.
 	for {
-		var request, err = req.newHTTPRequest(c.url.String())
-		if err != nil {
-			return nil, err
+		var body io.Reader
+		if in != nil {
+			var data, err = json.Marshal(in)
+			if err != nil {
+				return nil, fmt.Errorf("failed to marshal request body: %w", err)
+			}
+
+			body = bytes.NewReader(data)
 		}
 
-		request = request.WithContext(ctx)
+		var request, err = http.NewRequestWithContext(ctx, method, c.url.String()+path, body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create new HTTP request: %w", err)
+		}
+
+		// Add a content type header when we have a request body. Note that
+		// HVCA specifically requires a UTF-8 charset parameter with the
+		// media type.
+		if in != nil {
+			request.Header.Set(httputils.ContentTypeHeader, httputils.ContentTypeJSONUTF8)
+		}
 
 		// Add any extra headers to the request first, so they can't override
 		// any headers we add ourselves.
@@ -85,7 +104,7 @@ func (c *Client) makeRequest(
 		}
 
 		// Perform specific processing for non-login requests.
-		if !isLoginRequest(req) {
+		if !strings.HasPrefix(path, endpointLogin) {
 			// Since this is not a login request, preemptively login again if
 			// the stored authentication token is believed to be expired.
 			err = c.loginIfTokenHasExpired(ctx)
@@ -97,23 +116,16 @@ func (c *Client) makeRequest(
 			request.Header.Set(httputils.AuthorizationHeader, "Bearer "+c.tokenRead())
 		}
 
-		// Add a content type header for POST requests. Note that HVCA
-		// specifically requires a UTF-8 charset parameter with the media type.
-		if request.Method == http.MethodPost {
-			request.Header.Set(httputils.ContentTypeHeader, httputils.ContentTypeJSONUTF8)
-		}
-
 		// Execute the request.
 		if response, err = c.httpClient.Do(request); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to execute HTTP request: %w", err)
 		}
+		defer httputils.ConsumeAndCloseResponseBody(response)
 
 		// HVCA doesn't return any 3XX HTTP status codes, so treat everything outside
 		// of the 2XX range as an error. Also treat 202 status codes as "errors",
 		// because we want to retry in that event.
 		if response.StatusCode < 200 || response.StatusCode > 299 || response.StatusCode == http.StatusAccepted {
-			defer httputils.ConsumeAndCloseResponseBody(response)
-
 			var apiErr = newAPIError(response)
 
 			// Depending on the status code, we may want to retry the request.
@@ -122,7 +134,7 @@ func (c *Client) makeRequest(
 				// If we get an unauthorized status from a login request
 				// then we just have bad login credentials. This is a
 				// fatal error, so just stop and return it.
-				if isLoginRequest(req) {
+				if strings.HasPrefix(path, endpointLogin) {
 					return nil, apiErr
 				}
 
@@ -166,10 +178,10 @@ func (c *Client) makeRequest(
 		break
 	}
 
+	// Return early if we're not expecting a response body.
 	if out == nil {
 		return response, nil
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
 	// All response bodies from successful HVCA requests have a JSON content
 	// type, so verify that's what we have before reading the body.
@@ -190,7 +202,7 @@ func (c *Client) makeRequest(
 		return nil, fmt.Errorf("failed to unmarshal HTTP response body: %w", err)
 	}
 
-	return nil, nil
+	return response, nil
 }
 
 // DefaultTimeout returns the timeout specified in the configuration object or
@@ -244,10 +256,9 @@ func NewClient(ctx context.Context, conf *Config) (*Client, error) {
 
 	// Build a new client.
 	var newClient = Client{
-		config:       conf,
-		url:          conf.url,
-		httpClient:   &http.Client{Transport: tnspt},
-		loginRequest: newLoginRequest(conf.APIKey, conf.APISecret),
+		config:     conf,
+		url:        conf.url,
+		httpClient: &http.Client{Transport: tnspt},
 	}
 
 	// Perform the initial login and return the new client.

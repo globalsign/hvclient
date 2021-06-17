@@ -98,7 +98,7 @@ var (
 	}
 	testAPIErrorExistingDomain = hvclient.APIError{
 		StatusCode:  409,
-		Description: "Claim for domain no.such.domain.com. already exists",
+		Description: `Claim for domain "no.such.domain.com." already exists`,
 	}
 	testAPIErrorInvalidPage = hvclient.APIError{
 		StatusCode:  422,
@@ -116,9 +116,13 @@ var (
 		StatusCode:  422,
 		Description: "invalid ID length",
 	}
+	testAPIErrorInvalidSerialNumberFormat = hvclient.APIError{
+		StatusCode:  422,
+		Description: "invalid serial number format",
+	}
 	testAPIErrorInvalidDomain = hvclient.APIError{
 		StatusCode:  422,
-		Description: "Risk scoring validation failure",
+		Description: "domain name needs at least one dot",
 	}
 	testAPIErrorInvalidKey = hvclient.APIError{
 		StatusCode:  422,

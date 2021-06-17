@@ -108,7 +108,7 @@ func claimDNS(clnt *hvclient.Client, id string) {
 	var clm bool
 	var err error
 
-	if clm, err = clnt.ClaimDNS(ctx, id); err != nil {
+	if clm, err = clnt.ClaimDNS(ctx, id, ""); err != nil {
 		log.Fatalf("%v", err)
 	}
 

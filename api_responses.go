@@ -72,17 +72,6 @@ func counterFromResponse(r *http.Response) (int64, error) {
 	return data.Count, nil
 }
 
-// stringSliceFromResponse retrieves a slice of strings from an HTTP response body.
-func stringSliceFromResponse(r *http.Response) ([]string, error) {
-	var s []string
-
-	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
-		return nil, err
-	}
-
-	return s, nil
-}
-
 // certMetasFromResponse extracts a slice of certificate metadata from an HTTP response.
 func certMetasFromResponse(r *http.Response) ([]CertMeta, int64, error) {
 	var metas []CertMeta

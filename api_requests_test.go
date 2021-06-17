@@ -179,15 +179,6 @@ var requestTestCases = []struct {
 	},
 	{
 		func() apiRequest {
-			return newTrustChainRequest()
-		},
-		http.MethodGet,
-		"/trustchain",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
 			return newPolicyRequest()
 		},
 		http.MethodGet,

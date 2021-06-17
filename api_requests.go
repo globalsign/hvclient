@@ -61,9 +61,6 @@ type statsRevokedRequest struct {
 // quotaRequest represents an HVCA GET /quotas/issuance API call.
 type quotaRequest struct{}
 
-// trustChainRequest represents an HVCA GET /trustchain API call.
-type trustChainRequest struct{}
-
 // policyRequest represents an HVCA GET /validationpolicy API call.
 type policyRequest struct{}
 
@@ -191,15 +188,6 @@ func (r *quotaRequest) newHTTPRequest(url string) (*http.Request, error) {
 	return newHTTPRequest(
 		http.MethodGet,
 		url+endpointQuota,
-		r,
-	)
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA GET /trustchain API call.
-func (r *trustChainRequest) newHTTPRequest(url string) (*http.Request, error) {
-	return newHTTPRequest(
-		http.MethodGet,
-		url+endpointTrustChain,
 		r,
 	)
 }
@@ -350,11 +338,6 @@ func newStatsRevokedRequest(page, perPage int, from, to time.Time) *statsRevoked
 // newQuotaRequest creates a new HVCA GET /quotas/issuance API call.
 func newQuotaRequest() *quotaRequest {
 	return &quotaRequest{}
-}
-
-// newTrustChainRequest creates a new HVCA GET /trustchain API call.
-func newTrustChainRequest() *trustChainRequest {
-	return &trustChainRequest{}
 }
 
 // newPolicyRequest creates a new HVCA GET /validationpolicy API call.

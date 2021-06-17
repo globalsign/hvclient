@@ -97,18 +97,20 @@ func (c *Client) CertificateRevoke(ctx context.Context, serialNumber string) err
 // TrustChain returns the chain of trust for the
 // certificates issued by the calling account.
 func (c *Client) TrustChain(ctx context.Context) ([]string, error) {
-	var response, err = c.makeRequest(
+	var chain []string
+	var _, err = c.makeRequest(
 		ctx,
-		newTrustChainRequest(),
-		"", "", nil,
 		nil,
+		endpointTrustChain,
+		http.MethodGet,
+		nil,
+		&chain,
 	)
 	if err != nil {
 		return nil, err
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
-	return stringSliceFromResponse(response)
+	return chain, nil
 }
 
 // Policy returns the calling account's validation policy.

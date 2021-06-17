@@ -26,16 +26,6 @@ type apiRequest interface {
 	newHTTPRequest(url string) (*http.Request, error)
 }
 
-// claimRetrieveRequest represents an HVCA GET claims/domains/{claimID} API call.
-type claimRetrieveRequest struct {
-	id string
-}
-
-// claimDeleteRequest represents an HVCA DELETE /claims/domains/{claimID} API call.
-type claimDeleteRequest struct {
-	id string
-}
-
 // claimDNSRequest represents an HVCA POST /claims/domains/{domain}/dns API call.
 type claimDNSRequest struct {
 	id string
@@ -44,24 +34,6 @@ type claimDNSRequest struct {
 // claimReassertRequest represents an HVCA POST /claims/domains/{domain}/reassert API call.
 type claimReassertRequest struct {
 	id string
-}
-
-// newHTTPRequest creates an HTTP request for a GET HVCA claims/domains/{claimID} API call.
-func (r *claimRetrieveRequest) newHTTPRequest(url string) (*http.Request, error) {
-	return newHTTPRequest(
-		http.MethodGet,
-		url+endpointClaims+"/"+r.id,
-		r,
-	)
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA DELETE /claims/domains/{claimID} API call.
-func (r *claimDeleteRequest) newHTTPRequest(url string) (*http.Request, error) {
-	return newHTTPRequest(
-		http.MethodDelete,
-		url+endpointClaims+"/"+r.id,
-		r,
-	)
 }
 
 // newHTTPRequest creates an HTTP request for an HVCA POST /claims/domains/{domain}/dns API call.
@@ -78,15 +50,6 @@ func (r *claimReassertRequest) newHTTPRequest(url string) (*http.Request, error)
 	return newHTTPRequest(
 		http.MethodPost,
 		url+endpointClaims+"/"+r.id+"/reassert",
-		r,
-	)
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA POST /login API call.
-func (r *loginRequest) newHTTPRequest(url string) (*http.Request, error) {
-	return newHTTPRequest(
-		http.MethodPost,
-		url+endpointLogin,
 		r,
 	)
 }
@@ -114,20 +77,6 @@ func newHTTPRequest(method, url string, b apiRequest) (*http.Request, error) {
 	}
 
 	return request, nil
-}
-
-// newClaimRetrieveRequest creates a new HVCA claims/domains/{claimID} API call.
-func newClaimRetrieveRequest(id string) *claimRetrieveRequest {
-	return &claimRetrieveRequest{
-		id: id,
-	}
-}
-
-// newClaimDeleteRequest creates a new HVCA DELETE /claims/domains/{claimID} API call.
-func newClaimDeleteRequest(id string) *claimDeleteRequest {
-	return &claimDeleteRequest{
-		id: id,
-	}
 }
 
 // newClaimDNSRequest creates a new HVCA POST /claims/domains/{domain}/dns API call.

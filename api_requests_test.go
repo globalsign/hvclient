@@ -28,15 +28,6 @@ var requestTestCases = []struct {
 }{
 	{
 		func() apiRequest {
-			return newClaimDeleteRequest("1234")
-		},
-		http.MethodDelete,
-		"/claims/domains/1234",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
 			return newClaimDNSRequest("1234")
 		},
 		http.MethodPost,
@@ -50,15 +41,6 @@ var requestTestCases = []struct {
 		},
 		http.MethodPost,
 		"/claims/domains/1234/reassert",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
-			return newClaimRetrieveRequest("1234")
-		},
-		http.MethodGet,
-		"/claims/domains/1234",
 		"",
 		false,
 	},

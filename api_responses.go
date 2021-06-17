@@ -83,14 +83,3 @@ func claimAssertionInfoFromResponse(r *http.Response) (*ClaimAssertionInfo, erro
 
 	return clm, nil
 }
-
-// claimFromResponse extracts a domain claim from an HTTP response.
-func claimFromResponse(r *http.Response) (*Claim, error) {
-	var clm *Claim
-
-	if err := json.NewDecoder(r.Body).Decode(&clm); err != nil {
-		return nil, err
-	}
-
-	return clm, nil
-}

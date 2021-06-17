@@ -341,34 +341,33 @@ func (c *Client) ClaimSubmit(ctx context.Context, domain string) (*ClaimAssertio
 
 // ClaimRetrieve returns the domain claim with the specified ID.
 func (c *Client) ClaimRetrieve(ctx context.Context, id string) (*Claim, error) {
-	var response, err = c.makeRequest(
+	var claim Claim
+	var _, err = c.makeRequest(
 		ctx,
-		newClaimRetrieveRequest(id),
-		"", "", nil,
 		nil,
+		endpointClaimsDomains+"/"+url.QueryEscape(id),
+		http.MethodGet,
+		nil,
+		&claim,
 	)
 	if err != nil {
 		return nil, err
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
-	return claimFromResponse(response)
+	return &claim, nil
 }
 
 // ClaimDelete deletes the domain claim with the specified ID.
 func (c *Client) ClaimDelete(ctx context.Context, id string) error {
-	var response, err = c.makeRequest(
+	var _, err = c.makeRequest(
 		ctx,
-		newClaimDeleteRequest(id),
-		"", "", nil,
+		nil,
+		endpointClaimsDomains+"/"+url.QueryEscape(id),
+		http.MethodDelete,
+		nil,
 		nil,
 	)
-	if err != nil {
-		return err
-	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
-
-	return nil
+	return err
 }
 
 // ClaimDNS requests assertion of domain control using DNS once the appropriate

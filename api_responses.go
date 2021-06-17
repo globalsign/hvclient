@@ -57,29 +57,6 @@ func intHeaderFromResponse(r *http.Response, name string) (int64, error) {
 	return n, nil
 }
 
-// claimsFromResponse returns a list and total count of domain claims from
-// an HTTP response.
-func claimsFromResponse(r *http.Response) ([]Claim, int64, error) {
-	// Parse HTTP response body.
-
-	var clms []Claim
-
-	var err = json.NewDecoder(r.Body).Decode(&clms)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// Parse total count from HTTP header.
-
-	var totalCount int64
-	totalCount, err = intHeaderFromResponse(r, totalCountHeaderName)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return clms, totalCount, nil
-}
-
 // claimAssertionInfoFromResponse extracts claim assertion information from
 // an HTTP response.
 func claimAssertionInfoFromResponse(r *http.Response) (*ClaimAssertionInfo, error) {
@@ -116,17 +93,4 @@ func claimFromResponse(r *http.Response) (*Claim, error) {
 	}
 
 	return clm, nil
-}
-
-// tokenFromResponse creates a new HVCA login API call response object.
-func tokenFromResponse(httpResp *http.Response) (string, error) {
-	var data *struct {
-		AccessToken string `json:"access_token"`
-	}
-
-	if err := json.NewDecoder(httpResp.Body).Decode(&data); err != nil {
-		return "", err
-	}
-
-	return data.AccessToken, nil
 }

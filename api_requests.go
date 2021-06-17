@@ -11,7 +11,6 @@ package hvclient
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -25,18 +24,6 @@ type apiRequest interface {
 	// newHTTPRequest creates a new HTTP request for the particular API call.
 	// Normally this method should only be called by Client.makeRequest.
 	newHTTPRequest(url string) (*http.Request, error)
-}
-
-// claimsDomainsRequest represents an HVCA GET /claims/domains API call.
-type claimsDomainsRequest struct {
-	page    int
-	perPage int
-	status  ClaimStatus
-}
-
-// claimSubmitRequest represents an HVCA POST /claims/domains/{domain} API call.
-type claimSubmitRequest struct {
-	domain string
 }
 
 // claimRetrieveRequest represents an HVCA GET claims/domains/{claimID} API call.
@@ -57,30 +44,6 @@ type claimDNSRequest struct {
 // claimReassertRequest represents an HVCA POST /claims/domains/{domain}/reassert API call.
 type claimReassertRequest struct {
 	id string
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA GET /claims/domains API call.
-func (r *claimsDomainsRequest) newHTTPRequest(url string) (*http.Request, error) {
-	url = fmt.Sprintf("%s/claims/domains?status=%s&page=%d", url, r.status, r.page)
-
-	if r.perPage > 0 {
-		url += fmt.Sprintf("&per_page=%d", r.perPage)
-	}
-
-	return newHTTPRequest(
-		http.MethodGet,
-		url,
-		r,
-	)
-}
-
-// newHTTPRequest creates an HTTP request for an HVCA POST /claims/domains/{domain} API call.
-func (r *claimSubmitRequest) newHTTPRequest(url string) (*http.Request, error) {
-	return newHTTPRequest(
-		http.MethodPost,
-		url+endpointClaims+"/"+r.domain,
-		r,
-	)
 }
 
 // newHTTPRequest creates an HTTP request for a GET HVCA claims/domains/{claimID} API call.
@@ -151,22 +114,6 @@ func newHTTPRequest(method, url string, b apiRequest) (*http.Request, error) {
 	}
 
 	return request, nil
-}
-
-// newClaimsDomainsRequest creates a new HVCA GET /claims/domains API call.
-func newClaimsDomainsRequest(page, perPage int, status ClaimStatus) *claimsDomainsRequest {
-	return &claimsDomainsRequest{
-		page:    page,
-		perPage: perPage,
-		status:  status,
-	}
-}
-
-// newClaimSubmitRequest creates a new HVCA POST /claims/domains/{domain} API call.
-func newClaimSubmitRequest(domain string) *claimSubmitRequest {
-	return &claimSubmitRequest{
-		domain: domain,
-	}
 }
 
 // newClaimRetrieveRequest creates a new HVCA claims/domains/{claimID} API call.

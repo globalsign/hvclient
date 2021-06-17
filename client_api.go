@@ -13,6 +13,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -43,6 +44,7 @@ const (
 const (
 	endpointCertificates                = "/certificates"
 	endpointClaims                      = "/claims/domains"
+	endpointClaimsDomains               = "/claims/domains"
 	endpointCountersCertificatesIssued  = "/counters/certificates/issued"
 	endpointCountersCertificatesRevoked = "/counters/certificates/revoked"
 	endpointQuotasIssuance              = "/quotas/issuance"
@@ -79,7 +81,7 @@ func (c *Client) CertificateRetrieve(ctx context.Context, serialNumber string) (
 	var _, err = c.makeRequest(
 		ctx,
 		nil,
-		endpointCertificates+"/"+serialNumber,
+		endpointCertificates+"/"+url.QueryEscape(serialNumber),
 		http.MethodGet,
 		nil,
 		&r,
@@ -96,7 +98,7 @@ func (c *Client) CertificateRevoke(ctx context.Context, serialNumber string) err
 	var _, err = c.makeRequest(
 		ctx,
 		nil,
-		endpointCertificates+"/"+serialNumber,
+		endpointCertificates+"/"+url.QueryEscape(serialNumber),
 		http.MethodDelete,
 		nil,
 		nil,
@@ -281,36 +283,60 @@ func paginationString(
 // than the number of claims in the slice, the remaining claims may be
 // retrieved by incrementing the page number in subsequent calls of this
 // method.
-func (c *Client) ClaimsDomains(ctx context.Context, page, perPage int, status ClaimStatus) ([]Claim, int64, error) {
-	var response, err = c.makeRequest(
+func (c *Client) ClaimsDomains(
+	ctx context.Context,
+	page, perPage int,
+	status ClaimStatus,
+) ([]Claim, int64, error) {
+	var claims []Claim
+	var r, err = c.makeRequest(
 		ctx,
-		newClaimsDomainsRequest(page, perPage, status),
-		"", "", nil,
 		nil,
+		endpointClaimsDomains+
+			paginationString(page, perPage, time.Time{}, time.Time{})+
+			fmt.Sprintf("&status=%s", status),
+		http.MethodGet,
+		nil,
+		&claims,
 	)
 	if err != nil {
 		return nil, 0, err
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
-	return claimsFromResponse(response)
+	var count int64
+	count, err = intHeaderFromResponse(r, totalCountHeaderName)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return claims, count, nil
 }
 
 // ClaimSubmit submits a new domain claim and returns the token value that
 // should be used to verify control of that domain.
 func (c *Client) ClaimSubmit(ctx context.Context, domain string) (*ClaimAssertionInfo, error) {
-	var response, err = c.makeRequest(
+	var info ClaimAssertionInfo
+	var r, err = c.makeRequest(
 		ctx,
-		newClaimSubmitRequest(domain),
-		"", "", nil,
 		nil,
+		endpointClaimsDomains+"/"+url.QueryEscape(domain),
+		http.MethodPost,
+		nil,
+		&info,
 	)
 	if err != nil {
 		return nil, err
 	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
 
-	return claimAssertionInfoFromResponse(response)
+	var location string
+	location, err = basePathHeaderFromResponse(r, claimLocationHeaderName)
+	if err != nil {
+		return nil, err
+	}
+
+	info.ID = location
+
+	return &info, nil
 }
 
 // ClaimRetrieve returns the domain claim with the specified ID.

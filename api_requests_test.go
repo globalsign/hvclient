@@ -62,33 +62,6 @@ var requestTestCases = []struct {
 		"",
 		false,
 	},
-	{
-		func() apiRequest {
-			return newClaimSubmitRequest("donkey.com")
-		},
-		http.MethodPost,
-		"/claims/domains/donkey.com",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
-			return newClaimsDomainsRequest(1, 20, StatusPending)
-		},
-		http.MethodGet,
-		"/claims/domains?status=PENDING&page=1&per_page=20",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
-			return newClaimsDomainsRequest(2, 0, StatusVerified)
-		},
-		http.MethodGet,
-		"/claims/domains?status=VERIFIED&page=2",
-		"",
-		false,
-	},
 }
 
 func TestRequestNewHTTPRequest(t *testing.T) {

@@ -36,14 +36,12 @@ var timeout = time.Second * 5
 
 func main() {
 	// Parse flags and set logger.
-
 	flag.Parse()
 
 	log.SetFlags(0)
 	log.SetPrefix("hvclient: ")
 
 	// Handle any non-request options.
-
 	var err error
 
 	switch {
@@ -74,7 +72,6 @@ func main() {
 	}
 
 	// Validate and parse time window.
-
 	if *fFrom == "" && *fTo != "" {
 		log.Fatalf("you must specify -from if you specify -to")
 	} else if *fSince != "" && (*fFrom != "" || *fTo != "") {
@@ -83,13 +80,11 @@ func main() {
 
 	var from time.Time
 	var to time.Time
-
 	if from, to, err = parseTimeWindow(*fFrom, *fTo, *fSince); err != nil {
 		log.Fatalf("%v", err)
 	}
 
 	// Validate that configuration file is specified or default is available.
-
 	var configFile string
 	if *fConfigFile == "" {
 		var homeDir = os.Getenv("HOME")
@@ -104,24 +99,18 @@ func main() {
 	}
 
 	// Create HVCA client.
-
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	var clnt *hvclient.Client
-
 	if clnt, err = hvclient.NewClientFromFile(ctx, configFile); err != nil {
 		log.Fatalf("couldn't create client: %v", err)
 	}
 
 	// Set the timeout based on the configuration file.
-
 	timeout = clnt.DefaultTimeout()
 
 	// Select and execute desired operation.
-
 	var willRequest = !(*fPublicKey == "" && *fPrivateKey == "" && *fCSR == "")
 
 	switch {

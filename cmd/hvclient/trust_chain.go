@@ -26,15 +26,11 @@ import (
 // trustChain outputs the chain of trust for the certificates issued
 // by the calling account, in PEM format.
 func trustChain(clnt *hvclient.Client) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var err error
-	var certs []string
-
-	if certs, err = clnt.TrustChain(ctx); err != nil {
+	var certs, err = clnt.TrustChain(ctx)
+	if err != nil {
 		log.Fatalf("%v", err)
 	}
 

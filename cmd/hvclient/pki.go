@@ -26,10 +26,8 @@ import (
 // generateRSAKey generates and outputs an RSA private key, optionally
 // encrypting it.
 func generateRSAKey(bits int, encrypt bool) (*rsa.PrivateKey, error) {
-	var newkey *rsa.PrivateKey
-	var err error
-
-	if newkey, err = rsa.GenerateKey(rand.Reader, bits); err != nil {
+	var newkey, err = rsa.GenerateKey(rand.Reader, bits)
+	if err != nil {
 		return nil, err
 	}
 
@@ -41,12 +39,11 @@ func generateRSAKey(bits int, encrypt bool) (*rsa.PrivateKey, error) {
 	}
 
 	if encrypt {
-		var password string
-
-		if password, err = getPasswordFromTerminal(
+		var password, err = getPasswordFromTerminal(
 			"Enter passphrase to encrypt private key",
 			true,
-		); err != nil {
+		)
+		if err != nil {
 			return nil, err
 		}
 

@@ -26,9 +26,7 @@ import (
 // claimsDomains lists the ID, status, domain, created-at and assert-by times (or the
 // total count) for either pending or verified domain hvclient.
 func claimsDomains(clnt *hvclient.Client, page, pagesize int, pending bool) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	var status hvclient.ClaimStatus
@@ -38,11 +36,8 @@ func claimsDomains(clnt *hvclient.Client, page, pagesize int, pending bool) {
 		status = hvclient.StatusVerified
 	}
 
-	var clms []hvclient.Claim
-	var count int64
-	var err error
-
-	if clms, count, err = clnt.ClaimsDomains(ctx, page, pagesize, status); err != nil {
+	var clms, count, err = clnt.ClaimsDomains(ctx, page, pagesize, status)
+	if err != nil {
 		log.Fatalf("%v", err)
 	}
 
@@ -58,15 +53,11 @@ func claimsDomains(clnt *hvclient.Client, page, pagesize int, pending bool) {
 // claimRetrieve lists the ID, status, domain, created-at and assert-by times for the domain
 // claim with the specified ID.
 func claimRetrieve(clnt *hvclient.Client, id string) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var clm *hvclient.Claim
-	var err error
-
-	if clm, err = clnt.ClaimRetrieve(ctx, id); err != nil {
+	var clm, err = clnt.ClaimRetrieve(ctx, id)
+	if err != nil {
 		log.Fatalf("%v", err)
 	}
 
@@ -76,15 +67,11 @@ func claimRetrieve(clnt *hvclient.Client, id string) {
 // claimSubmit submits a domain claim for the specified domain and
 // outputs the claim token, assert-by date, and claim ID on success.
 func claimSubmit(clnt *hvclient.Client, domain string) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var clm *hvclient.ClaimAssertionInfo
-	var err error
-
-	if clm, err = clnt.ClaimSubmit(ctx, domain); err != nil {
+	var clm, err = clnt.ClaimSubmit(ctx, domain)
+	if err != nil {
 		log.Fatalf("%v", err)
 	}
 
@@ -93,9 +80,7 @@ func claimSubmit(clnt *hvclient.Client, domain string) {
 
 // revokeCert revokes the certificate with the specified serial number.
 func claimDelete(clnt *hvclient.Client, id string) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	if err := clnt.ClaimDelete(ctx, id); err != nil {
@@ -106,15 +91,11 @@ func claimDelete(clnt *hvclient.Client, id string) {
 // claimDNS requests assertion of domain control using DNS for
 // the specified claim ID.
 func claimDNS(clnt *hvclient.Client, id string) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var clm bool
-	var err error
-
-	if clm, err = clnt.ClaimDNS(ctx, id, ""); err != nil {
+	var clm, err = clnt.ClaimDNS(ctx, id, "")
+	if err != nil {
 		log.Fatalf("%v", err)
 	}
 
@@ -128,15 +109,11 @@ func claimDNS(clnt *hvclient.Client, id string) {
 // claimReassert reasserts an existing domain claim with the specified
 // id and outputs the claim token, and assert-by date.
 func claimReassert(clnt *hvclient.Client, id string) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var clm *hvclient.ClaimAssertionInfo
-	var err error
-
-	if clm, err = clnt.ClaimReassert(ctx, id); err != nil {
+	var clm, err = clnt.ClaimReassert(ctx, id)
+	if err != nil {
 		log.Fatalf("%v", err)
 	}
 

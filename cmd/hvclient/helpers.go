@@ -37,10 +37,7 @@ import (
 func getPasswordFromTerminal(prompt string, confirm bool) (string, error) {
 	fmt.Fprintf(os.Stderr, "%s: ", prompt)
 
-	var password []byte
-	var err error
-
-	password, err = terminal.ReadPassword(int(syscall.Stdin))
+	var password, err = terminal.ReadPassword(int(syscall.Stdin))
 	fmt.Fprintf(os.Stderr, "\n")
 
 	if err != nil {
@@ -51,7 +48,6 @@ func getPasswordFromTerminal(prompt string, confirm bool) (string, error) {
 		fmt.Fprintf(os.Stderr, "Enter again to confirm: ")
 
 		var confirmation []byte
-
 		confirmation, err = terminal.ReadPassword(int(syscall.Stdin))
 		fmt.Fprintf(os.Stderr, "\n")
 
@@ -99,10 +95,8 @@ func stringToOIDs(s string) ([]asn1.ObjectIdentifier, error) {
 	var result = []asn1.ObjectIdentifier{}
 
 	for _, stroid := range strings.Split(s, ",") {
-		var oid asn1.ObjectIdentifier
-		var err error
-
-		if oid, err = oids.StringToOID(stroid); err != nil {
+		var oid, err = oids.StringToOID(stroid)
+		if err != nil {
 			return nil, err
 		}
 
@@ -118,9 +112,8 @@ func stringToIPs(s string) ([]net.IP, error) {
 	var ips []net.IP
 
 	for _, strip := range strings.Split(s, ",") {
-		var ip net.IP
-
-		if ip = net.ParseIP(strings.TrimSpace(strip)); ip == nil {
+		var ip = net.ParseIP(strings.TrimSpace(strip))
+		if ip == nil {
 			return nil, fmt.Errorf("invalid IP address: %s", strings.TrimSpace(strip))
 		}
 
@@ -142,10 +135,8 @@ func stringToURIs(s string) ([]*url.URL, error) {
 			return nil, fmt.Errorf("missing URI: %q", s)
 		}
 
-		var uri *url.URL
-		var err error
-
-		if uri, err = url.Parse(trimmed); err != nil {
+		var uri, err = url.Parse(trimmed)
+		if err != nil {
 			return nil, err
 		}
 
@@ -179,9 +170,8 @@ func stringToOIDAndStrings(s string) ([]hvclient.OIDAndString, error) {
 			return nil, fmt.Errorf("missing value for OID: %q", pair)
 		}
 
-		var oid asn1.ObjectIdentifier
-		var err error
-		if oid, err = oids.StringToOID(cmps[0]); err != nil {
+		var oid, err = oids.StringToOID(cmps[0])
+		if err != nil {
 			return nil, fmt.Errorf("invalid OID: %v", err)
 		}
 

@@ -26,15 +26,11 @@ import (
 
 // validationPolicy outputs the validation policy in JSON format.
 func validationPolicy(clnt *hvclient.Client) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var err error
-	var pol *hvclient.Policy
-
-	if pol, err = clnt.Policy(ctx); err != nil {
+	var pol, err = clnt.Policy(ctx)
+	if err != nil {
 		log.Fatalf("%v", err)
 	}
 

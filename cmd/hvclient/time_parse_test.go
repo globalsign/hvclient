@@ -29,44 +29,34 @@ func TestParseTimeWindow(t *testing.T) {
 		wantfrom, wantto time.Time
 	}{
 		{
-			"FromAndTo",
-			"2010-01-01T06:00:00UTC",
-			"2010-01-11T06:00:00UTC",
-			"",
-			time.Date(2010, 1, 1, 6, 0, 0, 0, time.UTC),
-			time.Date(2010, 1, 11, 6, 0, 0, 0, time.UTC),
+			name:     "FromAndTo",
+			from:     "2010-01-01T06:00:00UTC",
+			to:       "2010-01-11T06:00:00UTC",
+			wantfrom: time.Date(2010, 1, 1, 6, 0, 0, 0, time.UTC),
+			wantto:   time.Date(2010, 1, 11, 6, 0, 0, 0, time.UTC),
 		},
 		{
-			"FromOnly",
-			"2010-01-01T06:00:00UTC",
-			"",
-			"",
-			time.Date(2010, 1, 1, 6, 0, 0, 0, time.UTC),
-			time.Now(),
+			name:     "FromOnly",
+			from:     "2010-01-01T06:00:00UTC",
+			wantfrom: time.Date(2010, 1, 1, 6, 0, 0, 0, time.UTC),
+			wantto:   time.Now(),
 		},
 		{
-			"ToOnly",
-			"",
-			"2010-01-01T06:00:00UTC",
-			"",
-			time.Date(2009, 12, 2, 6, 0, 0, 0, time.UTC),
-			time.Date(2010, 1, 1, 6, 0, 0, 0, time.UTC),
+			name:     "ToOnly",
+			to:       "2010-01-01T06:00:00UTC",
+			wantfrom: time.Date(2009, 12, 2, 6, 0, 0, 0, time.UTC),
+			wantto:   time.Date(2010, 1, 1, 6, 0, 0, 0, time.UTC),
 		},
 		{
-			"Neither",
-			"",
-			"",
-			"",
-			time.Now().Add(time.Hour * 24 * -30),
-			time.Now(),
+			name:     "Neither",
+			wantfrom: time.Now().Add(time.Hour * 24 * -30),
+			wantto:   time.Now(),
 		},
 		{
-			"Since",
-			"",
-			"",
-			"10d",
-			time.Now().Add(time.Hour * 24 * -10),
-			time.Now(),
+			name:     "Since",
+			since:    "10d",
+			wantfrom: time.Now().Add(time.Hour * 24 * -10),
+			wantto:   time.Now(),
 		},
 	}
 
@@ -74,10 +64,10 @@ func TestParseTimeWindow(t *testing.T) {
 		var tc = tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			var from, to time.Time
-			var err error
+			t.Parallel()
 
-			if from, to, err = parseTimeWindow(tc.from, tc.to, tc.since); err != nil {
+			var from, to, err = parseTimeWindow(tc.from, tc.to, tc.since)
+			if err != nil {
 				t.Fatalf("couldn't parse time window: %v", err)
 			}
 
@@ -112,22 +102,18 @@ func TestParseTimeWindowFailure(t *testing.T) {
 		from, to, since string
 	}{
 		{
-			"BadFrom",
-			"not a time value",
-			"2010-01-11T06:00:00UTC",
-			"",
+			name: "BadFrom",
+			from: "not a time value",
+			to:   "2010-01-11T06:00:00UTC",
 		},
 		{
-			"BadTo",
-			"2010-01-11T06:00:00UTC",
-			"not a time value",
-			"",
+			name: "BadTo",
+			from: "2010-01-11T06:00:00UTC",
+			to:   "not a time value",
 		},
 		{
-			"BadSince",
-			"",
-			"",
-			"not a duration",
+			name:  "BadSince",
+			since: "not a duration",
 		},
 	}
 
@@ -135,6 +121,8 @@ func TestParseTimeWindowFailure(t *testing.T) {
 		var tc = tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			if _, _, err := parseTimeWindow(tc.from, tc.to, tc.since); err == nil {
 				t.Errorf("unexpectedly parsed time window: %v", err)
 			}
@@ -203,10 +191,8 @@ func TestTimeParse(t *testing.T) {
 		t.Run(tc.str, func(t *testing.T) {
 			t.Parallel()
 
-			var got time.Duration
-			var err error
-
-			if got, err = parseDuration(tc.str); err != nil {
+			var got, err = parseDuration(tc.str)
+			if err != nil {
 				t.Fatalf("couldn't parse duration: %v", err)
 			}
 

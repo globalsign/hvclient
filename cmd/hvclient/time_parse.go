@@ -36,7 +36,6 @@ func parseTimeWindow(from, to, since string) (time.Time, time.Time, error) {
 	// always denotes a period of time up to the present time). Parsing
 	// of command-line arguments will prevent both -to and -since from
 	// being specified.
-
 	if to != "" && since == "" {
 		if timeTo, err = time.Parse(defaultTimeLayout, to); err != nil {
 			return timeTo, timeFrom, fmt.Errorf("couldn't parse 'to' time string: %v", err)
@@ -47,7 +46,6 @@ func parseTimeWindow(from, to, since string) (time.Time, time.Time, error) {
 
 	if from != "" {
 		// -from flag was specified, so calculate it.
-
 		if timeFrom, err = time.Parse(defaultTimeLayout, from); err != nil {
 			return timeTo, timeFrom, fmt.Errorf("couldn't parse 'from' time string: %v", err)
 		}
@@ -55,10 +53,8 @@ func parseTimeWindow(from, to, since string) (time.Time, time.Time, error) {
 
 		// -since flag was specified, so set from-time to the to-time less
 		// the since duration.
-
-		var duration time.Duration
-		var err error
-		if duration, err = parseDuration(since); err != nil {
+		var duration, err = parseDuration(since)
+		if err != nil {
 			return timeTo, timeFrom, err
 		}
 
@@ -66,7 +62,6 @@ func parseTimeWindow(from, to, since string) (time.Time, time.Time, error) {
 	} else {
 		// Neither was specified, so set from-time to a default period prior
 		// to the to-time.
-
 		timeFrom = timeTo.Add(time.Hour * 24 * -defaultTimeWindowDays)
 	}
 
@@ -75,7 +70,6 @@ func parseTimeWindow(from, to, since string) (time.Time, time.Time, error) {
 
 func parseDuration(d string) (time.Duration, error) {
 	// Break string into duration value and units.
-
 	var n string
 	var unit string
 	for i := 0; i < len(d); i++ {
@@ -87,16 +81,12 @@ func parseDuration(d string) (time.Duration, error) {
 	}
 
 	// Parse duration value.
-
-	var extent int64
-	var err error
-
-	if extent, err = strconv.ParseInt(n, 0, 64); err != nil {
+	var extent, err = strconv.ParseInt(n, 0, 64)
+	if err != nil {
 		return 0, fmt.Errorf("invalid duration quantity: %s", n)
 	}
 
 	// Parse units.
-
 	switch strings.ToUpper(unit) {
 	case "S", "SEC", "SECS", "SECOND", "SECONDS":
 		return time.Second * time.Duration(extent), nil

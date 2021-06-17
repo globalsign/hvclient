@@ -97,16 +97,12 @@ func (s subjectValues) isEmpty() bool {
 func buildRequest(reqinfo *requestValues) (*hvclient.Request, error) {
 	// Create the request and, if necesssary, prepopulate it with values from
 	// a template file.
-
-	var request *hvclient.Request
-	var err error
-
-	if request, err = getRequestFromTemplateOrNew(reqinfo.template); err != nil {
+	var request, err = getRequestFromTemplateOrNew(reqinfo.template)
+	if err != nil {
 		return nil, err
 	}
 
 	// Populate certificate request with values specified at the command line.
-
 	if request.Validity, err = buildValidity(
 		request.Validity,
 		reqinfo.validity.notBefore,
@@ -167,16 +163,14 @@ func getRequestFromTemplateOrNew(template string) (*hvclient.Request, error) {
 	var request = &hvclient.Request{}
 
 	// Initialize request with values from template, if present.
-
 	if template != "" {
-		var data []byte
-		var err error
-
-		if data, err = ioutil.ReadFile(template); err != nil {
+		var data, err = ioutil.ReadFile(template)
+		if err != nil {
 			return nil, fmt.Errorf("couldn't read template file: %v", err)
 		}
 
-		if err = json.Unmarshal(data, &request); err != nil {
+		err = json.Unmarshal(data, &request)
+		if err != nil {
 			return nil, fmt.Errorf("couldn't unmarshal JSON in template file: %v", err)
 		}
 	}
@@ -192,13 +186,11 @@ func buildValidity(
 	notbefore, notafter, duration string,
 ) (*hvclient.Validity, error) {
 	// If initial object is nil, create it.
-
 	if validity == nil {
 		validity = &hvclient.Validity{}
 	}
 
 	// Parse command line fields.
-
 	var err error
 
 	var timeBefore time.Time
@@ -223,11 +215,9 @@ func buildValidity(
 	}
 
 	// Set or override initial values as necessary.
-
 	if validity.NotBefore.IsZero() {
 		// Not-before time was not already set, so set it the value specified
 		// at the command line, or to now if no value was specified.
-
 		if timeBefore.IsZero() {
 			validity.NotBefore = time.Now()
 		} else {
@@ -237,7 +227,6 @@ func buildValidity(
 		// Not-before time was already set, so override it with the value
 		// specified at the command line, or leave it alone if no value was
 		// specified.
-
 		validity.NotBefore = timeBefore
 	}
 
@@ -245,38 +234,31 @@ func buildValidity(
 		// Not-after time was not already set, so we need to check if
 		// either the not-after time or the certificate duration were
 		// set at the command line.
-
 		if timeAfter.IsZero() {
 			// Not-after time was not set at the command line, so...
-
 			if timeDuration == 0 {
 				// ...set the not-after time to the maximum allowed by the
 				// validation policy if the duration was not set at the
 				// command line either...
-
 				validity.NotAfter = time.Unix(0, 0)
 			} else {
 				// ...or calculate it based on the duration that was set at
 				// the command line.
-
 				validity.NotAfter = validity.NotBefore.Add(timeDuration)
 			}
 		} else {
 			// Not-after time was set at the command line, so use it.
-
 			validity.NotAfter = timeAfter
 		}
 	} else if !timeAfter.IsZero() {
 		// Not-after time was already set, but it was also specified at the
 		// command line, so override the initial value.
-
 		validity.NotAfter = timeAfter
 	} else if timeDuration != 0 {
 		// Not-after time was already set, and was not specified at the
 		// command line, but the certificate duration was set at the command
 		// line, so override the initial value with an appropriately
 		// calculated one.
-
 		validity.NotAfter = validity.NotBefore.Add(timeDuration)
 	}
 
@@ -284,7 +266,6 @@ func buildValidity(
 	// omit this check if the not-after time is set to the special value of
 	// UNIX timestamp zero, which signifies the maximum duration allowed by
 	// the validation policy.
-
 	if !validity.NotAfter.Equal(time.Unix(0, 0)) {
 		if d := validity.NotAfter.Sub(validity.NotBefore); d < 0 {
 			return nil, errors.New("not-before time is later than not-after time")
@@ -302,19 +283,16 @@ func buildValidity(
 // object is created and populated and its address is returned.
 func buildDN(dn *hvclient.DN, values subjectValues) (*hvclient.DN, error) {
 	// Return initial value without changes if no other values are specified.
-
 	if values.isEmpty() {
 		return dn, nil
 	}
 
 	// Create the DN object if the initial value is nil.
-
 	if dn == nil {
 		dn = &hvclient.DN{}
 	}
 
 	// Set or override any single-value fields as required.
-
 	for _, field := range []struct {
 		from string
 		to   *string
@@ -337,7 +315,6 @@ func buildDN(dn *hvclient.DN, values subjectValues) (*hvclient.DN, error) {
 	}
 
 	// Append to organizational unit field as required.
-
 	if values.organizationalUnit != "" {
 		for _, s := range strings.Split(values.organizationalUnit, ",") {
 			var trimmed = strings.TrimSpace(s)
@@ -352,7 +329,6 @@ func buildDN(dn *hvclient.DN, values subjectValues) (*hvclient.DN, error) {
 	}
 
 	// Append to extra attributes as required.
-
 	if values.extraAttributes != "" {
 		var err error
 
@@ -376,19 +352,16 @@ func buildSAN(
 	uris string,
 ) (*hvclient.SAN, error) {
 	// Return initial value without changes if no other values are specified.
-
 	if checkAllEmpty(dnsnames, emails, ips, uris) {
 		return san, nil
 	}
 
 	// Create the SAN object if the initial value is nil.
-
 	if san == nil {
 		san = &hvclient.SAN{}
 	}
 
 	// Append to the fields as required.
-
 	if dnsnames != "" {
 		for _, s := range strings.Split(dnsnames, ",") {
 			var trimmed = strings.TrimSpace(s)
@@ -448,28 +421,22 @@ func buildEKUs(
 ) ([]asn1.ObjectIdentifier, error) {
 	// Return without changing the request if no extended key usages were
 	// specified at the command line.
-
 	if field == "" {
 		return ekus, nil
 	}
 
 	// Extract the OIDs from the field.
-
-	var oids []asn1.ObjectIdentifier
-	var err error
-
-	if oids, err = stringToOIDs(field); err != nil {
+	var oids, err = stringToOIDs(field)
+	if err != nil {
 		return nil, err
 	}
 
 	// If the initial object is nil, return the new one.
-
 	if ekus == nil {
 		return oids, nil
 	}
 
 	// Otherwise, append the new one to the old one and return it.
-
 	return append(ekus, oids...), nil
 }
 
@@ -480,7 +447,6 @@ func getKeys(
 	passwordFunc func(string, bool) (string, error),
 ) (interface{}, interface{}, *x509.CertificateRequest, error) {
 	var err error
-
 	var publickey, privatekey interface{}
 	var request *x509.CertificateRequest
 

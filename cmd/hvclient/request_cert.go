@@ -17,7 +17,6 @@ package main
 
 import (
 	"context"
-	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -30,10 +29,7 @@ import (
 // it, if successful.
 func requestCert(clnt *hvclient.Client) error {
 	// Build a request from the information supplied via the command line.
-
-	var request *hvclient.Request
-	var err error
-	if request, err = buildRequest(
+	var request, err = buildRequest(
 		&requestValues{
 			template: *fTemplate,
 			validity: validityValues{
@@ -68,13 +64,13 @@ func requestCert(clnt *hvclient.Client) error {
 			csr:        *fCSR,
 			gencsr:     *fGenCSR,
 		},
-	); err != nil {
+	)
+	if err != nil {
 		return err
 	}
 
 	// If the user requested to output the certificate request JSON without
 	// actually making the request, then do so.
-
 	if *fGenerate {
 		var encoder = json.NewEncoder(os.Stdout)
 		encoder.SetIndent("", "    ")
@@ -88,11 +84,9 @@ func requestCert(clnt *hvclient.Client) error {
 
 	// If the user requested to output a PKCS#10 certificate signing request
 	// without actually making the request, then do so.
-
 	if *fCSROut {
-		var csr *x509.CertificateRequest
-
-		if csr, err = request.PKCS10(); err != nil {
+		var csr, err = request.PKCS10()
+		if err != nil {
 			return fmt.Errorf("couldn't generate PKCS#10 request: %v", err)
 		}
 
@@ -110,10 +104,7 @@ func requestCert(clnt *hvclient.Client) error {
 	}
 
 	// Otherwise, request new certificate and obtain its serial number.
-
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	var serialNumber string
@@ -123,14 +114,12 @@ func requestCert(clnt *hvclient.Client) error {
 
 	// Using the serial number of the new certificate, request the
 	// certificate itself and output it.
-
 	var info *hvclient.CertInfo
 	if info, err = clnt.CertificateRetrieve(ctx, serialNumber); err != nil {
 		return fmt.Errorf("couldn't retrieve certificate %s: %v", serialNumber, err)
 	}
 
 	// Output the PEM-encoded certificate.
-
 	fmt.Printf("%s", info.PEM)
 
 	return nil

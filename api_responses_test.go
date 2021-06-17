@@ -312,7 +312,7 @@ func TestCounter(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 
@@ -349,7 +349,7 @@ func TestCounterFailure(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 
@@ -383,7 +383,7 @@ func TestStringSlice(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 
@@ -420,7 +420,7 @@ func TestStringSliceFailure(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 
@@ -469,7 +469,7 @@ func TestCertInfo(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 
@@ -510,7 +510,7 @@ func TestCertInfoFailure(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 
@@ -546,7 +546,7 @@ func TestCertMetas(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 			response.Header.Add("Total-Count", tc.count)
@@ -595,7 +595,7 @@ func TestCertMetasFailure(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 			response.Header.Add("Total-Count", tc.count)
@@ -635,7 +635,7 @@ func TestPolicy(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 
@@ -672,7 +672,7 @@ func TestPolicyFailure(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 
@@ -746,7 +746,7 @@ func TestClaimsFromResponse(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 			response.Header.Add("Total-Count", tc.count)
@@ -792,7 +792,7 @@ func TestClaimsFromResponseFailure(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 			response.Header.Add("Total-Count", "not a count")
@@ -855,7 +855,7 @@ func TestClaimFromResponse(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 
@@ -892,7 +892,7 @@ func TestClaimFromResponseFailure(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 
@@ -932,7 +932,7 @@ func TestClaimAssertionInfoFromResponse(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 			response.Header.Add("Location", tc.location)
@@ -974,7 +974,7 @@ func TestClaimAssertionInfoFromResponseFailure(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 
@@ -1008,7 +1008,7 @@ func TestTokenFromResponse(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 
@@ -1045,7 +1045,7 @@ func TestTokenFromResponseFailure(t *testing.T) {
 
 			var recorder = httptest.NewRecorder()
 			recorder.WriteHeader(http.StatusOK)
-			recorder.Write([]byte(tc.body))
+			_, _ = recorder.Write([]byte(tc.body))
 
 			var response = recorder.Result()
 

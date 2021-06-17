@@ -526,11 +526,7 @@ func (r *Request) PKCS10() (*x509.CertificateRequest, error) {
 func (v *Validity) Equal(other *Validity) bool {
 	// Check for nil in both objects.
 	if v == nil {
-		if other == nil {
-			return true
-		}
-
-		return false
+		return other == nil
 	}
 
 	if other == nil {
@@ -571,11 +567,7 @@ func (v *Validity) UnmarshalJSON(b []byte) error {
 func (n *DN) Equal(other *DN) bool {
 	// Check for nil in both objects.
 	if n == nil {
-		if other == nil {
-			return true
-		}
-
-		return false
+		return other == nil
 	}
 
 	if other == nil {
@@ -742,11 +734,7 @@ func (o OIDAndString) AttributeTypeAndValue() pkix.AttributeTypeAndValue {
 func (s *SAN) Equal(other *SAN) bool {
 	// Check for nil in both objects.
 	if s == nil {
-		if other == nil {
-			return true
-		}
-
-		return false
+		return other == nil
 	}
 
 	if other == nil {
@@ -876,11 +864,7 @@ func (s *SAN) UnmarshalJSON(b []byte) error {
 func (d *DA) Equal(other *DA) bool {
 	// Check for nil in both objects.
 	if d == nil {
-		if other == nil {
-			return true
-		}
-
-		return false
+		return other == nil
 	}
 
 	if other == nil {
@@ -972,11 +956,7 @@ func (d *DA) UnmarshalJSON(b []byte) error {
 func (q *QualifiedStatements) Equal(other *QualifiedStatements) bool {
 	// Check for nil in both objects.
 	if q == nil {
-		if other == nil {
-			return true
-		}
-
-		return false
+		return other == nil
 	}
 
 	if other == nil {
@@ -1123,11 +1103,7 @@ func (s *Semantics) UnmarshalJSON(b []byte) error {
 func (m *MSExtension) Equal(other *MSExtension) bool {
 	// Check for nil in both objects.
 	if m == nil {
-		if other == nil {
-			return true
-		}
-
-		return false
+		return other == nil
 	}
 
 	if other == nil {

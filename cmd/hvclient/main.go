@@ -21,12 +21,9 @@ import (
 )
 
 const (
-	defaultPageSize       = 100
 	defaultConfigFile     = ".hvclient/hvclient.conf"
 	defaultTimeLayout     = "2006-01-02T15:04:05MST"
 	defaultTimeWindowDays = 30
-	fieldPairSeparator    = "&"
-	fieldSeparator        = "="
 )
 
 var timeout = time.Second * 5

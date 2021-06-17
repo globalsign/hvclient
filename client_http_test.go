@@ -68,7 +68,7 @@ func newMockServer(t *testing.T) *httptest.Server {
 
 			// Write a mock token.
 			w.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeJSON)
-			w.Write([]byte(`{"access_token":"mock_token"}`))
+			_, _ = w.Write([]byte(`{"access_token":"mock_token"}`))
 		})
 	})
 
@@ -76,7 +76,7 @@ func newMockServer(t *testing.T) *httptest.Server {
 		r.Route("/issuance", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeJSON)
-				w.Write([]byte(fmt.Sprintf(`{"value":%d}`, mockQuota)))
+				_, _ = w.Write([]byte(fmt.Sprintf(`{"value":%d}`, mockQuota)))
 			})
 		})
 	})
@@ -87,7 +87,7 @@ func newMockServer(t *testing.T) *httptest.Server {
 func writeMockError(w http.ResponseWriter, status int) {
 	w.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeProblemJSON)
 	w.WriteHeader(status)
-	w.Write([]byte(fmt.Sprintf(`{"description":"%s"}`, http.StatusText(status))))
+	_, _ = w.Write([]byte(fmt.Sprintf(`{"description":"%s"}`, http.StatusText(status))))
 }
 
 func TestClientLocalNew(t *testing.T) {

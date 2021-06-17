@@ -21,7 +21,7 @@ const (
 // ConsumeAndCloseResponseBody discards any remaining contents in an HTTP
 // response body and closes it.
 func ConsumeAndCloseResponseBody(r *http.Response) {
-	io.Copy(ioutil.Discard, r.Body)
+	_, _ = io.Copy(ioutil.Discard, r.Body)
 	r.Body.Close()
 }
 

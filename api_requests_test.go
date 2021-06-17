@@ -339,22 +339,3 @@ func TestIsLoginRequest(t *testing.T) {
 		})
 	}
 }
-
-func checkAuthorizationHeader(t *testing.T, req apiRequest, value string) {
-	t.Helper()
-
-	var httpReq, err = req.newHTTPRequest(testURL)
-	if err != nil {
-		t.Fatalf("couldn't get HTTP request: %v", err)
-	}
-
-	var expectedAuthHeader = "bearer " + value
-
-	if len(httpReq.Header["Authorization"]) != 1 {
-		t.Fatalf("got authorization header length %d, want %d", len(httpReq.Header["Authorization"]), 1)
-	}
-
-	if got := httpReq.Header["Authorization"][0]; got != expectedAuthHeader {
-		t.Errorf("got authorization header value %q, want %q", got, expectedAuthHeader)
-	}
-}

@@ -81,7 +81,7 @@ func (c *Client) tokenHasExpired() bool {
 	c.tokenMtx.RLock()
 	defer c.tokenMtx.RUnlock()
 
-	return time.Now().Sub(c.lastLogin) > tokenLifetime
+	return time.Since(c.lastLogin) > tokenLifetime
 }
 
 // tokenReset clears the stored authentication token and the last login time.

@@ -30,16 +30,16 @@ func TestStringToOID(t *testing.T) {
 		want  asn1.ObjectIdentifier
 	}{
 		{
-			"1",
-			asn1.ObjectIdentifier{1},
+			value: "1",
+			want:  asn1.ObjectIdentifier{1},
 		},
 		{
-			"1.2.3.4",
-			asn1.ObjectIdentifier{1, 2, 3, 4},
+			value: "1.2.3.4",
+			want:  asn1.ObjectIdentifier{1, 2, 3, 4},
 		},
 		{
-			"     5.6.7    ",
-			asn1.ObjectIdentifier{5, 6, 7},
+			value: "     5.6.7    ",
+			want:  asn1.ObjectIdentifier{5, 6, 7},
 		},
 	}
 

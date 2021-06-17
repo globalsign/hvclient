@@ -12,11 +12,17 @@ package hvclient
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 )
 
-// loginResponse is the body of a successful response from the /login
-// endpoint.
+// loginRequest is an HVCA POST /login request body.
+type loginRequest struct {
+	APIKey    string `json:"api_key"`
+	APISecret string `json:"api_secret"`
+}
+
+// loginResponse is an HVCA POST /login response body.
 type loginResponse struct {
 	AccessToken string `json:"access_token"`
 }
@@ -30,17 +36,34 @@ const (
 	tokenLifetime = time.Minute * 9
 )
 
+// HVCA API endpoints.
+const (
+	endpointLogin = "/login"
+)
+
 // login logs into the HVCA server and stores the authentication token.
 func (c *Client) login(ctx context.Context) error {
-	var r loginResponse
-	var _, err = c.makeRequest(ctx, c.loginRequest, &r)
+	var req = loginRequest{
+		APIKey:    c.apiKey,
+		APISecret: c.apiSecret,
+	}
+
+	var resp loginResponse
+	var _, err = c.makeRequest(
+		ctx,
+		nil,
+		endpointLogin,
+		http.MethodPost,
+		req,
+		&resp,
+	)
 	if err != nil {
 		c.tokenReset()
 
 		return fmt.Errorf("failed to login: %w", err)
 	}
 
-	c.tokenSet(r.AccessToken)
+	c.tokenSet(resp.AccessToken)
 
 	return nil
 }

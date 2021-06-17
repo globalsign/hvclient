@@ -114,17 +114,11 @@ type claimReassertRequest struct {
 	id string
 }
 
-// loginRequest represents an HVCA POST /login API call.
-type loginRequest struct {
-	body []byte
-}
-
+// HVCA API endpoints.
 const (
-	// HVCA API endpoints.
 	endpointCertificates = "/certificates"
 	endpointClaims       = "/claims/domains"
 	endpointCounters     = "/counters/certificates"
-	endpointLogin        = "/login"
 	endpointQuota        = "/quotas/issuance"
 	endpointStats        = "/stats"
 	endpointTrustChain   = "/trustchain"
@@ -482,20 +476,4 @@ func newClaimReassertRequest(id string) *claimReassertRequest {
 	return &claimReassertRequest{
 		id: id,
 	}
-}
-
-// newLoginRequest creates a new HVCA POST /login API call.
-func newLoginRequest(key, secret string) *loginRequest {
-	return &loginRequest{
-		body: []byte(fmt.Sprintf(`{"api_key":"%s","api_secret":"%s"}`, key, secret)),
-	}
-}
-
-// isLoginRequest checks if the provided request is a login request.
-func isLoginRequest(req apiRequest) bool {
-	if _, ok := req.(*loginRequest); !ok {
-		return false
-	}
-
-	return true
 }

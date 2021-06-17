@@ -10,13 +10,16 @@ Proprietary and confidential.
 package hvclient
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -39,14 +42,15 @@ import (
 //
 // It is safe to make concurrent API calls from a single client object.
 type Client struct {
-	config       *Config
-	url          *url.URL
-	loginRequest *loginRequest
-	httpClient   *http.Client
-	token        string
-	lastLogin    time.Time
-	tokenMtx     sync.RWMutex
-	loginMtx     sync.Mutex
+	config     *Config
+	url        *url.URL
+	apiKey     string
+	apiSecret  string
+	httpClient *http.Client
+	token      string
+	lastLogin  time.Time
+	tokenMtx   sync.RWMutex
+	loginMtx   sync.Mutex
 }
 
 const (
@@ -64,6 +68,9 @@ const (
 func (c *Client) makeRequest(
 	ctx context.Context,
 	req apiRequest,
+	path string,
+	method string,
+	in interface{},
 	out interface{},
 ) (*http.Response, error) {
 	var retriesRemaining = numberOfRetries
@@ -71,12 +78,32 @@ func (c *Client) makeRequest(
 
 	// Loop so we can retry requests if necessary.
 	for {
-		var request, err = req.newHTTPRequest(c.url.String())
-		if err != nil {
-			return nil, err
-		}
+		var request *http.Request
+		var err error
 
-		request = request.WithContext(ctx)
+		if path == "" {
+			request, err = req.newHTTPRequest(c.url.String())
+			if err != nil {
+				return nil, fmt.Errorf("failed to create new HTTP request: %w", err)
+			}
+
+			request = request.WithContext(ctx)
+		} else {
+			var body io.Reader
+			if in != nil {
+				var data, err = json.Marshal(in)
+				if err != nil {
+					return nil, fmt.Errorf("failed to marshal request body: %w", err)
+				}
+
+				body = bytes.NewReader(data)
+			}
+
+			request, err = http.NewRequestWithContext(ctx, method, c.url.String()+path, body)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create new HTTP request: %w", err)
+			}
+		}
 
 		// Add any extra headers to the request first, so they can't override
 		// any headers we add ourselves.
@@ -85,7 +112,7 @@ func (c *Client) makeRequest(
 		}
 
 		// Perform specific processing for non-login requests.
-		if !isLoginRequest(req) {
+		if !strings.HasPrefix(path, endpointLogin) {
 			// Since this is not a login request, preemptively login again if
 			// the stored authentication token is believed to be expired.
 			err = c.loginIfTokenHasExpired(ctx)
@@ -105,7 +132,7 @@ func (c *Client) makeRequest(
 
 		// Execute the request.
 		if response, err = c.httpClient.Do(request); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to execute HTTP request: %w", err)
 		}
 
 		// HVCA doesn't return any 3XX HTTP status codes, so treat everything outside
@@ -122,7 +149,7 @@ func (c *Client) makeRequest(
 				// If we get an unauthorized status from a login request
 				// then we just have bad login credentials. This is a
 				// fatal error, so just stop and return it.
-				if isLoginRequest(req) {
+				if strings.HasPrefix(path, endpointLogin) {
 					return nil, apiErr
 				}
 
@@ -244,10 +271,11 @@ func NewClient(ctx context.Context, conf *Config) (*Client, error) {
 
 	// Build a new client.
 	var newClient = Client{
-		config:       conf,
-		url:          conf.url,
-		httpClient:   &http.Client{Transport: tnspt},
-		loginRequest: newLoginRequest(conf.APIKey, conf.APISecret),
+		config:     conf,
+		url:        conf.url,
+		apiKey:     conf.APIKey,
+		apiSecret:  conf.APISecret,
+		httpClient: &http.Client{Transport: tnspt},
 	}
 
 	// Perform the initial login and return the new client.

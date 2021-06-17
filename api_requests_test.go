@@ -223,15 +223,6 @@ var requestTestCases = []struct {
 		"",
 		false,
 	},
-	{
-		func() apiRequest {
-			return newLoginRequest("the key", "the secret")
-		},
-		http.MethodPost,
-		"/login",
-		`{"api_key":"the key","api_secret":"the secret"}`,
-		true,
-	},
 }
 
 func TestRequestNewHTTPRequest(t *testing.T) {
@@ -302,39 +293,6 @@ func TestRequestNewHTTPRequestBadURL(t *testing.T) {
 
 			if _, err := tc.constructor().newHTTPRequest("$" + testURL); err == nil {
 				t.Errorf("unexpectedly got HTTP request")
-			}
-		})
-	}
-}
-
-func TestIsLoginRequest(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []struct {
-		name string
-		req  apiRequest
-		want bool
-	}{
-		{
-			"True",
-			newLoginRequest("a key", "a secret"),
-			true,
-		},
-		{
-			"False",
-			newCertRetrieveRequest("some serial numer"),
-			false,
-		},
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			if got := isLoginRequest(tc.req); got != tc.want {
-				t.Errorf("got %t, want %t", got, tc.want)
 			}
 		})
 	}

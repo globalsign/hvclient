@@ -49,6 +49,7 @@ func (c *Client) CertificateRequest(ctx context.Context, hvcareq *Request) (stri
 	response, err = c.makeRequest(
 		ctx,
 		newCertRequest(body),
+		"", "", nil,
 		nil,
 	)
 	if err != nil {
@@ -64,6 +65,7 @@ func (c *Client) CertificateRetrieve(ctx context.Context, serialNumber string) (
 	var response, err = c.makeRequest(
 		ctx,
 		newCertRetrieveRequest(serialNumber),
+		"", "", nil,
 		nil,
 	)
 	if err != nil {
@@ -79,6 +81,7 @@ func (c *Client) CertificateRevoke(ctx context.Context, serialNumber string) err
 	var response, err = c.makeRequest(
 		ctx,
 		newCertRevokeRequest(serialNumber),
+		"", "", nil,
 		nil,
 	)
 	if err != nil {
@@ -95,6 +98,7 @@ func (c *Client) TrustChain(ctx context.Context) ([]string, error) {
 	var response, err = c.makeRequest(
 		ctx,
 		newTrustChainRequest(),
+		"", "", nil,
 		nil,
 	)
 	if err != nil {
@@ -110,6 +114,7 @@ func (c *Client) Policy(ctx context.Context) (*Policy, error) {
 	var response, err = c.makeRequest(
 		ctx,
 		newPolicyRequest(),
+		"", "", nil,
 		nil,
 	)
 	if err != nil {
@@ -139,7 +144,7 @@ func (c *Client) QuotaIssuance(ctx context.Context) (int64, error) {
 }
 
 func (c *Client) counter(ctx context.Context, r apiRequest) (int64, error) {
-	var response, err = c.makeRequest(ctx, r, nil)
+	var response, err = c.makeRequest(ctx, r, "", "", nil, nil)
 	if err != nil {
 		return 0, err
 	}
@@ -197,7 +202,7 @@ func (c *Client) StatsRevoked(
 }
 
 func (c *Client) certsMeta(ctx context.Context, r apiRequest) ([]CertMeta, int64, error) {
-	var response, err = c.makeRequest(ctx, r, nil)
+	var response, err = c.makeRequest(ctx, r, "", "", nil, nil)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -218,6 +223,7 @@ func (c *Client) ClaimsDomains(ctx context.Context, page, perPage int, status Cl
 	var response, err = c.makeRequest(
 		ctx,
 		newClaimsDomainsRequest(page, perPage, status),
+		"", "", nil,
 		nil,
 	)
 	if err != nil {
@@ -234,6 +240,7 @@ func (c *Client) ClaimSubmit(ctx context.Context, domain string) (*ClaimAssertio
 	var response, err = c.makeRequest(
 		ctx,
 		newClaimSubmitRequest(domain),
+		"", "", nil,
 		nil,
 	)
 	if err != nil {
@@ -249,6 +256,7 @@ func (c *Client) ClaimRetrieve(ctx context.Context, id string) (*Claim, error) {
 	var response, err = c.makeRequest(
 		ctx,
 		newClaimRetrieveRequest(id),
+		"", "", nil,
 		nil,
 	)
 	if err != nil {
@@ -264,6 +272,7 @@ func (c *Client) ClaimDelete(ctx context.Context, id string) error {
 	var response, err = c.makeRequest(
 		ctx,
 		newClaimDeleteRequest(id),
+		"", "", nil,
 		nil,
 	)
 	if err != nil {
@@ -282,6 +291,7 @@ func (c *Client) ClaimDNS(ctx context.Context, id string) (bool, error) {
 	var response, err = c.makeRequest(
 		ctx,
 		newClaimDNSRequest(id),
+		"", "", nil,
 		nil,
 	)
 	if err != nil {
@@ -305,6 +315,7 @@ func (c *Client) ClaimReassert(ctx context.Context, id string) (*ClaimAssertionI
 	var response, err = c.makeRequest(
 		ctx,
 		newClaimReassertRequest(id),
+		"", "", nil,
 		nil,
 	)
 	if err != nil {

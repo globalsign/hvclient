@@ -29,15 +29,6 @@ var requestTestCases = []struct {
 }{
 	{
 		func() apiRequest {
-			return newCertRevokeRequest("1234")
-		},
-		http.MethodDelete,
-		"/certificates/1234",
-		"",
-		false,
-	},
-	{
-		func() apiRequest {
 			return newClaimDeleteRequest("1234")
 		},
 		http.MethodDelete,

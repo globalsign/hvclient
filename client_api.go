@@ -83,18 +83,15 @@ func (c *Client) CertificateRetrieve(ctx context.Context, serialNumber string) (
 
 // CertificateRevoke revokes the certificate with the specified serial number.
 func (c *Client) CertificateRevoke(ctx context.Context, serialNumber string) error {
-	var response, err = c.makeRequest(
+	var _, err = c.makeRequest(
 		ctx,
-		newCertRevokeRequest(serialNumber),
-		"", "", nil,
+		nil,
+		endpointCertificates+"/"+serialNumber,
+		http.MethodDelete,
+		nil,
 		nil,
 	)
-	if err != nil {
-		return err
-	}
-	defer httputils.ConsumeAndCloseResponseBody(response)
-
-	return nil
+	return err
 }
 
 // TrustChain returns the chain of trust for the

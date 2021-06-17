@@ -10,10 +10,9 @@ Proprietary and confidential.
 package hvclient_test
 
 import (
-	"crypto/x509"
 	"encoding/asn1"
 	"encoding/json"
-	"log"
+	"fmt"
 	"net"
 	"net/url"
 	"testing"
@@ -358,10 +357,10 @@ func TestRequestMarshalJSON(t *testing.T) {
 		var tc = tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			var got []byte
-			var err error
+			t.Parallel()
 
-			if got, err = json.MarshalIndent(tc.req, "", "    "); err != nil {
+			var got, err = json.MarshalIndent(tc.req, "", "    ")
+			if err != nil {
 				t.Fatalf("couldn't marshal JSON: %v", err)
 			}
 
@@ -397,6 +396,8 @@ func TestRequestMarshalJSONFailure(t *testing.T) {
 		var tc = tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			if _, err := json.Marshal(tc.req); err == nil {
 				t.Fatalf("unexpectedly marshalled JSON: %v", err)
 			}
@@ -433,10 +434,11 @@ func TestRequestUnmarshalJSON(t *testing.T) {
 		var tc = tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			var got *hvclient.Request
-			var err error
+			t.Parallel()
 
-			if err = json.Unmarshal([]byte(tc.json), &got); err != nil {
+			var got *hvclient.Request
+			var err = json.Unmarshal([]byte(tc.json), &got)
+			if err != nil {
 				t.Fatalf("couldn't unmarshal JSON: %v", err)
 			}
 
@@ -468,7 +470,6 @@ func TestRequestUnmarshalJSONFailure(t *testing.T) {
 			t.Parallel()
 
 			var r *hvclient.Request
-
 			if err := json.Unmarshal([]byte(tc), &r); err == nil {
 				t.Fatalf("unexpectedly unmarshalled JSON")
 			}
@@ -1510,10 +1511,8 @@ func TestRequestPKCS10(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var got *x509.CertificateRequest
-			var err error
-
-			if got, err = tc.request.PKCS10(); err != nil {
+			var got, err = tc.request.PKCS10()
+			if err != nil {
 				t.Fatalf("couldn't build PKCS10 request: %v", err)
 			}
 
@@ -1556,11 +1555,9 @@ func TestRequestPKCS10Failure(t *testing.T) {
 }
 
 func mustParseURI(uri string) *url.URL {
-	var parsed *url.URL
-	var err error
-
-	if parsed, err = url.Parse(uri); err != nil {
-		log.Fatalf("couldn't parse URI: %v", err)
+	var parsed, err = url.Parse(uri)
+	if err != nil {
+		panic(fmt.Sprintf("couldn't parse URI: %v", err))
 	}
 
 	return parsed

@@ -10,8 +10,8 @@ Proprietary and confidential.
 package hvclient_test
 
 import (
+	"bytes"
 	"encoding/json"
-	"reflect"
 	"testing"
 	"time"
 
@@ -52,14 +52,12 @@ func TestClaimLogEntryMarshalJSON(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var err error
-			var got []byte
-
-			if got, err = json.Marshal(tc.entry); err != nil {
+			var got, err = json.Marshal(tc.entry)
+			if err != nil {
 				t.Fatalf("couldn't marshal JSON: %v", err)
 			}
 
-			if !reflect.DeepEqual(got, tc.want) {
+			if !bytes.Equal(got, tc.want) {
 				t.Errorf("got %s, want %s", string(got), string(tc.want))
 			}
 		})
@@ -126,10 +124,9 @@ func TestClaimLogEntryUnmarshalJSON(t *testing.T) {
 		t.Run(tc.json, func(t *testing.T) {
 			t.Parallel()
 
-			var err error
 			var got *hvclient.ClaimLogEntry
-
-			if err = json.Unmarshal([]byte(tc.json), &got); err != nil {
+			var err = json.Unmarshal([]byte(tc.json), &got)
+			if err != nil {
 				t.Fatalf("couldn't unmarshal JSON: %v", err)
 			}
 
@@ -154,7 +151,6 @@ func TestClaimLogEntryUnmarshalJSONFailure(t *testing.T) {
 			t.Parallel()
 
 			var got *hvclient.ClaimLogEntry
-
 			if err := json.Unmarshal([]byte(tc), &got); err == nil {
 				t.Errorf("unexpectedly unmarshalled JSON")
 			}
@@ -260,14 +256,12 @@ func TestClaimMarshalJSON(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var got []byte
-			var err error
-
-			if got, err = json.MarshalIndent(tc.claim, "", "    "); err != nil {
+			var got, err = json.MarshalIndent(tc.claim, "", "    ")
+			if err != nil {
 				t.Fatalf("couldn't marshal JSON: %v", err)
 			}
 
-			if !reflect.DeepEqual(got, tc.want) {
+			if !bytes.Equal(got, tc.want) {
 				t.Errorf("got %s, want %s", string(got), string(tc.want))
 			}
 		})
@@ -361,10 +355,9 @@ func TestClaimUnmarshalJSON(t *testing.T) {
 		t.Run(tc.json, func(t *testing.T) {
 			t.Parallel()
 
-			var err error
 			var got *hvclient.Claim
-
-			if err = json.Unmarshal([]byte(tc.json), &got); err != nil {
+			var err = json.Unmarshal([]byte(tc.json), &got)
+			if err != nil {
 				t.Fatalf("couldn't unmarshal JSON: %v", err)
 			}
 
@@ -406,7 +399,6 @@ func TestClaimUnmarshalJSONFailure(t *testing.T) {
 			t.Parallel()
 
 			var got *hvclient.Claim
-
 			if err := json.Unmarshal([]byte(tc), &got); err == nil {
 				t.Errorf("unexpectedly unmarshalled JSON")
 			}
@@ -455,14 +447,12 @@ func TestClaimAssertionInfoMarshalJSON(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var err error
-			var got []byte
-
-			if got, err = json.Marshal(tc.entry); err != nil {
+			var got, err = json.Marshal(tc.entry)
+			if err != nil {
 				t.Fatalf("couldn't marshal JSON: %v", err)
 			}
 
-			if !reflect.DeepEqual(got, tc.want) {
+			if !bytes.Equal(got, tc.want) {
 				t.Errorf("got %s, want %s", string(got), string(tc.want))
 			}
 		})
@@ -494,10 +484,9 @@ func TestClaimAssertionInfoUnmarshalJSON(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var err error
 			var got *hvclient.ClaimAssertionInfo
-
-			if err = json.Unmarshal(tc.json, &got); err != nil {
+			var err = json.Unmarshal(tc.json, &got)
+			if err != nil {
 				t.Fatalf("couldn't unmarshal JSON: %v", err)
 			}
 
@@ -522,7 +511,6 @@ func TestClaimAssertionInfoUnmarshalJSONFailure(t *testing.T) {
 			t.Parallel()
 
 			var got *hvclient.ClaimAssertionInfo
-
 			if err := json.Unmarshal([]byte(tc), &got); err == nil {
 				t.Errorf("unexpectedly unmarshalled JSON")
 			}

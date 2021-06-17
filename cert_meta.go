@@ -48,8 +48,7 @@ func (c CertMeta) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON parses a JSON-encoded certificate metadata object and stores
 // the result in the object.
 func (c *CertMeta) UnmarshalJSON(b []byte) error {
-	var data *jsonCertMeta
-
+	var data jsonCertMeta
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}

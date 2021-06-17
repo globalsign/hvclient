@@ -83,15 +83,13 @@ func (s CertStatus) MarshalJSON() ([]byte, error) {
 // result in the object.
 func (s *CertStatus) UnmarshalJSON(b []byte) error {
 	var data string
-	var err error
-
-	if err = json.Unmarshal(b, &data); err != nil {
+	var err = json.Unmarshal(b, &data)
+	if err != nil {
 		return err
 	}
 
-	var ok bool
-	var result CertStatus
-	if result, ok = certStatusCodes[strings.ToUpper(data)]; !ok {
+	var result, ok = certStatusCodes[strings.ToUpper(data)]
+	if !ok {
 		return fmt.Errorf("invalid certificate status value: %s", data)
 	}
 
@@ -120,22 +118,20 @@ func (s CertInfo) MarshalJSON() ([]byte, error) {
 // result in the object.
 func (s *CertInfo) UnmarshalJSON(b []byte) error {
 	var data *jsonCertInfo
-	var err error
-
-	if err = json.Unmarshal(b, &data); err != nil {
+	var err = json.Unmarshal(b, &data)
+	if err != nil {
 		return err
 	}
 
-	var block *pem.Block
-	var rest []byte
-	block, _ = pem.Decode([]byte(data.PEM))
+	var block, rest = pem.Decode([]byte(data.PEM))
 
 	if block == nil || len(block.Bytes) == 0 || len(rest) != 0 {
 		return errors.New("bad PEM data")
 	}
 
 	var cert *x509.Certificate
-	if cert, err = x509.ParseCertificate(block.Bytes); err != nil {
+	cert, err = x509.ParseCertificate(block.Bytes)
+	if err != nil {
 		return err
 	}
 

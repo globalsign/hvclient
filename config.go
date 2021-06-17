@@ -24,7 +24,6 @@ import (
 
 // Config is a configuration object for an HVCA client.
 type Config struct {
-
 	// URL is the URL of the HVCA service, including any version number.
 	URL string
 
@@ -142,6 +141,11 @@ func (c *Config) Validate() error {
 //         "url": "https://emea.api.hvca.globalsign.com:8443/v2",
 //         "api_key": "value_of_api_key",
 //         "api_secret": "value_of_api_secret",
+//         "extra_headers": [
+//             "Some-Header-Name": "some value",
+//             "Other-Header-Name": "other value"
+//         ],
+//         "insecure_skip_verify": false,
 //         "cert_file": "/path/to/mTLS/certificate.pem",
 //         "key_file": "/path/to/mTLS/private_key.pem",
 //         "key_passphrase": "passphrase",
@@ -193,9 +197,8 @@ func NewConfigFromFile(filename string) (*Config, error) {
 // in the object.
 func (c *Config) UnmarshalJSON(b []byte) error {
 	var jsonConfig *config.Config
-	var err error
-
-	if err = json.Unmarshal(b, &jsonConfig); err != nil {
+	var err = json.Unmarshal(b, &jsonConfig)
+	if err != nil {
 		return err
 	}
 

@@ -533,10 +533,8 @@ func TestPolicyMarshalJSON(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var got []byte
-			var err error
-
-			if got, err = json.MarshalIndent(tc.value, "", "  "); err != nil {
+			var got, err = json.MarshalIndent(tc.value, "", "  ")
+			if err != nil {
 				t.Fatalf("couldn't marshal JSON: %v", err)
 			}
 
@@ -550,13 +548,11 @@ func TestPolicyMarshalJSON(t *testing.T) {
 					line++
 
 					var gotline = gotscanner.Text()
-
 					if !wantscanner.Scan() {
 						t.Fatalf("got line %d %q, want no line %d", line, gotline, line)
 					}
 
 					var wantline = wantscanner.Text()
-
 					if gotline != wantline {
 						t.Fatalf("line %d, got %q, want %q", line, gotline, wantline)
 					}
@@ -701,9 +697,8 @@ func TestPolicyUnmarshalJSON(t *testing.T) {
 			t.Parallel()
 
 			var got hvclient.Policy
-			var err error
-
-			if err = json.Unmarshal(tc.value, &got); err != nil {
+			var err = json.Unmarshal(tc.value, &got)
+			if err != nil {
 				t.Fatalf("couldn't unmarshal JSON: %v", err)
 			}
 
@@ -790,9 +785,8 @@ func TestPolicyUnmarshalJSONFailure(t *testing.T) {
 			t.Parallel()
 
 			var got hvclient.Policy
-			var err error
-
-			if err = json.Unmarshal(tc.value, &got); err == nil {
+			var err = json.Unmarshal(tc.value, &got)
+			if err == nil {
 				t.Fatalf("unexpectedly unmarshalled JSON: %v", got)
 			}
 		})

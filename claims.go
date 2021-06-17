@@ -142,15 +142,13 @@ func (s ClaimStatus) MarshalJSON() ([]byte, error) {
 // result in the object.
 func (s *ClaimStatus) UnmarshalJSON(b []byte) error {
 	var data string
-	var err error
-
-	if err = json.Unmarshal(b, &data); err != nil {
+	var err = json.Unmarshal(b, &data)
+	if err != nil {
 		return err
 	}
 
-	var ok bool
-	var result ClaimStatus
-	if result, ok = claimStatusCodes[strings.ToUpper(data)]; !ok {
+	var result, ok = claimStatusCodes[strings.ToUpper(data)]
+	if !ok {
 		return fmt.Errorf("invalid claim status value: %s", data)
 	}
 
@@ -187,15 +185,13 @@ func (s ClaimLogEntryStatus) MarshalJSON() ([]byte, error) {
 // status value and stores the result in the object.
 func (s *ClaimLogEntryStatus) UnmarshalJSON(b []byte) error {
 	var data string
-	var err error
-
-	if err = json.Unmarshal(b, &data); err != nil {
+	var err = json.Unmarshal(b, &data)
+	if err != nil {
 		return err
 	}
 
-	var ok bool
-	var result ClaimLogEntryStatus
-	if result, ok = claimLogEntryStatusCodes[strings.ToUpper(data)]; !ok {
+	var result, ok = claimLogEntryStatusCodes[strings.ToUpper(data)]
+	if !ok {
 		return fmt.Errorf("invalid claim log entry status value: %s", data)
 	}
 
@@ -241,8 +237,7 @@ func (c Claim) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON parses a JSON-encoded domain claim and stores the result in
 // the object.
 func (c *Claim) UnmarshalJSON(b []byte) error {
-	var data *jsonClaim
-
+	var data jsonClaim
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
@@ -281,8 +276,7 @@ func (l ClaimLogEntry) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON parses a JSON-encoded domain claim verification log entry
 // and stores the result in the object.
 func (l *ClaimLogEntry) UnmarshalJSON(b []byte) error {
-	var data *jsonClaimLogEntry
-
+	var data jsonClaimLogEntry
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
@@ -316,8 +310,7 @@ func (c ClaimAssertionInfo) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON parses a JSON-encoded domain claim assertion info object
 // and stores the result in the object.
 func (c *ClaimAssertionInfo) UnmarshalJSON(b []byte) error {
-	var data *jsonClaimAssertionInfo
-
+	var data jsonClaimAssertionInfo
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}

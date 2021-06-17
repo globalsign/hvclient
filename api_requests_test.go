@@ -347,7 +347,6 @@ func checkAuthorizationHeader(t *testing.T, req apiRequest, value string) {
 	if err != nil {
 		t.Fatalf("couldn't get HTTP request: %v", err)
 	}
-	defer httpReq.Body.Close()
 
 	var expectedAuthHeader = "bearer " + value
 

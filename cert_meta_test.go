@@ -10,8 +10,8 @@ Proprietary and confidential.
 package hvclient_test
 
 import (
+	"bytes"
 	"encoding/json"
-	"reflect"
 	"testing"
 	"time"
 
@@ -43,14 +43,12 @@ func TestCertMetaMarshalJSON(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var err error
-			var got []byte
-
-			if got, err = json.Marshal(tc.entry); err != nil {
+			var got, err = json.Marshal(tc.entry)
+			if err != nil {
 				t.Fatalf("couldn't marshal JSON: %v", err)
 			}
 
-			if !reflect.DeepEqual(got, tc.want) {
+			if !bytes.Equal(got, tc.want) {
 				t.Errorf("got %s, want %s", string(got), string(tc.want))
 			}
 		})
@@ -82,10 +80,9 @@ func TestCertMetaUnmarshalJSON(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var err error
 			var got *hvclient.CertMeta
-
-			if err = json.Unmarshal(tc.json, &got); err != nil {
+			var err = json.Unmarshal(tc.json, &got)
+			if err != nil {
 				t.Fatalf("couldn't unmarshal JSON: %v", err)
 			}
 
@@ -110,7 +107,6 @@ func TestCertMetaUnmarshalJSONFailure(t *testing.T) {
 			t.Parallel()
 
 			var got *hvclient.CertMeta
-
 			if err := json.Unmarshal([]byte(tc), &got); err == nil {
 				t.Errorf("unexpectedly unmarshalled JSON")
 			}

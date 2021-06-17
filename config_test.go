@@ -66,10 +66,8 @@ func TestConfigNewFromFile(t *testing.T) {
 		t.Run(tc.filename, func(t *testing.T) {
 			t.Parallel()
 
-			var conf *Config
-			var err error
-
-			if conf, err = NewConfigFromFile(tc.filename); err != nil {
+			var conf, err = NewConfigFromFile(tc.filename)
+			if err != nil {
 				t.Fatalf("couldn't get config file: %v", err)
 			}
 

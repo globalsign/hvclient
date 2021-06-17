@@ -80,10 +80,8 @@ func TestHeader(t *testing.T) {
 				response.Header.Add(tc.name, value)
 			}
 
-			var got string
-			var err error
-
-			if got, err = headerFromResponse(response, tc.name); err != nil {
+			var got, err = headerFromResponse(response, tc.name)
+			if err != nil {
 				t.Fatalf("couldn't get header value: %v", err)
 			}
 
@@ -158,10 +156,8 @@ func TestBasePathHeader(t *testing.T) {
 				response.Header.Add(tc.name, value)
 			}
 
-			var got string
-			var err error
-
-			if got, err = basePathHeaderFromResponse(response, tc.name); err != nil {
+			var got, err = basePathHeaderFromResponse(response, tc.name)
+			if err != nil {
 				t.Fatalf("couldn't get header value: %v", err)
 			}
 
@@ -237,10 +233,8 @@ func TestIntegerHeader(t *testing.T) {
 				response.Header.Add(tc.name, value)
 			}
 
-			var got int64
-			var err error
-
-			if got, err = intHeaderFromResponse(response, tc.name); err != nil {
+			var got, err = intHeaderFromResponse(response, tc.name)
+			if err != nil {
 				t.Fatalf("couldn't get header value: %v", err)
 			}
 
@@ -322,10 +316,8 @@ func TestCounter(t *testing.T) {
 
 			var response = recorder.Result()
 
-			var got int64
-			var err error
-
-			if got, err = counterFromResponse(response); err != nil {
+			var got, err = counterFromResponse(response)
+			if err != nil {
 				t.Fatalf("couldn't get cert info: %v", err)
 			}
 
@@ -395,10 +387,8 @@ func TestStringSlice(t *testing.T) {
 
 			var response = recorder.Result()
 
-			var got []string
-			var err error
-
-			if got, err = stringSliceFromResponse(response); err != nil {
+			var got, err = stringSliceFromResponse(response)
+			if err != nil {
 				t.Fatalf("couldn't get string slice: %v", err)
 			}
 
@@ -483,10 +473,8 @@ func TestCertInfo(t *testing.T) {
 
 			var response = recorder.Result()
 
-			var got *CertInfo
-			var err error
-
-			if got, err = certInfoFromResponse(response); err != nil {
+			var got, err = certInfoFromResponse(response)
+			if err != nil {
 				t.Fatalf("couldn't get cert info: %v", err)
 			}
 
@@ -563,11 +551,8 @@ func TestCertMetas(t *testing.T) {
 			var response = recorder.Result()
 			response.Header.Add("Total-Count", tc.count)
 
-			var got []CertMeta
-			var count int64
-			var err error
-
-			if got, count, err = certMetasFromResponse(response); err != nil {
+			var got, count, err = certMetasFromResponse(response)
+			if err != nil {
 				t.Fatalf("couldn't get cert info: %v", err)
 			}
 
@@ -654,10 +639,8 @@ func TestPolicy(t *testing.T) {
 
 			var response = recorder.Result()
 
-			var got *Policy
-			var err error
-
-			if got, err = policyFromResponse(response); err != nil {
+			var got, err = policyFromResponse(response)
+			if err != nil {
 				t.Fatalf("couldn't get policy: %v", err)
 			}
 
@@ -768,11 +751,8 @@ func TestClaimsFromResponse(t *testing.T) {
 			var response = recorder.Result()
 			response.Header.Add("Total-Count", tc.count)
 
-			var got []Claim
-			var count int64
-			var err error
-
-			if got, count, err = claimsFromResponse(response); err != nil {
+			var got, count, err = claimsFromResponse(response)
+			if err != nil {
 				t.Fatalf("couldn't get claims: %v", err)
 			}
 
@@ -879,10 +859,8 @@ func TestClaimFromResponse(t *testing.T) {
 
 			var response = recorder.Result()
 
-			var got *Claim
-			var err error
-
-			if got, err = claimFromResponse(response); err != nil {
+			var got, err = claimFromResponse(response)
+			if err != nil {
 				t.Fatalf("couldn't get claim: %v", err)
 			}
 
@@ -959,10 +937,8 @@ func TestClaimAssertionInfoFromResponse(t *testing.T) {
 			var response = recorder.Result()
 			response.Header.Add("Location", tc.location)
 
-			var got *ClaimAssertionInfo
-			var err error
-
-			if got, err = claimAssertionInfoFromResponse(response); err != nil {
+			var got, err = claimAssertionInfoFromResponse(response)
+			if err != nil {
 				t.Fatalf("couldn't get claim assertion info: %v", err)
 			}
 
@@ -1036,10 +1012,8 @@ func TestTokenFromResponse(t *testing.T) {
 
 			var response = recorder.Result()
 
-			var got string
-			var err error
-
-			if got, err = tokenFromResponse(response); err != nil {
+			var got, err = tokenFromResponse(response)
+			if err != nil {
 				t.Fatalf("couldn't get token: %v", err)
 			}
 

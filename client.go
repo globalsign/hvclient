@@ -44,8 +44,6 @@ import (
 type Client struct {
 	config     *Config
 	url        *url.URL
-	apiKey     string
-	apiSecret  string
 	httpClient *http.Client
 	token      string
 	lastLogin  time.Time
@@ -63,8 +61,8 @@ const (
 )
 
 // makeRequest sends an API request to the HVCA server. If out is non-nil,
-// the HTTP response body will be unmarshalled into it. Otherwise, the caller
-// is responsible for closing the response body on success.
+// the HTTP response body will be unmarshalled into it. In all code paths,
+// the response body will be fully consumed and closed before returning.
 func (c *Client) makeRequest(
 	ctx context.Context,
 	path string,
@@ -92,6 +90,13 @@ func (c *Client) makeRequest(
 			return nil, fmt.Errorf("failed to create new HTTP request: %w", err)
 		}
 
+		// Add a content type header when we have a request body. Note that
+		// HVCA specifically requires a UTF-8 charset parameter with the
+		// media type.
+		if in != nil {
+			request.Header.Set(httputils.ContentTypeHeader, httputils.ContentTypeJSONUTF8)
+		}
+
 		// Add any extra headers to the request first, so they can't override
 		// any headers we add ourselves.
 		for key, value := range c.config.ExtraHeaders {
@@ -109,12 +114,6 @@ func (c *Client) makeRequest(
 
 			// Add the authentication token to all requests except login requests.
 			request.Header.Set(httputils.AuthorizationHeader, "Bearer "+c.tokenRead())
-		}
-
-		// Add a content type header for POST requests. Note that HVCA
-		// specifically requires a UTF-8 charset parameter with the media type.
-		if request.Method == http.MethodPost {
-			request.Header.Set(httputils.ContentTypeHeader, httputils.ContentTypeJSONUTF8)
 		}
 
 		// Execute the request.
@@ -179,7 +178,7 @@ func (c *Client) makeRequest(
 		break
 	}
 
-	// Return early if we're not expected a response body.
+	// Return early if we're not expecting a response body.
 	if out == nil {
 		return response, nil
 	}
@@ -259,8 +258,6 @@ func NewClient(ctx context.Context, conf *Config) (*Client, error) {
 	var newClient = Client{
 		config:     conf,
 		url:        conf.url,
-		apiKey:     conf.APIKey,
-		apiSecret:  conf.APISecret,
 		httpClient: &http.Client{Transport: tnspt},
 	}
 

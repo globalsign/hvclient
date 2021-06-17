@@ -44,8 +44,8 @@ const (
 // login logs into the HVCA server and stores the authentication token.
 func (c *Client) login(ctx context.Context) error {
 	var req = loginRequest{
-		APIKey:    c.apiKey,
-		APISecret: c.apiSecret,
+		APIKey:    c.config.APIKey,
+		APISecret: c.config.APISecret,
 	}
 
 	var resp loginResponse

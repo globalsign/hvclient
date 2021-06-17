@@ -193,6 +193,10 @@ func (c *Client) makeRequest(
 		break
 	}
 
+	if path != "" {
+		defer httputils.ConsumeAndCloseResponseBody(response)
+	}
+
 	if out == nil {
 		return response, nil
 	}

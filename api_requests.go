@@ -28,11 +28,6 @@ type apiRequest interface {
 	newHTTPRequest(url string) (*http.Request, error)
 }
 
-// certRequest represents an HVCA POST /certificates API call.
-type certRequest struct {
-	body []byte
-}
-
 // certRetrieveRequest represents an HVCA GET /certificates/{certificate} API call.
 type certRetrieveRequest struct {
 	serialNumber string
@@ -112,26 +107,6 @@ type claimDNSRequest struct {
 // claimReassertRequest represents an HVCA POST /claims/domains/{domain}/reassert API call.
 type claimReassertRequest struct {
 	id string
-}
-
-// HVCA API endpoints.
-const (
-	endpointCertificates = "/certificates"
-	endpointClaims       = "/claims/domains"
-	endpointCounters     = "/counters/certificates"
-	endpointQuota        = "/quotas/issuance"
-	endpointStats        = "/stats"
-	endpointTrustChain   = "/trustchain"
-	endpointPolicy       = "/validationpolicy"
-)
-
-// newHTTPRequest creates an HTTP request for an HVCA POST /certificates API call.
-func (r *certRequest) newHTTPRequest(url string) (*http.Request, error) {
-	return newHTTPRequest(
-		http.MethodPost,
-		url+endpointCertificates,
-		r,
-	)
 }
 
 // newHTTPRequest creates an HTTP request for an HVCA GET /certificates/{certificate} API call.
@@ -358,13 +333,6 @@ func newHTTPRequest(method, url string, b apiRequest) (*http.Request, error) {
 	}
 
 	return request, nil
-}
-
-// newCertRequest creates a new HVCA POST /certificates API call.
-func newCertRequest(body []byte) *certRequest {
-	return &certRequest{
-		body: body,
-	}
 }
 
 // newCertRetrieveRequest creates a new HVCA GET /certificates/{certificate} API call.

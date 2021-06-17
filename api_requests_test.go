@@ -30,15 +30,6 @@ var requestTestCases = []struct {
 }{
 	{
 		func() apiRequest {
-			return newCertRequest([]byte(bodyValue))
-		},
-		http.MethodPost,
-		"/certificates",
-		bodyValue,
-		false,
-	},
-	{
-		func() apiRequest {
 			return newCertRetrieveRequest("1234")
 		},
 		http.MethodGet,

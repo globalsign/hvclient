@@ -11,7 +11,6 @@ package hvclient
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -33,23 +32,28 @@ const (
 	totalCountHeaderName = "Total-Count"
 )
 
+// HVCA API endpoints.
+const (
+	endpointCertificates = "/certificates"
+	endpointClaims       = "/claims/domains"
+	endpointCounters     = "/counters/certificates"
+	endpointQuota        = "/quotas/issuance"
+	endpointStats        = "/stats"
+	endpointTrustChain   = "/trustchain"
+	endpointPolicy       = "/validationpolicy"
+)
+
 // CertificateRequest requests a new certificate based on a Request object.
 // The HVCA HTTP API is asynchronous, and on success this method returns the
 // serial number of the certificate to be issued. After a short delay, the
 // certificate itself may be retrieved via the CertificateRetrieve method.
 func (c *Client) CertificateRequest(ctx context.Context, hvcareq *Request) (string, error) {
-	// Marshal certificate request.
-	var body, err = json.Marshal(hvcareq)
-	if err != nil {
-		return "", err
-	}
-
-	// Make API call.
-	var response *http.Response
-	response, err = c.makeRequest(
+	var response, err = c.makeRequest(
 		ctx,
-		newCertRequest(body),
-		"", "", nil,
+		nil,
+		endpointCertificates,
+		http.MethodPost,
+		hvcareq,
 		nil,
 	)
 	if err != nil {

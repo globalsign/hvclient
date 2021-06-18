@@ -16,64 +16,92 @@ limitations under the License.
 package hvclient
 
 import (
-	"fmt"
-	"net/http/httptest"
+	"errors"
+	"io/ioutil"
+	"net/http"
+	"reflect"
+	"strings"
 	"testing"
+	"testing/iotest"
 
 	"github.com/globalsign/hvclient/internal/httputils"
 )
 
-var apiErrorTestCases = []struct {
-	statusCode int
-	body       string
-	err        APIError
-	want       string
-}{
-	{
-		statusCode: 401,
-		body:       `{"description":"unauthorized"}`,
-		err: APIError{
-			StatusCode:  401,
-			Description: "unauthorized",
-		},
-		want: "401: unauthorized",
-	},
-	{
-		statusCode: 404,
-		body:       `{"description":"not found"}`,
-		err: APIError{
-			StatusCode:  404,
-			Description: "not found",
-		},
-		want: "404: not found",
-	},
-	{
-		statusCode: 422,
-		body:       `{"description":"json stopped`,
-		err: APIError{
-			StatusCode:  422,
-			Description: "unknown API error",
-		},
-		want: "422: unknown API error",
-	},
-}
-
-func TestAPIErrorNew(t *testing.T) {
+func TestAPIError(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range apiErrorTestCases {
+	var testcases = []struct {
+		name string
+		in   *http.Response
+		want APIError
+	}{
+		{
+			name: "OK",
+			in: &http.Response{
+				Body: ioutil.NopCloser(strings.NewReader(`{"description":"custom message"}`)),
+				Header: http.Header{
+					httputils.ContentTypeHeader: []string{httputils.ContentTypeProblemJSON},
+				},
+				StatusCode: http.StatusBadRequest,
+			},
+			want: APIError{
+				StatusCode:  http.StatusBadRequest,
+				Description: "custom message",
+			},
+		},
+		{
+			name: "BadContentType",
+			in: &http.Response{
+				Body: ioutil.NopCloser(strings.NewReader(`{"description":"custom message"}`)),
+				Header: http.Header{
+					httputils.ContentTypeHeader: []string{"text/plain"},
+				},
+				StatusCode: http.StatusUnauthorized,
+			},
+			want: APIError{
+				StatusCode:  http.StatusUnauthorized,
+				Description: "unknown API error",
+			},
+		},
+		{
+			name: "BadBody",
+			in: &http.Response{
+				Body: ioutil.NopCloser(iotest.ErrReader(errors.New("bad read"))),
+				Header: http.Header{
+					httputils.ContentTypeHeader: []string{httputils.ContentTypeProblemJSON},
+				},
+				StatusCode: http.StatusNotFound,
+			},
+			want: APIError{
+				StatusCode:  http.StatusNotFound,
+				Description: "unknown API error",
+			},
+		},
+		{
+			name: "BadJSON",
+			in: &http.Response{
+				Body: ioutil.NopCloser(strings.NewReader(`{"description":"custom mess`)),
+				Header: http.Header{
+					httputils.ContentTypeHeader: []string{httputils.ContentTypeProblemJSON},
+				},
+				StatusCode: http.StatusServiceUnavailable,
+			},
+			want: APIError{
+				StatusCode:  http.StatusServiceUnavailable,
+				Description: "unknown API error",
+			},
+		},
+	}
+
+	for _, tc := range testcases {
 		var tc = tc
 
-		t.Run(fmt.Sprintf("%d %s", tc.statusCode, tc.body), func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var resp = httptest.NewRecorder()
-			resp.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeProblemJSON)
-			resp.WriteHeader(tc.statusCode)
-			_, _ = resp.Write([]byte(tc.body))
-
-			if got := newAPIError(resp.Result()); got != tc.err {
-				t.Errorf("got %v, want %v", got, tc.err)
+			var got = newAPIError(tc.in)
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("got %v, want %v", got, tc.want)
 			}
 		})
 	}
@@ -82,19 +110,29 @@ func TestAPIErrorNew(t *testing.T) {
 func TestAPIErrorString(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range apiErrorTestCases {
+	var testcases = []struct {
+		name string
+		in   APIError
+		want string
+	}{
+		{
+			name: "OK",
+			in: APIError{
+				StatusCode:  http.StatusBadRequest,
+				Description: "custom message",
+			},
+			want: "400: custom message",
+		},
+	}
+
+	for _, tc := range testcases {
 		var tc = tc
 
-		t.Run(fmt.Sprintf("%d %s", tc.statusCode, tc.body), func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var resp = httptest.NewRecorder()
-			resp.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeProblemJSON)
-			resp.WriteHeader(tc.statusCode)
-			_, _ = resp.Write([]byte(tc.body))
-
-			if got := newAPIError(resp.Result()).Error(); got != tc.want {
-				t.Errorf("got %q, want %q", got, tc.want)
+			if got := tc.in.Error(); got != tc.want {
+				t.Fatalf("got %q, want %q", got, tc.want)
 			}
 		})
 	}

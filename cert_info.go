@@ -28,8 +28,7 @@ import (
 // CertStatus is the issued/revoked status of a certificate.
 type CertStatus int
 
-// CertInfo contains a certificate and associated information as returned
-// by an HVCA GET /certificates/{certificate} API call.
+// CertInfo contains a certificate and associated information.
 type CertInfo struct {
 	PEM       string            // The PEM-encoded certificate
 	X509      *x509.Certificate // The parsed certificate
@@ -130,7 +129,6 @@ func (s *CertInfo) UnmarshalJSON(b []byte) error {
 	}
 
 	var block, rest = pem.Decode([]byte(data.PEM))
-
 	if block == nil || len(block.Bytes) == 0 || len(rest) != 0 {
 		return errors.New("bad PEM data")
 	}

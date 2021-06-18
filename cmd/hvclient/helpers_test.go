@@ -35,20 +35,20 @@ func TestCheckOneValue(t *testing.T) {
 		want   bool
 	}{
 		{
-			[]string{},
-			false,
+			values: []string{},
+			want:   false,
 		},
 		{
-			[]string{"value"},
-			true,
+			values: []string{"value"},
+			want:   true,
 		},
 		{
-			[]string{"value", ""},
-			true,
+			values: []string{"value", ""},
+			want:   true,
 		},
 		{
-			[]string{"value", "another value"},
-			false,
+			values: []string{"value", "another value"},
+			want:   false,
 		},
 	}
 
@@ -73,32 +73,32 @@ func TestCheckAllEmpty(t *testing.T) {
 		want   bool
 	}{
 		{
-			[]string{},
-			true,
+			values: []string{},
+			want:   true,
 		},
 		{
-			[]string{""},
-			true,
+			values: []string{""},
+			want:   true,
 		},
 		{
-			[]string{"", ""},
-			true,
+			values: []string{"", ""},
+			want:   true,
 		},
 		{
-			[]string{"value"},
-			false,
+			values: []string{"value"},
+			want:   false,
 		},
 		{
-			[]string{"value", ""},
-			false,
+			values: []string{"value", ""},
+			want:   false,
 		},
 		{
-			[]string{"", "value"},
-			false,
+			values: []string{"", "value"},
+			want:   false,
 		},
 		{
-			[]string{"value", "another value"},
-			false,
+			values: []string{"value", "another value"},
+			want:   false,
 		},
 	}
 
@@ -123,14 +123,14 @@ func TestStringToOIDs(t *testing.T) {
 		want  []asn1.ObjectIdentifier
 	}{
 		{
-			"1",
-			[]asn1.ObjectIdentifier{
+			value: "1",
+			want: []asn1.ObjectIdentifier{
 				{1},
 			},
 		},
 		{
-			"  1.2.3,  4.5.6 ",
-			[]asn1.ObjectIdentifier{
+			value: "  1.2.3,  4.5.6 ",
+			want: []asn1.ObjectIdentifier{
 				{1, 2, 3},
 				{4, 5, 6},
 			},
@@ -143,10 +143,8 @@ func TestStringToOIDs(t *testing.T) {
 		t.Run(tc.value, func(t *testing.T) {
 			t.Parallel()
 
-			var got []asn1.ObjectIdentifier
-			var err error
-
-			if got, err = stringToOIDs(tc.value); err != nil {
+			var got, err = stringToOIDs(tc.value)
+			if err != nil {
 				t.Fatalf("couldn't convert string to OIDs: %v", err)
 			}
 
@@ -191,14 +189,14 @@ func TestStringToIPs(t *testing.T) {
 		want  []net.IP
 	}{
 		{
-			"10.0.0.1",
-			[]net.IP{
+			value: "10.0.0.1",
+			want: []net.IP{
 				net.ParseIP("10.0.0.1"),
 			},
 		},
 		{
-			" 192.168.1.1  ,  192.168.1.2 ",
-			[]net.IP{
+			value: " 192.168.1.1  ,  192.168.1.2 ",
+			want: []net.IP{
 				net.ParseIP("192.168.1.1"),
 				net.ParseIP("192.168.1.2"),
 			},
@@ -211,10 +209,8 @@ func TestStringToIPs(t *testing.T) {
 		t.Run(tc.value, func(t *testing.T) {
 			t.Parallel()
 
-			var got []net.IP
-			var err error
-
-			if got, err = stringToIPs(tc.value); err != nil {
+			var got, err = stringToIPs(tc.value)
+			if err != nil {
 				t.Fatalf("couldn't convert string to IP addresses: %v", err)
 			}
 
@@ -259,8 +255,8 @@ func TestStringToURIs(t *testing.T) {
 		want  []*url.URL
 	}{
 		{
-			"http://www.example.com",
-			[]*url.URL{
+			value: "http://www.example.com",
+			want: []*url.URL{
 				testhelpers.MustParseURI(t, "http://www.example.com"),
 			},
 		},
@@ -272,10 +268,8 @@ func TestStringToURIs(t *testing.T) {
 		t.Run(tc.value, func(t *testing.T) {
 			t.Parallel()
 
-			var got []*url.URL
-			var err error
-
-			if got, err = stringToURIs(tc.value); err != nil {
+			var got, err = stringToURIs(tc.value)
+			if err != nil {
 				t.Fatalf("couldn't convert string to URIs: %v", err)
 			}
 
@@ -318,8 +312,8 @@ func TestStringToOIDAndStrings(t *testing.T) {
 		want  []hvclient.OIDAndString
 	}{
 		{
-			"1.2.3.4=some value,5.6.7 =  some other value",
-			[]hvclient.OIDAndString{
+			value: "1.2.3.4=some value,5.6.7 =  some other value",
+			want: []hvclient.OIDAndString{
 				{
 					OID:   asn1.ObjectIdentifier{1, 2, 3, 4},
 					Value: "some value",
@@ -338,10 +332,8 @@ func TestStringToOIDAndStrings(t *testing.T) {
 		t.Run(tc.value, func(t *testing.T) {
 			t.Parallel()
 
-			var got []hvclient.OIDAndString
-			var err error
-
-			if got, err = stringToOIDAndStrings(tc.value); err != nil {
+			var got, err = stringToOIDAndStrings(tc.value)
+			if err != nil {
 				t.Fatalf("couldn't convert string to OIDAndStrings: %v", err)
 			}
 

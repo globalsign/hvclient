@@ -527,9 +527,9 @@ func TestPolicyMarshalJSON(t *testing.T) {
 		want  []byte
 	}{
 		{
-			"One",
-			testFullPolicy,
-			[]byte(testPolicyFullJSON),
+			name:  "Full",
+			value: testFullPolicy,
+			want:  []byte(testPolicyFullJSON),
 		},
 	}
 
@@ -576,22 +576,22 @@ func TestPolicyMarshalJSONFailure(t *testing.T) {
 		policy hvclient.Policy
 	}{
 		{
-			"BadPresence",
-			hvclient.Policy{
+			name: "BadPresence",
+			policy: hvclient.Policy{
 				PublicKeySignature: hvclient.Presence(0),
 			},
 		},
 		{
-			"BadKeyType",
-			hvclient.Policy{
+			name: "BadKeyType",
+			policy: hvclient.Policy{
 				PublicKey: &hvclient.PublicKeyPolicy{
 					KeyType: hvclient.KeyType(0),
 				},
 			},
 		},
 		{
-			"BadKeyFormat",
-			hvclient.Policy{
+			name: "BadKeyFormat",
+			policy: hvclient.Policy{
 				PublicKey: &hvclient.PublicKeyPolicy{
 					KeyType:   hvclient.RSA,
 					KeyFormat: hvclient.KeyFormat(0),
@@ -599,8 +599,8 @@ func TestPolicyMarshalJSONFailure(t *testing.T) {
 			},
 		},
 		{
-			"BadValueType",
-			hvclient.Policy{
+			name: "BadValueType",
+			policy: hvclient.Policy{
 				CustomExtensions: []hvclient.CustomExtensionsPolicy{
 					{
 						OID:       asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 48, 1, 5},
@@ -612,8 +612,8 @@ func TestPolicyMarshalJSONFailure(t *testing.T) {
 			},
 		},
 		{
-			"BadOptionalStaticValueType",
-			hvclient.Policy{
+			name: "BadOptionalStaticValueType",
+			policy: hvclient.Policy{
 				QualifiedStatements: &hvclient.QualifiedStatementsPolicy{
 					Semantics: &hvclient.SemanticsPolicy{
 						Identifier: &hvclient.StringPolicy{
@@ -650,8 +650,8 @@ func TestPolicyMarshalJSONFailure(t *testing.T) {
 			},
 		},
 		{
-			"BadTypeAndValue",
-			hvclient.Policy{
+			name: "BadTypeAndValue",
+			policy: hvclient.Policy{
 				SubjectDN: &hvclient.SubjectDNPolicy{
 					ExtraAttributes: []hvclient.TypeAndValuePolicy{
 						{
@@ -690,9 +690,9 @@ func TestPolicyUnmarshalJSON(t *testing.T) {
 		want  hvclient.Policy
 	}{
 		{
-			"One",
-			[]byte(testPolicyFullJSON),
-			testFullPolicy,
+			name:  "OK",
+			value: []byte(testPolicyFullJSON),
+			want:  testFullPolicy,
 		},
 	}
 
@@ -723,64 +723,64 @@ func TestPolicyUnmarshalJSONFailure(t *testing.T) {
 		value []byte
 	}{
 		{
-			"BadQCComplianceValue",
-			[]byte(`{"qualified_statements":{"etsi_qc_compliance":"BAD VALUE"}}`),
+			name:  "BadQCComplianceValue",
+			value: []byte(`{"qualified_statements":{"etsi_qc_compliance":"BAD VALUE"}}`),
 		},
 		{
-			"BadQCComplianceType",
-			[]byte(`{"qualified_statements":{"etsi_qc_compliance":999999}}`),
+			name:  "BadQCComplianceType",
+			value: []byte(`{"qualified_statements":{"etsi_qc_compliance":999999}}`),
 		},
 		{
-			"BadKeyFormatValue",
-			[]byte(`{"public_key":{"key_format":"BAD FORMAT"}}`),
+			name:  "BadKeyFormatValue",
+			value: []byte(`{"public_key":{"key_format":"BAD FORMAT"}}`),
 		},
 		{
-			"BadKeyFormatType",
-			[]byte(`{"public_key":{"key_format":99999}}`),
+			name:  "BadKeyFormatType",
+			value: []byte(`{"public_key":{"key_format":99999}}`),
 		},
 		{
-			"BadKeyTypeValue",
-			[]byte(`{"public_key":{"key_type":"SKELETON"}}`),
+			name:  "BadKeyTypeValue",
+			value: []byte(`{"public_key":{"key_type":"SKELETON"}}`),
 		},
 		{
-			"BadKeyTypeType",
-			[]byte(`{"public_key":{"key_type":99999}}`),
+			name:  "BadKeyTypeType",
+			value: []byte(`{"public_key":{"key_type":99999}}`),
 		},
 		{
-			"BadPresenceValue",
-			[]byte(`{"subject_dn":{"common_name":{"presence":"NOT ON GOOD LIST"}}}`),
+			name:  "BadPresenceValue",
+			value: []byte(`{"subject_dn":{"common_name":{"presence":"NOT ON GOOD LIST"}}}`),
 		},
 		{
-			"BadPresenceType",
-			[]byte(`{"subject_dn":{"common_name":{"presence":999999}}}`),
+			name:  "BadPresenceType",
+			value: []byte(`{"subject_dn":{"common_name":{"presence":999999}}}`),
 		},
 		{
-			"BadValueTypeValue",
-			[]byte(`{"custom_extensions":{"1.2.3.4":{"value_type":"BAD VALUE TYPE"}}}`),
+			name:  "BadValueTypeValue",
+			value: []byte(`{"custom_extensions":{"1.2.3.4":{"value_type":"BAD VALUE TYPE"}}}`),
 		},
 		{
-			"BadValueTypeType",
-			[]byte(`{"custom_extensions":{"1.2.3.4":{"value_type":999999}}}`),
+			name:  "BadValueTypeType",
+			value: []byte(`{"custom_extensions":{"1.2.3.4":{"value_type":999999}}}`),
 		},
 		{
-			"BadOIDValueCustomExtension",
-			[]byte(`{"custom_extensions":{"NOT AN OID":{"value_type":"NIL"}}}`),
+			name:  "BadOIDValueCustomExtension",
+			value: []byte(`{"custom_extensions":{"NOT AN OID":{"value_type":"NIL"}}}`),
 		},
 		{
-			"BadOIDValueTypeAndValue",
-			[]byte(`{"subject_dn":{"extra_attributes":{"NOT AN OID":{"static":true,"value_type":"NIL"}}}}`),
+			name:  "BadOIDValueTypeAndValue",
+			value: []byte(`{"subject_dn":{"extra_attributes":{"NOT AN OID":{"static":true,"value_type":"NIL"}}}}`),
 		},
 		{
-			"BadTypeAndValue",
-			[]byte(`{"subject_dn":{"extra_attributes":{"NOT AN OID":{"static":1234,"value_type":"NIL"}}}}`),
+			name:  "BadTypeAndValue",
+			value: []byte(`{"subject_dn":{"extra_attributes":{"NOT AN OID":{"static":1234,"value_type":"NIL"}}}}`),
 		},
 		{
-			"BadSANURL",
-			[]byte(`{"san":{"uris":["$http://bad.uri/"]}}`),
+			name:  "BadSANURL",
+			value: []byte(`{"san":{"uris":["$http://bad.uri/"]}}`),
 		},
 		{
-			"BadSubjectDA",
-			[]byte(`{"subject_da":{"gender":123}}`),
+			name:  "BadSubjectDA",
+			value: []byte(`{"subject_da":{"gender":123}}`),
 		},
 	}
 

@@ -298,61 +298,61 @@ func TestRequestMarshalJSON(t *testing.T) {
 		want string
 	}{
 		{
-			"Full",
-			testRequestFullRequest,
-			testRequestFullJSON,
+			name: "Full",
+			req:  testRequestFullRequest,
+			want: testRequestFullJSON,
 		},
 		{
-			"CSR",
-			hvclient.Request{
+			name: "CSR",
+			req: hvclient.Request{
 				CSR: testhelpers.MustParseCSR(t, testRequestCSRPEM),
 			},
-			`{
+			want: `{
     "public_key": "-----BEGIN NEW CERTIFICATE REQUEST-----\nMIID1jCCAr4CAQAwgYwxCzAJBgNVBAYTAkdCMQ8wDQYDVQQIEwZMb25kb24xDzAN\nBgNVBAcTBkxvbmRvbjEaMBgGA1UECRMRMSBHbG9iYWxTaWduIFJvYWQxFzAVBgNV\nBAoTDkdNTyBHbG9iYWxTaWduMRMwEQYDVQQLEwpPcGVyYXRpb25zMREwDwYDVQQD\nEwhKb2huIERvZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANNRyiSc\nrpzY/vPy+3tjTxz0gsLBO+fbT+dn15vX7VgWj0wp0nTQfdYg8oBxDqB4KMsnQjip\ncEyoVv46pyPfmjlXDyLqqWQodCbsvjc+vxReG5AN6FC4/vKnXVMeVDS45H1fnHib\nwNPlAPYADfH4wIIB6ZinYBK9G+tK6e0o6aoDSumVFgezqiZdASSmUaO+NtaCLFr1\nKtBDBy7dUHZTfNORCz5Sq9w2XuM5jWspXb2PG6+Mr2bvFS6zB2CfiTrLGtYQZqsO\n99De+NM4LEMR/9AuOdi+cfDJ6jrXg+SkaiNCgBL7E5ZD72X7TWSaiJ/cu2f4mg5C\nsuess+3JScoR5/UCAwEAAaCCAQIwgf8GCSqGSIb3DQEJDjGB8TCB7jCBvAYDVR0R\nBIG0MIGxgh10ZXN0LmRlbW8uaHZjYS5nbG9iYWxzaWduLmNvbYIedGVzdDIuZGVt\nby5odmNhLmdsb2JhbHNpZ24uY29tgR5hZG1pbkBkZW1vLmh2Y2EuZ2xvYmFsc2ln\nbi5jb22BIGNvbnRhY3RAZGVtby5odmNhLmdsb2JhbHNpZ24uY29thwTGKdaahiho\ndHRwOi8vdGVzdC5kZW1vLmh2Y2EuZ2xvYmFsc2lnbi5jb20vdXJpMAsGA1UdDwQE\nAwIDqDAgBgNVHSUBAf8EFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDQYJKoZIhvcN\nAQELBQADggEBAJyVtFN3ykzNtEwxjwOJZdM1n6kBtVqI++n7Pvo7Y3w1mUZ3VSae\n6JBNjudfazHWqZZo1Djy2uZxzwvow2RjmcjxHDL4siO/dKopAtZOdH5eFn3efzZc\nnXZ2JQpmu2lauhQNh052k54qmy8lk86yVr7KBYx67ZPZkpPJMy3a5cEnByr26LnX\nuyrFCzayZxSHwj4u178+PgzNz4avQWv1jaCSDmgvs423N3z2DP0r30LfsVPvKsr4\nW9S7IjDr8TSVRpRCjx7M7QooOgovrKk08khTO4NDXO4FcJLcSsvb38QfvUeg/7WV\nL+9OFs/MYElfTUTFQd36X+378dgeOiZCKG4=\n-----END NEW CERTIFICATE REQUEST-----"
 }`,
 		},
 		{
-			"RSAPublicKey",
-			hvclient.Request{
+			name: "RSAPublicKey",
+			req: hvclient.Request{
 				PublicKey: testhelpers.MustExtractRSAPublicKey(t, testRequestRSAPrivateKeyPEM),
 			},
-			`{
+			want: `{
     "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7s0nIwA4nzrc5az0iD6F\n710WI2BnabCVe1wNXUckq7RdWXtshlQODZow+M6t7P2FLolYYyhT9vD5hFlMNBKY\nFqAAkauGlmx12luVyURRLW0ht9Piu41MaLnLCCMM7tQ/5lixMHkT86sX/wX8q32Z\nOuatyUgVQUV1hKXZCH12y9VK9U3pQGoPgG15SbCo6yfUYvYLp7NmNEb55Gz4I1xf\n4PBaRvynr0dtwbFXQOQAfg+q29sm+elYnAQLvtVVyYmfn+jqK9u1Ey+X2sNns3HW\nz9OSQt7e9lFIKMlospQPl4YuGhfcID/xC1gZLV5wlvghFJx/1QUW/yI3MZGXpIav\njwIDAQAB\n-----END PUBLIC KEY-----"
 }`,
 		},
 		{
-			"RSAPublicKeyNoPointer",
-			hvclient.Request{
+			name: "RSAPublicKeyNoPointer",
+			req: hvclient.Request{
 				PublicKey: *testhelpers.MustExtractRSAPublicKey(t, testRequestRSAPrivateKeyPEM),
 			},
-			`{
+			want: `{
     "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7s0nIwA4nzrc5az0iD6F\n710WI2BnabCVe1wNXUckq7RdWXtshlQODZow+M6t7P2FLolYYyhT9vD5hFlMNBKY\nFqAAkauGlmx12luVyURRLW0ht9Piu41MaLnLCCMM7tQ/5lixMHkT86sX/wX8q32Z\nOuatyUgVQUV1hKXZCH12y9VK9U3pQGoPgG15SbCo6yfUYvYLp7NmNEb55Gz4I1xf\n4PBaRvynr0dtwbFXQOQAfg+q29sm+elYnAQLvtVVyYmfn+jqK9u1Ey+X2sNns3HW\nz9OSQt7e9lFIKMlospQPl4YuGhfcID/xC1gZLV5wlvghFJx/1QUW/yI3MZGXpIav\njwIDAQAB\n-----END PUBLIC KEY-----"
 }`,
 		},
 		{
-			"ECPublicKey",
-			hvclient.Request{
+			name: "ECPublicKey",
+			req: hvclient.Request{
 				PublicKey: testhelpers.MustExtractECPublicKey(t, testRequestECPrivateKeyPEM),
 			},
-			`{
+			want: `{
     "public_key": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAETKbxjrMcHuXVmdmy0d1xSSjfY86U\nQlrBHFcYT3SHReVZZ0MdTjg/9PNUrWDpkZ75q4pZV5EpMgqrIdSIEqCiuA==\n-----END PUBLIC KEY-----"
 }`,
 		},
 		{
-			"ECPublicKeyNoPointer",
-			hvclient.Request{
+			name: "ECPublicKeyNoPointer",
+			req: hvclient.Request{
 				PublicKey: *testhelpers.MustExtractECPublicKey(t, testRequestECPrivateKeyPEM),
 			},
-			`{
+			want: `{
     "public_key": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAETKbxjrMcHuXVmdmy0d1xSSjfY86U\nQlrBHFcYT3SHReVZZ0MdTjg/9PNUrWDpkZ75q4pZV5EpMgqrIdSIEqCiuA==\n-----END PUBLIC KEY-----"
 }`,
 		},
 		{
-			"RSAPrivateKey",
-			hvclient.Request{
+			name: "RSAPrivateKey",
+			req: hvclient.Request{
 				PrivateKey: testhelpers.MustParseRSAPrivateKey(t, testRequestRSAPrivateKeyPEM),
 			},
-			`{
+			want: `{
     "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7s0nIwA4nzrc5az0iD6F\n710WI2BnabCVe1wNXUckq7RdWXtshlQODZow+M6t7P2FLolYYyhT9vD5hFlMNBKY\nFqAAkauGlmx12luVyURRLW0ht9Piu41MaLnLCCMM7tQ/5lixMHkT86sX/wX8q32Z\nOuatyUgVQUV1hKXZCH12y9VK9U3pQGoPgG15SbCo6yfUYvYLp7NmNEb55Gz4I1xf\n4PBaRvynr0dtwbFXQOQAfg+q29sm+elYnAQLvtVVyYmfn+jqK9u1Ey+X2sNns3HW\nz9OSQt7e9lFIKMlospQPl4YuGhfcID/xC1gZLV5wlvghFJx/1QUW/yI3MZGXpIav\njwIDAQAB\n-----END PUBLIC KEY-----",
     "public_key_signature": "rJy3l3t5ZcaN33b3cIAkVGVeef9B4hh+5m2Os5cJBkZGy6pcb+PXSZeqoRfNDUu4VhAt5vvloPe2Xo6qT4iEQ82qNl+exbpnV5ou/id6O8P2FYB2+tETDFjotMMlNYKiqPRBesVivbqhwUd91btOQHNd6t2qAWIcDioAZBwnjLJPNjPtK5In1Y1+CGvCLNdtRKB0g783mpxn7PzRAKUzimj9imPmo8cCWcgySvIK6fs8VoZU38dSgKuWCpEFfFaB5/EkXHcFC9BfJm3e4J69kZtnMJAbHwAXW23azcOuXIi8n4vZWoo4pQgZhSksXG8Ibx08hh65wZ+i6HqT5Zf71w=="
 }`,
@@ -385,14 +385,14 @@ func TestRequestMarshalJSONFailure(t *testing.T) {
 		req  hvclient.Request
 	}{
 		{
-			"BadPublicKey",
-			hvclient.Request{
+			name: "BadPublicKey",
+			req: hvclient.Request{
 				PublicKey: "not a public key",
 			},
 		},
 		{
-			"BadPrivateKey",
-			hvclient.Request{
+			name: "BadPrivateKey",
+			req: hvclient.Request{
 				PrivateKey: "not a private key",
 			},
 		},
@@ -420,14 +420,14 @@ func TestRequestUnmarshalJSON(t *testing.T) {
 		want hvclient.Request
 	}{
 		{
-			"Full",
-			testRequestFullJSON,
-			testRequestFullRequest,
+			name: "Full",
+			json: testRequestFullJSON,
+			want: testRequestFullRequest,
 		},
 		{
-			"Validity",
-			`{"validity":{"not_before":1550000000,"not_after":1560000000}}`,
-			hvclient.Request{
+			name: "Validity",
+			json: `{"validity":{"not_before":1550000000,"not_after":1560000000}}`,
+			want: hvclient.Request{
 				Validity: &hvclient.Validity{
 					NotBefore: time.Unix(1550000000, 0),
 					NotAfter:  time.Unix(1560000000, 0),
@@ -491,9 +491,9 @@ func TestRequestEqual(t *testing.T) {
 		first, second hvclient.Request
 	}{
 		{
-			"BothNil",
-			hvclient.Request{},
-			hvclient.Request{},
+			name:   "BothNil",
+			first:  hvclient.Request{},
+			second: hvclient.Request{},
 		},
 	}
 
@@ -518,11 +518,11 @@ func TestRequestNotEqual(t *testing.T) {
 		first, second hvclient.Request
 	}{
 		{
-			"ValidityFirstNil",
-			hvclient.Request{
+			name: "ValidityFirstNil",
+			first: hvclient.Request{
 				Validity: nil,
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Validity: &hvclient.Validity{
 					NotBefore: time.Unix(1555000000, 0),
 					NotAfter:  time.Unix(1560000000, 0),
@@ -530,26 +530,26 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"ValiditySecondNil",
-			hvclient.Request{
+			name: "ValiditySecondNil",
+			first: hvclient.Request{
 				Validity: &hvclient.Validity{
 					NotBefore: time.Unix(1555000000, 0),
 					NotAfter:  time.Unix(1560000000, 0),
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Validity: nil,
 			},
 		},
 		{
-			"ValidityNotBefore",
-			hvclient.Request{
+			name: "ValidityNotBefore",
+			first: hvclient.Request{
 				Validity: &hvclient.Validity{
 					NotBefore: time.Unix(1550000000, 0),
 					NotAfter:  time.Unix(1560000000, 0),
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Validity: &hvclient.Validity{
 					NotBefore: time.Unix(1555000000, 0),
 					NotAfter:  time.Unix(1560000000, 0),
@@ -557,14 +557,14 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"ValidityNotAfter",
-			hvclient.Request{
+			name: "ValidityNotAfter",
+			first: hvclient.Request{
 				Validity: &hvclient.Validity{
 					NotBefore: time.Unix(1550000000, 0),
 					NotAfter:  time.Unix(1560000000, 0),
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Validity: &hvclient.Validity{
 					NotBefore: time.Unix(1550000000, 0),
 					NotAfter:  time.Unix(1565000000, 0),
@@ -572,199 +572,199 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"SubjectFirstNil",
-			hvclient.Request{
+			name: "SubjectFirstNil",
+			first: hvclient.Request{
 				Subject: nil,
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					CommonName: "John Doe",
 				},
 			},
 		},
 		{
-			"SubjectSecondNil",
-			hvclient.Request{
+			name: "SubjectSecondNil",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					CommonName: "John Doe",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: nil,
 			},
 		},
 		{
-			"SubjectCountry",
-			hvclient.Request{
+			name: "SubjectCountry",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					Country: "a value",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					Country: "a different value",
 				},
 			},
 		},
 		{
-			"SubjectState",
-			hvclient.Request{
+			name: "SubjectState",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					State: "a value",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					State: "a different value",
 				},
 			},
 		},
 		{
-			"SubjectLocality",
-			hvclient.Request{
+			name: "SubjectLocality",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					Locality: "a value",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					Locality: "a different value",
 				},
 			},
 		},
 		{
-			"SubjectStreetAddress",
-			hvclient.Request{
+			name: "SubjectStreetAddress",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					StreetAddress: "a value",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					StreetAddress: "a different value",
 				},
 			},
 		},
 		{
-			"SubjectOrganization",
-			hvclient.Request{
+			name: "SubjectOrganization",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					Organization: "a value",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					Organization: "a different value",
 				},
 			},
 		},
 		{
-			"SubjectOrganizationalUnitLength",
-			hvclient.Request{
+			name: "SubjectOrganizationalUnitLength",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					OrganizationalUnit: []string{"a value", "another value"},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					OrganizationalUnit: []string{"a value"},
 				},
 			},
 		},
 		{
-			"SubjectOrganizationalUnitValue",
-			hvclient.Request{
+			name: "SubjectOrganizationalUnitValue",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					OrganizationalUnit: []string{"a value"},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					OrganizationalUnit: []string{"a different value"},
 				},
 			},
 		},
 		{
-			"SubjectCommonName",
-			hvclient.Request{
+			name: "SubjectCommonName",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					CommonName: "a value",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					CommonName: "a different value",
 				},
 			},
 		},
 		{
-			"SubjectEmail",
-			hvclient.Request{
+			name: "SubjectEmail",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					Email: "a value",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					Email: "a different value",
 				},
 			},
 		},
 		{
-			"SubjectJOILocality",
-			hvclient.Request{
+			name: "SubjectJOILocality",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					JOILocality: "a value",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					JOILocality: "a different value",
 				},
 			},
 		},
 		{
-			"SubjectJOIState",
-			hvclient.Request{
+			name: "SubjectJOIState",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					JOIState: "a value",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					JOIState: "a different value",
 				},
 			},
 		},
 		{
-			"SubjectJOICountry",
-			hvclient.Request{
+			name: "SubjectJOICountry",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					JOICountry: "a value",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					JOICountry: "a different value",
 				},
 			},
 		},
 		{
-			"SubjectBusinessCategory",
-			hvclient.Request{
+			name: "SubjectBusinessCategory",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					BusinessCategory: "a value",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					BusinessCategory: "a different value",
 				},
 			},
 		},
 		{
-			"SubjectExtraAttributesLength",
-			hvclient.Request{
+			name: "SubjectExtraAttributesLength",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					ExtraAttributes: []hvclient.OIDAndString{
 						{
@@ -778,7 +778,7 @@ func TestRequestNotEqual(t *testing.T) {
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					ExtraAttributes: []hvclient.OIDAndString{
 						{
@@ -790,8 +790,8 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"SubjectExtraAttributesValue",
-			hvclient.Request{
+			name: "SubjectExtraAttributesValue",
+			first: hvclient.Request{
 				Subject: &hvclient.DN{
 					ExtraAttributes: []hvclient.OIDAndString{
 						{
@@ -801,7 +801,7 @@ func TestRequestNotEqual(t *testing.T) {
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					ExtraAttributes: []hvclient.OIDAndString{
 						{
@@ -813,78 +813,78 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"SANDNSNamesFirstNil",
-			hvclient.Request{},
-			hvclient.Request{
+			name:  "SANDNSNamesFirstNil",
+			first: hvclient.Request{},
+			second: hvclient.Request{
 				SAN: &hvclient.SAN{
 					DNSNames: []string{"a value"},
 				},
 			},
 		},
 		{
-			"SANDNSNamesSecondNil",
-			hvclient.Request{
+			name: "SANDNSNamesSecondNil",
+			first: hvclient.Request{
 				SAN: &hvclient.SAN{
 					DNSNames: []string{"a value"},
 				},
 			},
-			hvclient.Request{},
+			second: hvclient.Request{},
 		},
 		{
-			"SANDNSNamesLength",
-			hvclient.Request{
+			name: "SANDNSNamesLength",
+			first: hvclient.Request{
 				SAN: &hvclient.SAN{
 					DNSNames: []string{"a value", "another value"},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				SAN: &hvclient.SAN{
 					DNSNames: []string{"a value"},
 				},
 			},
 		},
 		{
-			"SANDNSNamesValue",
-			hvclient.Request{
+			name: "SANDNSNamesValue",
+			first: hvclient.Request{
 				SAN: &hvclient.SAN{
 					DNSNames: []string{"a value"},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				SAN: &hvclient.SAN{
 					DNSNames: []string{"a different value"},
 				},
 			},
 		},
 		{
-			"SANEmailsLength",
-			hvclient.Request{
+			name: "SANEmailsLength",
+			first: hvclient.Request{
 				SAN: &hvclient.SAN{
 					Emails: []string{"a value", "another value"},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				SAN: &hvclient.SAN{
 					Emails: []string{"a value"},
 				},
 			},
 		},
 		{
-			"SANEmailsValue",
-			hvclient.Request{
+			name: "SANEmailsValue",
+			first: hvclient.Request{
 				SAN: &hvclient.SAN{
 					Emails: []string{"a value"},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				SAN: &hvclient.SAN{
 					Emails: []string{"a different value"},
 				},
 			},
 		},
 		{
-			"SANIPAddressesLength",
-			hvclient.Request{
+			name: "SANIPAddressesLength",
+			first: hvclient.Request{
 				SAN: &hvclient.SAN{
 					IPAddresses: []net.IP{
 						net.ParseIP("10.0.0.1"),
@@ -892,7 +892,7 @@ func TestRequestNotEqual(t *testing.T) {
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				SAN: &hvclient.SAN{
 					IPAddresses: []net.IP{
 						net.ParseIP("10.0.0.1"),
@@ -901,15 +901,15 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"SANIPAddressesValue",
-			hvclient.Request{
+			name: "SANIPAddressesValue",
+			first: hvclient.Request{
 				SAN: &hvclient.SAN{
 					IPAddresses: []net.IP{
 						net.ParseIP("10.0.0.1"),
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				SAN: &hvclient.SAN{
 					IPAddresses: []net.IP{
 						net.ParseIP("10.0.0.2"),
@@ -918,8 +918,8 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"SANURIsLength",
-			hvclient.Request{
+			name: "SANURIsLength",
+			first: hvclient.Request{
 				SAN: &hvclient.SAN{
 					URIs: []*url.URL{
 						mustParseURI("http://that.com"),
@@ -927,7 +927,7 @@ func TestRequestNotEqual(t *testing.T) {
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				SAN: &hvclient.SAN{
 					URIs: []*url.URL{
 						mustParseURI("http://that.com"),
@@ -936,15 +936,15 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"SANURIsValue",
-			hvclient.Request{
+			name: "SANURIsValue",
+			first: hvclient.Request{
 				SAN: &hvclient.SAN{
 					URIs: []*url.URL{
 						mustParseURI("http://that.com"),
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				SAN: &hvclient.SAN{
 					URIs: []*url.URL{
 						mustParseURI("http://this.com"),
@@ -953,8 +953,8 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"SANOtherNamesLength",
-			hvclient.Request{
+			name: "SANOtherNamesLength",
+			first: hvclient.Request{
 				SAN: &hvclient.SAN{
 					OtherNames: []hvclient.OIDAndString{
 						{
@@ -968,7 +968,7 @@ func TestRequestNotEqual(t *testing.T) {
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				SAN: &hvclient.SAN{
 					OtherNames: []hvclient.OIDAndString{
 						{
@@ -980,8 +980,8 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"SANOtherNamesValue",
-			hvclient.Request{
+			name: "SANOtherNamesValue",
+			first: hvclient.Request{
 				SAN: &hvclient.SAN{
 					OtherNames: []hvclient.OIDAndString{
 						{
@@ -991,7 +991,7 @@ func TestRequestNotEqual(t *testing.T) {
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				SAN: &hvclient.SAN{
 					OtherNames: []hvclient.OIDAndString{
 						{
@@ -1003,117 +1003,117 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"DAFirstNil",
-			hvclient.Request{},
-			hvclient.Request{
+			name:  "DAFirstNil",
+			first: hvclient.Request{},
+			second: hvclient.Request{
 				DA: &hvclient.DA{
 					Gender: "f",
 				},
 			},
 		},
 		{
-			"DASecondNil",
-			hvclient.Request{
+			name: "DASecondNil",
+			first: hvclient.Request{
 				DA: &hvclient.DA{
 					Gender: "f",
 				},
 			},
-			hvclient.Request{},
+			second: hvclient.Request{},
 		},
 		{
-			"DAGender",
-			hvclient.Request{
+			name: "DAGender",
+			first: hvclient.Request{
 				DA: &hvclient.DA{
 					Gender: "m",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				DA: &hvclient.DA{
 					Gender: "f",
 				},
 			},
 		},
 		{
-			"DADateOfBirth",
-			hvclient.Request{
+			name: "DADateOfBirth",
+			first: hvclient.Request{
 				DA: &hvclient.DA{
 					DateOfBirth: time.Date(1875, 10, 12, 12, 0, 0, 0, time.UTC),
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				DA: &hvclient.DA{
 					DateOfBirth: time.Date(1947, 12, 1, 12, 0, 0, 0, time.UTC),
 				},
 			},
 		},
 		{
-			"DAPlaceOfBirth",
-			hvclient.Request{
+			name: "DAPlaceOfBirth",
+			first: hvclient.Request{
 				DA: &hvclient.DA{
 					PlaceOfBirth: "London",
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				DA: &hvclient.DA{
 					PlaceOfBirth: "Paris",
 				},
 			},
 		},
 		{
-			"DACountryOfCitizenshipLength",
-			hvclient.Request{
+			name: "DACountryOfCitizenshipLength",
+			first: hvclient.Request{
 				DA: &hvclient.DA{
 					CountryOfCitizenship: []string{"UK", "FR"},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				DA: &hvclient.DA{
 					CountryOfCitizenship: []string{"UK"},
 				},
 			},
 		},
 		{
-			"DACountryOfCitizenshipValue",
-			hvclient.Request{
+			name: "DACountryOfCitizenshipValue",
+			first: hvclient.Request{
 				DA: &hvclient.DA{
 					CountryOfCitizenship: []string{"UK"},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				DA: &hvclient.DA{
 					CountryOfCitizenship: []string{"FR"},
 				},
 			},
 		},
 		{
-			"DACountryOfResidenceLength",
-			hvclient.Request{
+			name: "DACountryOfResidenceLength",
+			first: hvclient.Request{
 				DA: &hvclient.DA{
 					CountryOfResidence: []string{"UK", "FR"},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				DA: &hvclient.DA{
 					CountryOfResidence: []string{"UK"},
 				},
 			},
 		},
 		{
-			"DACountryOfResidenceValue",
-			hvclient.Request{
+			name: "DACountryOfResidenceValue",
+			first: hvclient.Request{
 				DA: &hvclient.DA{
 					CountryOfResidence: []string{"UK"},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				DA: &hvclient.DA{
 					CountryOfResidence: []string{"FR"},
 				},
 			},
 		},
 		{
-			"DAExtraAttributesLength",
-			hvclient.Request{
+			name: "DAExtraAttributesLength",
+			first: hvclient.Request{
 				DA: &hvclient.DA{
 					ExtraAttributes: []hvclient.OIDAndString{
 						{
@@ -1127,7 +1127,7 @@ func TestRequestNotEqual(t *testing.T) {
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				DA: &hvclient.DA{
 					ExtraAttributes: []hvclient.OIDAndString{
 						{
@@ -1139,8 +1139,8 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"DAExtraAttributesValue",
-			hvclient.Request{
+			name: "DAExtraAttributesValue",
+			first: hvclient.Request{
 				DA: &hvclient.DA{
 					ExtraAttributes: []hvclient.OIDAndString{
 						{
@@ -1150,7 +1150,7 @@ func TestRequestNotEqual(t *testing.T) {
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				DA: &hvclient.DA{
 					ExtraAttributes: []hvclient.OIDAndString{
 						{
@@ -1162,78 +1162,78 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"QualifiedStatementsFirstNil",
-			hvclient.Request{},
-			hvclient.Request{
+			name:  "QualifiedStatementsFirstNil",
+			first: hvclient.Request{},
+			second: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCCompliance: true,
 				},
 			},
 		},
 		{
-			"QualifiedStatementsSecondNil",
-			hvclient.Request{
+			name: "QualifiedStatementsSecondNil",
+			first: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCCompliance: true,
 				},
 			},
-			hvclient.Request{},
+			second: hvclient.Request{},
 		},
 		{
-			"QualifiedStatementsQCCompliance",
-			hvclient.Request{
+			name: "QualifiedStatementsQCCompliance",
+			first: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCCompliance: true,
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCCompliance: false,
 				},
 			},
 		},
 		{
-			"QualifiedStatementsQCSSCDCompliance",
-			hvclient.Request{
+			name: "QualifiedStatementsQCSSCDCompliance",
+			first: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCSSCDCompliance: true,
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCSSCDCompliance: false,
 				},
 			},
 		},
 		{
-			"QualifiedStatementsQCType",
-			hvclient.Request{
+			name: "QualifiedStatementsQCType",
+			first: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCType: asn1.ObjectIdentifier{1, 2, 3, 4},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCType: asn1.ObjectIdentifier{1, 2, 3, 5},
 				},
 			},
 		},
 		{
-			"QualifiedStatementsQCRetentionPeriod",
-			hvclient.Request{
+			name: "QualifiedStatementsQCRetentionPeriod",
+			first: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCRetentionPeriod: 1,
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCRetentionPeriod: 2,
 				},
 			},
 		},
 		{
-			"QualifiedStatementsQCPDsLength",
-			hvclient.Request{
+			name: "QualifiedStatementsQCPDsLength",
+			first: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCPDs: map[string]string{
 						"EN": "a value",
@@ -1241,7 +1241,7 @@ func TestRequestNotEqual(t *testing.T) {
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCPDs: map[string]string{
 						"EN": "a value",
@@ -1250,15 +1250,15 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"QualifiedStatementsQCPDsValue",
-			hvclient.Request{
+			name: "QualifiedStatementsQCPDsValue",
+			first: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCPDs: map[string]string{
 						"EN": "a value",
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					QCPDs: map[string]string{
 						"EN": "a different value",
@@ -1267,15 +1267,15 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"QualifiedStatementsSemanticsOID",
-			hvclient.Request{
+			name: "QualifiedStatementsSemanticsOID",
+			first: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					Semantics: hvclient.Semantics{
 						OID: asn1.ObjectIdentifier{1, 2, 3, 4},
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					Semantics: hvclient.Semantics{
 						OID: asn1.ObjectIdentifier{1, 2, 3, 5},
@@ -1284,15 +1284,15 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"QualifiedStatementsSemanticsNameAuthoritiesLength",
-			hvclient.Request{
+			name: "QualifiedStatementsSemanticsNameAuthoritiesLength",
+			first: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					Semantics: hvclient.Semantics{
 						NameAuthorities: []string{"value", "another value"},
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					Semantics: hvclient.Semantics{
 						NameAuthorities: []string{"value"},
@@ -1301,15 +1301,15 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"QualifiedStatementsSemanticsNameAuthoritiesValue",
-			hvclient.Request{
+			name: "QualifiedStatementsSemanticsNameAuthoritiesValue",
+			first: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					Semantics: hvclient.Semantics{
 						NameAuthorities: []string{"value"},
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				QualifiedStatements: &hvclient.QualifiedStatements{
 					Semantics: hvclient.Semantics{
 						NameAuthorities: []string{"a different value"},
@@ -1318,92 +1318,92 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"MSExtensionFirstNil",
-			hvclient.Request{},
-			hvclient.Request{
+			name:  "MSExtensionFirstNil",
+			first: hvclient.Request{},
+			second: hvclient.Request{
 				MSExtension: &hvclient.MSExtension{
 					OID: asn1.ObjectIdentifier{1, 2, 3, 4},
 				},
 			},
 		},
 		{
-			"MSExtensionSecondNil",
-			hvclient.Request{
+			name: "MSExtensionSecondNil",
+			first: hvclient.Request{
 				MSExtension: &hvclient.MSExtension{
 					OID: asn1.ObjectIdentifier{1, 2, 3, 4},
 				},
 			},
-			hvclient.Request{},
+			second: hvclient.Request{},
 		},
 		{
-			"MSExtensionOID",
-			hvclient.Request{
+			name: "MSExtensionOID",
+			first: hvclient.Request{
 				MSExtension: &hvclient.MSExtension{
 					OID: asn1.ObjectIdentifier{1, 2, 3, 4},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				MSExtension: &hvclient.MSExtension{
 					OID: asn1.ObjectIdentifier{1, 2, 3, 5},
 				},
 			},
 		},
 		{
-			"MSExtensionMinorVersion",
-			hvclient.Request{
+			name: "MSExtensionMinorVersion",
+			first: hvclient.Request{
 				MSExtension: &hvclient.MSExtension{
 					MinorVersion: 1,
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				MSExtension: &hvclient.MSExtension{
 					MinorVersion: 2,
 				},
 			},
 		},
 		{
-			"MSExtensionMajorVersion",
-			hvclient.Request{
+			name: "MSExtensionMajorVersion",
+			first: hvclient.Request{
 				MSExtension: &hvclient.MSExtension{
 					MajorVersion: 1,
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				MSExtension: &hvclient.MSExtension{
 					MajorVersion: 2,
 				},
 			},
 		},
 		{
-			"EKUDifferentLength",
-			hvclient.Request{
+			name: "EKUDifferentLength",
+			first: hvclient.Request{
 				EKUs: []asn1.ObjectIdentifier{
 					{1, 3, 6, 1, 5, 5, 7, 3, 1},
 					{1, 3, 6, 1, 5, 5, 7, 3, 2},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				EKUs: []asn1.ObjectIdentifier{
 					{1, 3, 6, 1, 5, 5, 7, 3, 1},
 				},
 			},
 		},
 		{
-			"EKUDifferentValue",
-			hvclient.Request{
+			name: "EKUDifferentValue",
+			first: hvclient.Request{
 				EKUs: []asn1.ObjectIdentifier{
 					{1, 3, 6, 1, 5, 5, 7, 3, 1},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				EKUs: []asn1.ObjectIdentifier{
 					{1, 3, 6, 1, 5, 5, 7, 3, 2},
 				},
 			},
 		},
 		{
-			"CustomExtensionsDifferentLength",
-			hvclient.Request{
+			name: "CustomExtensionsDifferentLength",
+			first: hvclient.Request{
 				CustomExtensions: []hvclient.OIDAndString{
 					{
 						OID:   asn1.ObjectIdentifier{2, 5, 29, 99, 1},
@@ -1415,7 +1415,7 @@ func TestRequestNotEqual(t *testing.T) {
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				CustomExtensions: []hvclient.OIDAndString{
 					{
 						OID:   asn1.ObjectIdentifier{2, 5, 29, 99, 1},
@@ -1425,8 +1425,8 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
-			"CustomExtensionsDifferentValue",
-			hvclient.Request{
+			name: "CustomExtensionsDifferentValue",
+			first: hvclient.Request{
 				CustomExtensions: []hvclient.OIDAndString{
 					{
 						OID:   asn1.ObjectIdentifier{2, 5, 29, 99, 1},
@@ -1434,7 +1434,7 @@ func TestRequestNotEqual(t *testing.T) {
 					},
 				},
 			},
-			hvclient.Request{
+			second: hvclient.Request{
 				CustomExtensions: []hvclient.OIDAndString{
 					{
 						OID:   asn1.ObjectIdentifier{2, 5, 29, 99, 2},
@@ -1466,8 +1466,8 @@ func TestRequestPKCS10(t *testing.T) {
 		request hvclient.Request
 	}{
 		{
-			"Validity",
-			hvclient.Request{
+			name: "Full",
+			request: hvclient.Request{
 				Subject: &hvclient.DN{
 					CommonName:         "John Doe",
 					Organization:       "ACME Inc",
@@ -1537,8 +1537,8 @@ func TestRequestPKCS10Failure(t *testing.T) {
 		request hvclient.Request
 	}{
 		{
-			"NoPrivateKey",
-			hvclient.Request{
+			name: "NoPrivateKey",
+			request: hvclient.Request{
 				Subject: &hvclient.DN{
 					CommonName: "John Doe",
 				},

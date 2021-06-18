@@ -33,7 +33,7 @@ type Config struct {
 	// URL is the URL of the HVCA service, including any version number.
 	URL string
 
-	// Version is the major version number of the HVCA service located at
+	// version is the major version number of the HVCA service located at
 	// the specified URL. When creating a configuration object directly, this
 	// field can be omitted, but it will be populated when creating a
 	// configuration object from a configuration file.
@@ -139,33 +139,9 @@ func (c *Config) Validate() error {
 
 // NewConfigFromFile creates a new HVCA client configuration object from
 // a configuration file.
-//
-// The configuration file is JSON-encoded and should match the following
-// format:
-//
-//     {
-//         "url": "https://emea.api.hvca.globalsign.com:8443/v2",
-//         "api_key": "value_of_api_key",
-//         "api_secret": "value_of_api_secret",
-//         "extra_headers": [
-//             "Some-Header-Name": "some value",
-//             "Other-Header-Name": "other value"
-//         ],
-//         "insecure_skip_verify": false,
-//         "cert_file": "/path/to/mTLS/certificate.pem",
-//         "key_file": "/path/to/mTLS/private_key.pem",
-//         "key_passphrase": "passphrase",
-//         "timeout": 60
-//     }
-//
-// The key_passphrase field may be omitted in the unlikely event the private
-// key file is not encrypted. The timeout field may be omitted, and a
-// reasonable default timeout will be applied.
 func NewConfigFromFile(filename string) (*Config, error) {
-	var fileconf *config.Config
-	var err error
-
-	if fileconf, err = config.NewFromFile(filename); err != nil {
+	var fileconf, err = config.NewFromFile(filename)
+	if err != nil {
 		return nil, err
 	}
 
@@ -219,7 +195,8 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 
 	// Get mTLS private key from file.
 	if jsonConfig.KeyFile != "" {
-		if newconf.TLSKey, err = pkifile.PrivateKeyFromFileWithPassword(jsonConfig.KeyFile, jsonConfig.KeyPassphrase); err != nil {
+		if newconf.TLSKey, err = pkifile.PrivateKeyFromFileWithPassword(
+			jsonConfig.KeyFile, jsonConfig.KeyPassphrase); err != nil {
 			return fmt.Errorf("couldn't get mTLS private key: %v", err)
 		}
 	}

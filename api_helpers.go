@@ -27,11 +27,12 @@ import (
 // headerFromResponse retrieves the value of a header from an HTTP response. If there
 // is more than one header value, only the first is returned.
 func headerFromResponse(r *http.Response, name string) (string, error) {
-	if len(r.Header[name]) == 0 {
-		return "", fmt.Errorf("no values in response for header %q", name)
+	var value = r.Header.Get(name)
+	if value == "" {
+		return "", fmt.Errorf("no values in HTTP response for header %s", name)
 	}
 
-	return r.Header[name][0], nil
+	return value, nil
 }
 
 // basePathHeaderFromResponse retrieves the base part of the path value contained in a

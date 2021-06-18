@@ -279,9 +279,6 @@ func NewClient(ctx context.Context, conf *Config) (*Client, error) {
 // NewClientFromFile returns a new HVCA client from a configuration file. An
 // initial login is made, and the returned client is immediately ready to make
 // API calls.
-//
-// Refer to the documentation for the Config object for the format of the
-// configuration file.
 func NewClientFromFile(ctx context.Context, filename string) (*Client, error) {
 	var conf, err = NewConfigFromFile(filename)
 	if err != nil {

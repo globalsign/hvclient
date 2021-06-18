@@ -31,8 +31,8 @@ func TestConfigNewFromFile(t *testing.T) {
 		want     config.Config
 	}{
 		{
-			"testdata/test.conf",
-			config.Config{
+			filename: "testdata/test.conf",
+			want: config.Config{
 				URL:           "https://emea.api.hvca.globalsign.com:8443/v2",
 				APIKey:        "api key goes here",
 				APISecret:     "api secret goes here",
@@ -43,8 +43,8 @@ func TestConfigNewFromFile(t *testing.T) {
 			},
 		},
 		{
-			"testdata/test_enc.conf",
-			config.Config{
+			filename: "testdata/test_enc.conf",
+			want: config.Config{
 				URL:           "https://emea.api.hvca.globalsign.com:8443/v2",
 				APIKey:        "api key goes here",
 				APISecret:     "api secret goes here",
@@ -55,8 +55,8 @@ func TestConfigNewFromFile(t *testing.T) {
 			},
 		},
 		{
-			"testdata/test_insecure.conf",
-			config.Config{
+			filename: "testdata/test_insecure.conf",
+			want: config.Config{
 				URL:                "https://emea.api.hvca.globalsign.com:8443/v2",
 				APIKey:             "api key goes here",
 				APISecret:          "api secret goes here",

@@ -19,8 +19,8 @@ import "fmt"
 
 var helpDoc = `Usage: hvclient [options]
 
-HVClient is a command-line interface to GlobalSign's High Value Certificate
-Authority (HVCA) certificate issuance and lifecycle management API. 
+HVClient is a command-line interface to the GlobalSign Atlas Certificate
+Management API (HVCA). 
 
 Access to HVCA requires an account. At the time of account setup, GlobalSign
 will provide a mutual TLS certificate, an API key, and an API secret which can
@@ -208,24 +208,22 @@ Other options:
 
 `
 
-var versionString = `HVClient 0.9
+var versionString = `HVClient 1.0
 
 Usage: hvclient [options]
 
-Copyright 2018 GMO GlobalSign Ltd
+Copyright (c) 2019-2021 GMO GlobalSign Pte. Ltd.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+https://opensource.org/licenses/MIT
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 `
 
 const sampleTemplate = `{

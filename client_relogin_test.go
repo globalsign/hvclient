@@ -47,10 +47,8 @@ func TestRelogin(t *testing.T) {
 	var ctx, cancel = context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	var err error
-	var clnt *Client
-
-	if clnt, err = NewClientFromFile(ctx, testReloginConfigFilename); err != nil {
+	var clnt, err = NewClientFromFile(ctx, testReloginConfigFilename)
+	if err != nil {
 		t.Fatalf("couldn't get client: %v", err)
 	}
 

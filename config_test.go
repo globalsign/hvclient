@@ -131,8 +131,8 @@ func TestConfigValidateFailure(t *testing.T) {
 		conf Config
 	}{
 		{
-			"NoURL",
-			Config{
+			name: "NoURL",
+			conf: Config{
 				URL:       "",
 				APIKey:    "1234",
 				APISecret: "abcdefgh",
@@ -141,8 +141,8 @@ func TestConfigValidateFailure(t *testing.T) {
 			},
 		},
 		{
-			"NoAPIKey",
-			Config{
+			name: "NoAPIKey",
+			conf: Config{
 				URL:       "http://example.com/v2",
 				APIKey:    "",
 				APISecret: "abcdefgh",
@@ -151,8 +151,8 @@ func TestConfigValidateFailure(t *testing.T) {
 			},
 		},
 		{
-			"NoAPISecret",
-			Config{
+			name: "NoAPISecret",
+			conf: Config{
 				URL:       "http://example.com/v2",
 				APIKey:    "1234",
 				APISecret: "",
@@ -161,8 +161,8 @@ func TestConfigValidateFailure(t *testing.T) {
 			},
 		},
 		{
-			"NoKey",
-			Config{
+			name: "NoKey",
+			conf: Config{
 				URL:       "http://example.com/v2",
 				APIKey:    "1234",
 				APISecret: "abcdefgh",
@@ -171,8 +171,8 @@ func TestConfigValidateFailure(t *testing.T) {
 			},
 		},
 		{
-			"NoCert",
-			Config{
+			name: "NoCert",
+			conf: Config{
 				URL:       "http://example.com/v2",
 				APIKey:    "1234",
 				APISecret: "abcdefgh",

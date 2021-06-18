@@ -36,9 +36,7 @@ func countIssued(clnt *hvclient.Client) {
 
 // countRevoked outputs the total count of certificates revoked.
 func countRevoked(clnt *hvclient.Client) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	outputCount(clnt.CounterCertsRevoked(ctx))
@@ -46,9 +44,7 @@ func countRevoked(clnt *hvclient.Client) {
 
 // quota outputs the remaining quota of certificate issuances.
 func quota(clnt *hvclient.Client) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	outputCount(clnt.QuotaIssuance(ctx))
@@ -66,9 +62,7 @@ func outputCount(count int64, err error) {
 // certsExpiring lists the serial numbers, not-before times, and not-after times of
 // the certificates expiring in the specified time window.
 func certsExpiring(clnt *hvclient.Client, from, to time.Time, page, pagesize int) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	outputCertsMeta(clnt.StatsExpiring(ctx, page, pagesize, from, to))
@@ -77,9 +71,7 @@ func certsExpiring(clnt *hvclient.Client, from, to time.Time, page, pagesize int
 // certsIssued lists the serial numbers, not-before times, and not-after times of
 // the certificates issued in the specified time window.
 func certsIssued(clnt *hvclient.Client, from, to time.Time, page, pagesize int) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	outputCertsMeta(clnt.StatsIssued(ctx, page, pagesize, from, to))
@@ -88,9 +80,7 @@ func certsIssued(clnt *hvclient.Client, from, to time.Time, page, pagesize int) 
 // certsRevoked lists the serial numbers, not-before times, and not-after times of
 // the certificates revoked in the specified time window.
 func certsRevoked(clnt *hvclient.Client, from, to time.Time, page, pagesize int) {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	outputCertsMeta(clnt.StatsRevoked(ctx, page, pagesize, from, to))

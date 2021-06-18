@@ -62,23 +62,23 @@ func TestCertInfoMarshalJSON(t *testing.T) {
 		want []byte
 	}{
 		{
-			"One",
-			hvclient.CertInfo{
+			name: "Issued",
+			info: hvclient.CertInfo{
 				PEM:       testPEM,
 				Status:    hvclient.StatusIssued,
 				UpdatedAt: time.Unix(1477958400, 0),
 			},
-			[]byte(fmt.Sprintf(`{"certificate":"%s","status":"ISSUED","updated_at":1477958400}`,
+			want: []byte(fmt.Sprintf(`{"certificate":"%s","status":"ISSUED","updated_at":1477958400}`,
 				strings.Replace(testPEM, "\n", "\\n", -1))),
 		},
 		{
-			"Two",
-			hvclient.CertInfo{
+			name: "Revoked",
+			info: hvclient.CertInfo{
 				PEM:       testPEM,
 				Status:    hvclient.StatusRevoked,
 				UpdatedAt: time.Unix(1477958400, 0),
 			},
-			[]byte(fmt.Sprintf(`{"certificate":"%s","status":"REVOKED","updated_at":1477958400}`,
+			want: []byte(fmt.Sprintf(`{"certificate":"%s","status":"REVOKED","updated_at":1477958400}`,
 				strings.Replace(testPEM, "\n", "\\n", -1))),
 		},
 	}
@@ -109,8 +109,8 @@ func TestCertInfoMarshalJSONFailure(t *testing.T) {
 		info hvclient.CertInfo
 	}{
 		{
-			"One",
-			hvclient.CertInfo{
+			name: "BadStatus",
+			info: hvclient.CertInfo{
 				PEM:       testPEM,
 				Status:    hvclient.CertStatus(0),
 				UpdatedAt: time.Unix(1477958400, 0),
@@ -140,20 +140,20 @@ func TestCertInfoUnmarshalJSON(t *testing.T) {
 		want hvclient.CertInfo
 	}{
 		{
-			"One",
-			[]byte(fmt.Sprintf(`{"certificate":"%s","status":"ISSUED","updated_at":1477958400}`,
+			name: "Issued",
+			data: []byte(fmt.Sprintf(`{"certificate":"%s","status":"ISSUED","updated_at":1477958400}`,
 				strings.Replace(testPEM, "\n", "\\n", -1))),
-			hvclient.CertInfo{
+			want: hvclient.CertInfo{
 				PEM:       testPEM,
 				Status:    hvclient.StatusIssued,
 				UpdatedAt: time.Unix(1477958400, 0),
 			},
 		},
 		{
-			"Two",
-			[]byte(fmt.Sprintf(`{"certificate":"%s","status":"REVOKED","updated_at":1477958400}`,
+			name: "Revoked",
+			data: []byte(fmt.Sprintf(`{"certificate":"%s","status":"REVOKED","updated_at":1477958400}`,
 				strings.Replace(testPEM, "\n", "\\n", -1))),
-			hvclient.CertInfo{
+			want: hvclient.CertInfo{
 				PEM:       testPEM,
 				Status:    hvclient.StatusRevoked,
 				UpdatedAt: time.Unix(1477958400, 0),
@@ -188,26 +188,26 @@ func TestCertInfoUnmarshalJSONFailure(t *testing.T) {
 		data []byte
 	}{
 		{
-			"BadStatusValue",
-			[]byte(fmt.Sprintf(`{"certificate":"%s","status":"BAD STATUS","updated_at":1477958400}`,
+			name: "BadStatusValue",
+			data: []byte(fmt.Sprintf(`{"certificate":"%s","status":"BAD STATUS","updated_at":1477958400}`,
 				strings.Replace(testPEM, "\n", "\\n", -1))),
 		},
 		{
-			"BadStatusType",
-			[]byte(fmt.Sprintf(`{"certificate":"%s","status":1234,"updated_at":1477958400}`,
+			name: "BadStatusType",
+			data: []byte(fmt.Sprintf(`{"certificate":"%s","status":1234,"updated_at":1477958400}`,
 				strings.Replace(testPEM, "\n", "\\n", -1))),
 		},
 		{
-			"BadPEM",
-			[]byte(`{"certificate":"BAD PEM","status":"ISSUED","updated_at":1477958400}`),
+			name: "BadPEM",
+			data: []byte(`{"certificate":"BAD PEM","status":"ISSUED","updated_at":1477958400}`),
 		},
 		{
-			"EmptyPEM",
-			[]byte(`{"certificate":"","status":"ISSUED","updated_at":1477958400}`),
+			name: "EmptyPEM",
+			data: []byte(`{"certificate":"","status":"ISSUED","updated_at":1477958400}`),
 		},
 		{
-			"InvalidPEM",
-			[]byte(fmt.Sprintf(`{"certificate":"%s","status":"ISSUED","updated_at":1477958400}`,
+			name: "InvalidPEM",
+			data: []byte(fmt.Sprintf(`{"certificate":"%s","status":"ISSUED","updated_at":1477958400}`,
 				strings.Replace(strings.Replace(testPEM, "\n", "\\n", -1), "M", "N", -1))),
 		},
 	}
@@ -219,7 +219,6 @@ func TestCertInfoUnmarshalJSONFailure(t *testing.T) {
 			t.Parallel()
 
 			var got hvclient.CertInfo
-
 			if err := json.Unmarshal(tc.data, &got); err == nil {
 				t.Fatalf("unexpectedly unmarshalled JSON: %v", got)
 			}
@@ -231,7 +230,6 @@ func TestCertStatusStringInvalidValue(t *testing.T) {
 	t.Parallel()
 
 	var want = "ERROR: UNKNOWN STATUS"
-
 	if got := hvclient.CertStatus(0).String(); got != want {
 		t.Errorf("got %s, want %s", got, want)
 	}

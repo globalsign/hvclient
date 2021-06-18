@@ -33,22 +33,22 @@ func TestClaimLogEntryMarshalJSON(t *testing.T) {
 		want  []byte
 	}{
 		{
-			"StatusSuccess",
-			hvclient.ClaimLogEntry{
+			name: "StatusSuccess",
+			entry: hvclient.ClaimLogEntry{
 				Status:      hvclient.VerificationSuccess,
 				Description: "All is well",
 				TimeStamp:   time.Unix(1477958400, 0),
 			},
-			[]byte(`{"status":"SUCCESS","description":"All is well","timestamp":1477958400}`),
+			want: []byte(`{"status":"SUCCESS","description":"All is well","timestamp":1477958400}`),
 		},
 		{
-			"StatusError",
-			hvclient.ClaimLogEntry{
+			name: "StatusError",
+			entry: hvclient.ClaimLogEntry{
 				Status:      hvclient.VerificationError,
 				Description: "All is well",
 				TimeStamp:   time.Unix(1477958400, 0),
 			},
-			[]byte(`{"status":"ERROR","description":"All is well","timestamp":1477958400}`),
+			want: []byte(`{"status":"ERROR","description":"All is well","timestamp":1477958400}`),
 		},
 	}
 
@@ -78,8 +78,8 @@ func TestClaimLogEntryMarshalJSONFailure(t *testing.T) {
 		entry hvclient.ClaimLogEntry
 	}{
 		{
-			"BadStatus",
-			hvclient.ClaimLogEntry{
+			name: "BadStatus",
+			entry: hvclient.ClaimLogEntry{
 				Description: "All is well",
 				TimeStamp:   time.Unix(1477958400, 0),
 			},
@@ -107,16 +107,16 @@ func TestClaimLogEntryUnmarshalJSON(t *testing.T) {
 		want hvclient.ClaimLogEntry
 	}{
 		{
-			`{"status":"SUCCESS","description":"All is well","timestamp":1477958400}`,
-			hvclient.ClaimLogEntry{
+			json: `{"status":"SUCCESS","description":"All is well","timestamp":1477958400}`,
+			want: hvclient.ClaimLogEntry{
 				Status:      hvclient.VerificationSuccess,
 				Description: "All is well",
 				TimeStamp:   time.Unix(1477958400, 0),
 			},
 		},
 		{
-			`{"status":"ERROR","description":"All is well","timestamp":1477958400}`,
-			hvclient.ClaimLogEntry{
+			json: `{"status":"ERROR","description":"All is well","timestamp":1477958400}`,
+			want: hvclient.ClaimLogEntry{
 				Status:      hvclient.VerificationError,
 				Description: "All is well",
 				TimeStamp:   time.Unix(1477958400, 0),
@@ -172,27 +172,27 @@ func TestClaimNotEqual(t *testing.T) {
 		first, second hvclient.Claim
 	}{
 		{
-			"LogLength",
-			hvclient.Claim{
+			name: "LogLength",
+			first: hvclient.Claim{
 				Log: []hvclient.ClaimLogEntry{
 					{Status: hvclient.VerificationSuccess},
 					{Status: hvclient.VerificationError},
 				},
 			},
-			hvclient.Claim{
+			second: hvclient.Claim{
 				Log: []hvclient.ClaimLogEntry{
 					{Status: hvclient.VerificationSuccess},
 				},
 			},
 		},
 		{
-			"LogValue",
-			hvclient.Claim{
+			name: "LogValue",
+			first: hvclient.Claim{
 				Log: []hvclient.ClaimLogEntry{
 					{Status: hvclient.VerificationSuccess},
 				},
 			},
-			hvclient.Claim{
+			second: hvclient.Claim{
 				Log: []hvclient.ClaimLogEntry{
 					{Status: hvclient.VerificationError},
 				},
@@ -222,8 +222,8 @@ func TestClaimMarshalJSON(t *testing.T) {
 		want  []byte
 	}{
 		{
-			"One",
-			hvclient.Claim{
+			name: "One",
+			claim: hvclient.Claim{
 				ID:        "1234",
 				Status:    hvclient.StatusVerified,
 				Domain:    "example.com",
@@ -238,7 +238,7 @@ func TestClaimMarshalJSON(t *testing.T) {
 					},
 				},
 			},
-			[]byte(`{
+			want: []byte(`{
     "id": "1234",
     "status": "VERIFIED",
     "domain": "example.com",
@@ -282,8 +282,8 @@ func TestClaimMarshalJSONFailure(t *testing.T) {
 		claim hvclient.Claim
 	}{
 		{
-			"One",
-			hvclient.Claim{
+			name: "One",
+			claim: hvclient.Claim{
 				ID:        "1234",
 				Status:    hvclient.ClaimStatus(0),
 				Domain:    "example.com",
@@ -322,7 +322,7 @@ func TestClaimUnmarshalJSON(t *testing.T) {
 		want hvclient.Claim
 	}{
 		{
-			`{
+			json: `{
                 "id": "1234",
                 "status": "VERIFIED",
                 "domain": "example.com",
@@ -337,7 +337,7 @@ func TestClaimUnmarshalJSON(t *testing.T) {
                     }
                 ]
             }`,
-			hvclient.Claim{
+			want: hvclient.Claim{
 				ID:        "1234",
 				Status:    hvclient.StatusVerified,
 				Domain:    "example.com",
@@ -437,13 +437,13 @@ func TestClaimAssertionInfoMarshalJSON(t *testing.T) {
 		want  []byte
 	}{
 		{
-			"One",
-			hvclient.ClaimAssertionInfo{
+			name: "One",
+			entry: hvclient.ClaimAssertionInfo{
 				Token:    "1234",
 				AssertBy: time.Unix(1477958400, 0),
 				ID:       "/path/to/claim",
 			},
-			[]byte(`{"token":"1234","assert_by":1477958400,"id":"/path/to/claim"}`),
+			want: []byte(`{"token":"1234","assert_by":1477958400,"id":"/path/to/claim"}`),
 		},
 	}
 
@@ -474,9 +474,9 @@ func TestClaimAssertionInfoUnmarshalJSON(t *testing.T) {
 		want hvclient.ClaimAssertionInfo
 	}{
 		{
-			"One",
-			[]byte(`{"token":"1234","assert_by":1477958400,"id":"/path/to/claim"}`),
-			hvclient.ClaimAssertionInfo{
+			name: "One",
+			json: []byte(`{"token":"1234","assert_by":1477958400,"id":"/path/to/claim"}`),
+			want: hvclient.ClaimAssertionInfo{
 				Token:    "1234",
 				AssertBy: time.Unix(1477958400, 0),
 				ID:       "/path/to/claim",

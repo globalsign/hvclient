@@ -63,16 +63,19 @@ const (
 	pathReassert                        = "/reassert"
 )
 
-// CertificateRequest requests a new certificate based on a Request object.
-// The HVCA HTTP API is asynchronous, and on success this method returns the
-// serial number of the certificate to be issued. After a short delay, the
-// certificate itself may be retrieved via the CertificateRetrieve method.
-func (c *Client) CertificateRequest(ctx context.Context, hvcareq *Request) (string, error) {
+// CertificateRequest requests a new certificate based. The HVCA API is
+// asynchronous, and on success this method returns the serial number of
+// the new certificate. After a short delay, the certificate itself may be
+// retrieved via the CertificateRetrieve method.
+func (c *Client) CertificateRequest(
+	ctx context.Context,
+	req *Request,
+) (string, error) {
 	var r, err = c.makeRequest(
 		ctx,
 		endpointCertificates,
 		http.MethodPost,
-		hvcareq,
+		req,
 		nil,
 	)
 	if err != nil {
@@ -82,8 +85,11 @@ func (c *Client) CertificateRequest(ctx context.Context, hvcareq *Request) (stri
 	return basePathHeaderFromResponse(r, certSNHeaderName)
 }
 
-// CertificateRetrieve retrieves the certificate with the specified serial number.
-func (c *Client) CertificateRetrieve(ctx context.Context, serialNumber string) (*CertInfo, error) {
+// CertificateRetrieve retrieves a certificate.
+func (c *Client) CertificateRetrieve(
+	ctx context.Context,
+	serialNumber string,
+) (*CertInfo, error) {
 	var r CertInfo
 	var _, err = c.makeRequest(
 		ctx,
@@ -99,8 +105,11 @@ func (c *Client) CertificateRetrieve(ctx context.Context, serialNumber string) (
 	return &r, nil
 }
 
-// CertificateRevoke revokes the certificate with the specified serial number.
-func (c *Client) CertificateRevoke(ctx context.Context, serialNumber string) error {
+// CertificateRevoke revokes a certificate.
+func (c *Client) CertificateRevoke(
+	ctx context.Context,
+	serialNumber string,
+) error {
 	var _, err = c.makeRequest(
 		ctx,
 		endpointCertificates+"/"+url.QueryEscape(serialNumber),
@@ -111,8 +120,8 @@ func (c *Client) CertificateRevoke(ctx context.Context, serialNumber string) err
 	return err
 }
 
-// TrustChain returns the chain of trust for the
-// certificates issued by the calling account.
+// TrustChain returns the chain of trust for the certificates issued
+// by the calling account.
 func (c *Client) TrustChain(ctx context.Context) ([]string, error) {
 	var chain []string
 	var _, err = c.makeRequest(
@@ -316,7 +325,7 @@ func (c *Client) ClaimSubmit(ctx context.Context, domain string) (*ClaimAssertio
 	return &info, nil
 }
 
-// ClaimRetrieve returns the domain claim with the specified ID.
+// ClaimRetrieve returns a domain claim.
 func (c *Client) ClaimRetrieve(ctx context.Context, id string) (*Claim, error) {
 	var claim Claim
 	var _, err = c.makeRequest(
@@ -333,7 +342,7 @@ func (c *Client) ClaimRetrieve(ctx context.Context, id string) (*Claim, error) {
 	return &claim, nil
 }
 
-// ClaimDelete deletes the domain claim with the specified ID.
+// ClaimDelete deletes a domain claim.
 func (c *Client) ClaimDelete(ctx context.Context, id string) error {
 	var _, err = c.makeRequest(
 		ctx,

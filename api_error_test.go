@@ -27,34 +27,34 @@ var apiErrorTestCases = []struct {
 	statusCode int
 	body       string
 	err        APIError
-	str        string
+	want       string
 }{
 	{
-		401,
-		`{"description":"unauthorized"}`,
-		APIError{
+		statusCode: 401,
+		body:       `{"description":"unauthorized"}`,
+		err: APIError{
 			StatusCode:  401,
 			Description: "unauthorized",
 		},
-		"401: unauthorized",
+		want: "401: unauthorized",
 	},
 	{
-		404,
-		`{"description":"not found"}`,
-		APIError{
+		statusCode: 404,
+		body:       `{"description":"not found"}`,
+		err: APIError{
 			StatusCode:  404,
 			Description: "not found",
 		},
-		"404: not found",
+		want: "404: not found",
 	},
 	{
-		422,
-		`{"description":"json stopped`,
-		APIError{
+		statusCode: 422,
+		body:       `{"description":"json stopped`,
+		err: APIError{
 			StatusCode:  422,
 			Description: "unknown API error",
 		},
-		"422: unknown API error",
+		want: "422: unknown API error",
 	},
 }
 
@@ -93,8 +93,8 @@ func TestAPIErrorString(t *testing.T) {
 			resp.WriteHeader(tc.statusCode)
 			_, _ = resp.Write([]byte(tc.body))
 
-			if got := newAPIError(resp.Result()).Error(); got != tc.str {
-				t.Errorf("got %q, want %q", got, tc.str)
+			if got := newAPIError(resp.Result()).Error(); got != tc.want {
+				t.Errorf("got %q, want %q", got, tc.want)
 			}
 		})
 	}

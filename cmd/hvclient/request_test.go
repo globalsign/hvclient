@@ -56,10 +56,8 @@ func TestGetRequestFromTemplate(t *testing.T) {
 		t.Run(tc.filename, func(t *testing.T) {
 			t.Parallel()
 
-			var got *hvclient.Request
-			var err error
-
-			if got, err = getRequestFromTemplateOrNew(tc.filename); err != nil {
+			var got, err = getRequestFromTemplateOrNew(tc.filename)
+			if err != nil {
 				t.Fatalf("couldn't get request from template: %v", err)
 			}
 
@@ -270,10 +268,8 @@ func TestBuildValidity(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var got *hvclient.Validity
-			var err error
-
-			if got, err = buildValidity(tc.initial, tc.notbefore, tc.notafter, tc.duration); err != nil {
+			var got, err = buildValidity(tc.initial, tc.notbefore, tc.notafter, tc.duration)
+			if err != nil {
 				t.Fatalf("couldn't build validity: %v", err)
 			}
 
@@ -485,10 +481,8 @@ func TestBuildDN(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var got *hvclient.DN
-			var err error
-
-			if got, err = buildDN(tc.initial, tc.values); err != nil {
+			var got, err = buildDN(tc.initial, tc.values)
+			if err != nil {
 				t.Fatalf("couldn't build DN: %v", err)
 			}
 
@@ -655,10 +649,8 @@ func TestBuildSAN(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var got *hvclient.SAN
-			var err error
-
-			if got, err = buildSAN(tc.initial, tc.dnsnames, tc.emails, tc.ips, tc.uris); err != nil {
+			var got, err = buildSAN(tc.initial, tc.dnsnames, tc.emails, tc.ips, tc.uris)
+			if err != nil {
 				t.Fatalf("couldn't build SAN: %v", err)
 			}
 
@@ -807,10 +799,8 @@ func TestBuildEKUs(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var got []asn1.ObjectIdentifier
-			var err error
-
-			if got, err = buildEKUs(tc.initial, tc.field); err != nil {
+			var got, err = buildEKUs(tc.initial, tc.field)
+			if err != nil {
 				t.Fatalf("couldn't build EKUs: %v", err)
 			}
 
@@ -959,16 +949,13 @@ func TestGetKeys(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var gotpublic, gotprivate interface{}
-			var gotcsr *x509.CertificateRequest
-			var err error
-
-			if gotpublic, gotprivate, gotcsr, err = getKeys(
+			var gotpublic, gotprivate, gotcsr, err = getKeys(
 				tc.public,
 				tc.private,
 				tc.csr,
 				tc.pfunc,
-			); err != nil {
+			)
+			if err != nil {
 				t.Fatalf("couldn't get keys: %v", err)
 			}
 
@@ -1246,10 +1233,8 @@ func TestBuildRequest(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var request *hvclient.Request
-			var err error
-
-			if request, err = buildRequest(tc.values); err != nil {
+			var request, err = buildRequest(tc.values)
+			if err != nil {
 				t.Fatalf("couldn't build request: %v", err)
 			}
 

@@ -16,12 +16,11 @@ limitations under the License.
 package hvclient
 
 import (
-	"errors"
+	"bytes"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
-	"testing/iotest"
 
 	"github.com/globalsign/hvclient/internal/httputils"
 	"github.com/google/go-cmp/cmp"
@@ -66,7 +65,7 @@ func TestAPIError(t *testing.T) {
 		{
 			name: "BadBody",
 			in: &http.Response{
-				Body: ioutil.NopCloser(iotest.ErrReader(errors.New("bad read"))),
+				Body: ioutil.NopCloser(bytes.NewReader(nil)),
 				Header: http.Header{
 					httputils.ContentTypeHeader: []string{httputils.ContentTypeProblemJSON},
 				},

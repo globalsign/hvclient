@@ -21,12 +21,12 @@ import (
 	"errors"
 	"net"
 	"net/url"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/globalsign/hvclient"
 	"github.com/globalsign/hvclient/internal/testhelpers"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestGetRequestFromTemplate(t *testing.T) {
@@ -804,7 +804,7 @@ func TestBuildEKUs(t *testing.T) {
 				t.Fatalf("couldn't build EKUs: %v", err)
 			}
 
-			if !cmp.Equal(got, tc.want) {
+			if !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("got %v, want %v", got, tc.want)
 			}
 		})
@@ -959,15 +959,15 @@ func TestGetKeys(t *testing.T) {
 				t.Fatalf("couldn't get keys: %v", err)
 			}
 
-			if !cmp.Equal(gotpublic, tc.wantpublic) {
+			if !reflect.DeepEqual(gotpublic, tc.wantpublic) {
 				t.Errorf("public keys, got %v, want %v", gotpublic, tc.wantpublic)
 			}
 
-			if !cmp.Equal(gotprivate, tc.wantprivate) {
+			if !reflect.DeepEqual(gotprivate, tc.wantprivate) {
 				t.Errorf("private keys, got %v, want %v", gotprivate, tc.wantprivate)
 			}
 
-			if !cmp.Equal(gotcsr, tc.wantcsr) {
+			if !reflect.DeepEqual(gotcsr, tc.wantcsr) {
 				t.Errorf("CSRs, got %v, want %v", gotcsr, tc.wantcsr)
 			}
 		})
@@ -1242,15 +1242,15 @@ func TestBuildRequest(t *testing.T) {
 				t.Errorf("got %v, want %v", request, tc.want)
 			}
 
-			if !cmp.Equal(request.PublicKey, tc.want.PublicKey) {
+			if !reflect.DeepEqual(request.PublicKey, tc.want.PublicKey) {
 				t.Errorf("public keys, got %v, want %v", request.PublicKey, tc.want.PublicKey)
 			}
 
-			if !cmp.Equal(request.PrivateKey, tc.want.PrivateKey) {
+			if !reflect.DeepEqual(request.PrivateKey, tc.want.PrivateKey) {
 				t.Errorf("private keys, got %v, want %v", request.PrivateKey, tc.want.PrivateKey)
 			}
 
-			if !cmp.Equal(request.CSR, tc.want.CSR) {
+			if !reflect.DeepEqual(request.CSR, tc.want.CSR) {
 				t.Errorf("CSRs, got %v, want %v", request.CSR, tc.want.CSR)
 			}
 		})

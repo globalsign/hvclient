@@ -17,95 +17,20 @@ package hvclient_test
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"math/big"
 	"net/http"
-	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/globalsign/hvclient"
-	"github.com/globalsign/hvclient/internal/httputils"
-	"github.com/go-chi/chi"
+	"github.com/globalsign/hvclient/internal/pkifile"
+	"github.com/google/go-cmp/cmp"
 )
 
-const (
-	mockQuota             = 42
-	sslClientSerialHeader = "X-SSL-Client-Serial"
-)
-
-// newMockServer returns an *httptest.Server which mocks the HVCA API /login
-// endpoint.
-func newMockServer(t *testing.T) *httptest.Server {
-	t.Helper()
-
-	var r = chi.NewRouter()
-
-	r.Route("/login", func(r chi.Router) {
-		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-			var err = httputils.VerifyRequestContentType(r, httputils.ContentTypeJSON)
-			if err != nil {
-				writeMockError(w, http.StatusUnsupportedMediaType)
-				return
-			}
-
-			// Read and parse request body.
-			var data []byte
-			data, err = ioutil.ReadAll(r.Body)
-			if err != nil {
-				writeMockError(w, http.StatusInternalServerError)
-				return
-			}
-
-			var loginRequest struct {
-				APIKey    string `json:"api_key"`
-				APISecret string `json:"api_secret"`
-			}
-			err = json.Unmarshal(data, &loginRequest)
-			if err != nil {
-				writeMockError(w, http.StatusBadRequest)
-				return
-			}
-
-			// Trivially verify the expected SSL client serial header.
-			var serial = r.Header.Get(sslClientSerialHeader)
-			if serial != "mock_serial" {
-				writeMockError(w, http.StatusUnauthorized)
-				return
-			}
-
-			// Trivially verify the expected API key.
-			if loginRequest.APIKey != "mock_key" {
-				writeMockError(w, http.StatusUnauthorized)
-				return
-			}
-
-			// Write a mock token.
-			w.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeJSON)
-			_, _ = w.Write([]byte(`{"access_token":"mock_token"}`))
-		})
-	})
-
-	r.Route("/quotas", func(r chi.Router) {
-		r.Route("/issuance", func(r chi.Router) {
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeJSON)
-				_, _ = w.Write([]byte(fmt.Sprintf(`{"value":%d}`, mockQuota)))
-			})
-		})
-	})
-
-	return httptest.NewServer(r)
-}
-
-func writeMockError(w http.ResponseWriter, status int) {
-	w.Header().Set(httputils.ContentTypeHeader, httputils.ContentTypeProblemJSON)
-	w.WriteHeader(status)
-	_, _ = w.Write([]byte(fmt.Sprintf(`{"description":"%s"}`, http.StatusText(status))))
-}
-
-func TestClientLocalNew(t *testing.T) {
+func TestClientMockNew(t *testing.T) {
 	t.Parallel()
 
 	var testcases = []struct {
@@ -117,22 +42,22 @@ func TestClientLocalNew(t *testing.T) {
 	}{
 		{
 			name:      "OK",
-			apiKey:    "mock_key",
-			apiSecret: "mock_secret",
-			serial:    "mock_serial",
+			apiKey:    mockAPIKey,
+			apiSecret: mockAPISecret,
+			serial:    mockSSLClientSerial,
 			status:    http.StatusOK,
 		},
 		{
 			name:      "WrongAPIKey",
 			apiKey:    "wrong_key",
-			apiSecret: "mock_secret",
-			serial:    "mock_serial",
+			apiSecret: mockAPISecret,
+			serial:    mockSSLClientSerial,
 			status:    http.StatusUnauthorized,
 		},
 		{
 			name:      "WrongSerial",
-			apiKey:    "mock_key",
-			apiSecret: "mock_secret",
+			apiKey:    mockAPIKey,
+			apiSecret: mockAPISecret,
 			serial:    "wrong_serial",
 			status:    http.StatusUnauthorized,
 		},
@@ -163,9 +88,13 @@ func TestClientLocalNew(t *testing.T) {
 					t.Fatalf("failed to create client: %v", err)
 				}
 			} else {
+				if err == nil {
+					t.Fatal("unexpectedly created client")
+				}
+
 				var apiErr hvclient.APIError
 				if !errors.As(err, &apiErr) {
-					t.Fatalf("failed to create client: %v", err)
+					t.Fatalf("unexpected error: %v", err)
 				}
 
 				if apiErr.StatusCode != tc.status {
@@ -176,34 +105,465 @@ func TestClientLocalNew(t *testing.T) {
 	}
 }
 
-func TestClientLocalQuotasIssuance(t *testing.T) {
+func TestClientMockCertificatesRequest(t *testing.T) {
 	t.Parallel()
 
-	var testServer = newMockServer(t)
-	defer testServer.Close()
+	var testcases = []struct {
+		name string
+		cn   string
+		want *big.Int
+		err  error
+	}{
+		{
+			name: "OK",
+			cn:   "John Doe",
+			want: mustParseBigInt(t, mockCertSerial, 16),
+		},
+		{
+			name: "TriggeredError",
+			cn:   triggerError,
+			err:  hvclient.APIError{StatusCode: http.StatusUnprocessableEntity},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			var csr, err = pkifile.CSRFromFile("testdata/test_csr.pem")
+			if err != nil {
+				t.Fatalf("failed to read CSR: %v", err)
+			}
+
+			var got *big.Int
+			got, err = client.CertificateRequest(
+				ctx,
+				&hvclient.Request{
+					Validity: &hvclient.Validity{
+						NotBefore: time.Now(),
+						NotAfter:  time.Unix(0, 0),
+					},
+					Subject: &hvclient.DN{CommonName: tc.cn},
+					CSR:     csr,
+				},
+			)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if tc.err != nil {
+				verifyAPIError(t, err, tc.err)
+				return
+			}
+
+			if fmt.Sprintf("%X", got) != mockCertSerial {
+				t.Fatalf("got %X, want %s", got, mockCertSerial)
+			}
+		})
+	}
+}
+
+func TestClientMockCertificatesRetrieve(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name   string
+		serial *big.Int
+		want   hvclient.CertInfo
+		err    error
+	}{
+		{
+			name:   "OK",
+			serial: big.NewInt(0x741daf9ec2d5f7dc),
+			want: hvclient.CertInfo{
+				PEM: string(pem.EncodeToMemory(&pem.Block{
+					Type:  "CERTIFICATE",
+					Bytes: mockCert.Raw,
+				})),
+				X509:      mockCert,
+				Status:    hvclient.StatusIssued,
+				UpdatedAt: time.Date(2021, 6, 18, 16, 29, 51, 0, time.UTC),
+			},
+		},
+		{
+			name:   "NotFound",
+			serial: mockBigIntNotFound,
+			err:    hvclient.APIError{StatusCode: http.StatusNotFound},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			var got, err = client.CertificateRetrieve(ctx, tc.serial)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if tc.err != nil {
+				verifyAPIError(t, err, tc.err)
+				return
+			}
+
+			if !got.Equal(tc.want) {
+				t.Fatalf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestClientMockCertificatesRevoke(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name   string
+		serial *big.Int
+		err    error
+	}{
+		{
+			name:   "OK",
+			serial: big.NewInt(0x741daf9ec2d5f7dc),
+		},
+		{
+			name:   "NotFound",
+			serial: mockBigIntNotFound,
+			err:    hvclient.APIError{StatusCode: http.StatusNotFound},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			var err = client.CertificateRevoke(ctx, tc.serial)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if tc.err != nil {
+				verifyAPIError(t, err, tc.err)
+				return
+			}
+		})
+	}
+}
+
+func TestClientMockCounterCertsIssued(t *testing.T) {
+	t.Parallel()
+
+	var client, closefunc = newMockClient(t)
+	defer closefunc()
 
 	var ctx, cancel = context.WithCancel(context.Background())
 	defer cancel()
 
-	var client, err = hvclient.NewClient(ctx, &hvclient.Config{
-		URL:       testServer.URL,
-		APIKey:    "mock_key",
-		APISecret: "mock_secret",
-		ExtraHeaders: map[string]string{
-			sslClientSerialHeader: "mock_serial",
-		},
-	})
+	var got, err = client.CounterCertsIssued(ctx)
 	if err != nil {
-		t.Fatalf("failed to create new client: %v", err)
+		t.Fatalf("failed to get count of certificates issued: %v", err)
 	}
 
-	var got int64
-	got, err = client.QuotaIssuance(ctx)
+	if got != mockCounterIssued {
+		t.Fatalf("got %d, want %d", got, mockCounterIssued)
+	}
+}
+
+func TestClientMockCounterCertsRevoked(t *testing.T) {
+	t.Parallel()
+
+	var client, closefunc = newMockClient(t)
+	defer closefunc()
+
+	var ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	var got, err = client.CounterCertsRevoked(ctx)
+	if err != nil {
+		t.Fatalf("failed to get count of certificates revoked: %v", err)
+	}
+
+	if got != mockCounterRevoked {
+		t.Fatalf("got %d, want %d", got, mockCounterRevoked)
+	}
+}
+
+func TestClientMockQuotasIssuance(t *testing.T) {
+	t.Parallel()
+
+	var client, closefunc = newMockClient(t)
+	defer closefunc()
+
+	var ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	var got, err = client.QuotaIssuance(ctx)
 	if err != nil {
 		t.Fatalf("failed to get issuance quota: %v", err)
 	}
 
-	if got != mockQuota {
-		t.Fatalf("got quota %d, want %d", got, mockQuota)
+	if got != mockQuotaIssuance {
+		t.Fatalf("got %d, want %d", got, mockQuotaIssuance)
 	}
+}
+
+func TestClientMockStatsExpiring(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name          string
+		page, perPage int
+		from, to      time.Time
+		want          []hvclient.CertMeta
+	}{
+		{
+			name: "ok",
+			want: []hvclient.CertMeta{
+				{
+					SerialNumber: mustParseBigInt(t, "748BDAE7199CC246", 16),
+					NotBefore:    time.Date(2021, 7, 12, 16, 29, 51, 0, time.UTC),
+					NotAfter:     time.Date(2021, 10, 10, 16, 29, 51, 0, time.UTC),
+				},
+				{
+					SerialNumber: mustParseBigInt(t, "DEADBEEF44274823", 16),
+					NotBefore:    time.Date(2021, 7, 14, 12, 5, 37, 0, time.UTC),
+					NotAfter:     time.Date(2021, 10, 12, 12, 5, 37, 0, time.UTC),
+				},
+				{
+					SerialNumber: mustParseBigInt(t, "AA9915DC78BB21FF", 16),
+					NotBefore:    time.Date(2021, 7, 14, 17, 59, 8, 0, time.UTC),
+					NotAfter:     time.Date(2021, 10, 12, 17, 59, 8, 0, time.UTC),
+				},
+				{
+					SerialNumber: mustParseBigInt(t, "32897DA7B113DAB6", 16),
+					NotBefore:    time.Date(2021, 7, 14, 21, 11, 43, 0, time.UTC),
+					NotAfter:     time.Date(2021, 10, 12, 21, 11, 43, 0, time.UTC),
+				},
+			},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithCancel(context.Background())
+			defer cancel()
+
+			var got, count, err = client.StatsExpiring(ctx, tc.page, tc.perPage, tc.from, tc.to)
+			if err != nil {
+				t.Fatalf("failed to get stats expiring: %v", err)
+			}
+
+			if count != int64(len(tc.want)) {
+				t.Fatalf("got count %d, want %d", count, len(tc.want))
+			}
+
+			if !cmp.Equal(got, tc.want) {
+				t.Fatalf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestClientMockStatsIssued(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name          string
+		page, perPage int
+		from, to      time.Time
+		want          []hvclient.CertMeta
+	}{
+		{
+			name: "ok",
+			want: []hvclient.CertMeta{
+				{
+					SerialNumber: mustParseBigInt(t, "741DAF9EC2D5F7DC", 16),
+					NotBefore:    time.Date(2021, 6, 18, 16, 29, 51, 0, time.UTC),
+					NotAfter:     time.Date(2021, 9, 16, 16, 29, 51, 0, time.UTC),
+				},
+				{
+					SerialNumber: mustParseBigInt(t, "87BC1DC5524A2B18", 16),
+					NotBefore:    time.Date(2021, 6, 19, 12, 5, 37, 0, time.UTC),
+					NotAfter:     time.Date(2021, 9, 17, 12, 5, 37, 0, time.UTC),
+				},
+				{
+					SerialNumber: mustParseBigInt(t, "F488BCE14A56CD2A", 16),
+					NotBefore:    time.Date(2021, 6, 19, 17, 59, 8, 0, time.UTC),
+					NotAfter:     time.Date(2021, 9, 17, 17, 59, 8, 0, time.UTC),
+				},
+			},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithCancel(context.Background())
+			defer cancel()
+
+			var got, count, err = client.StatsIssued(ctx, tc.page, tc.perPage, tc.from, tc.to)
+			if err != nil {
+				t.Fatalf("failed to get stats issued: %v", err)
+			}
+
+			if count != int64(len(tc.want)) {
+				t.Fatalf("got count %d, want %d", count, len(tc.want))
+			}
+
+			if !cmp.Equal(got, tc.want) {
+				t.Fatalf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestClientMockStatsRevoked(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name          string
+		page, perPage int
+		from, to      time.Time
+		want          []hvclient.CertMeta
+	}{
+		{
+			name: "ok",
+			want: []hvclient.CertMeta{
+				{
+					SerialNumber: mustParseBigInt(t, "87BC1DC5524A2B18", 16),
+					NotBefore:    time.Date(2021, 6, 19, 12, 5, 37, 0, time.UTC),
+					NotAfter:     time.Date(2021, 9, 17, 12, 5, 37, 0, time.UTC),
+				},
+				{
+					SerialNumber: mustParseBigInt(t, "F488BCE14A56CD2A", 16),
+					NotBefore:    time.Date(2021, 6, 19, 17, 59, 8, 0, time.UTC),
+					NotAfter:     time.Date(2021, 9, 17, 17, 59, 8, 0, time.UTC),
+				},
+			},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithCancel(context.Background())
+			defer cancel()
+
+			var got, count, err = client.StatsRevoked(ctx, tc.page, tc.perPage, tc.from, tc.to)
+			if err != nil {
+				t.Fatalf("failed to get stats revoked: %v", err)
+			}
+
+			if count != int64(len(tc.want)) {
+				t.Fatalf("got count %d, want %d", count, len(tc.want))
+			}
+
+			if !cmp.Equal(got, tc.want) {
+				t.Fatalf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestClientMockTrustChain(t *testing.T) {
+	t.Parallel()
+
+	var client, closefunc = newMockClient(t)
+	defer closefunc()
+
+	var ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	var got, err = client.TrustChain(ctx)
+	if err != nil {
+		t.Fatalf("failed to get issuance quota: %v", err)
+	}
+
+	if !cmp.Equal(got, mockTrustChainCerts) {
+		t.Fatalf("got %v, want %v", got, mockTrustChainCerts)
+	}
+}
+
+func TestClientMockValidationPolicy(t *testing.T) {
+	t.Parallel()
+
+	var client, closefunc = newMockClient(t)
+	defer closefunc()
+
+	var ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	var got, err = client.Policy(ctx)
+	if err != nil {
+		t.Fatalf("failed to get validation policy: %v", err)
+	}
+
+	if !cmp.Equal(got, &mockPolicy) {
+		t.Fatalf("got %v, want %v", got, mockPolicy)
+	}
+}
+
+func verifyAPIError(t *testing.T, got, want error) {
+	t.Helper()
+
+	var gotAPIErr, wantAPIErr hvclient.APIError
+
+	if !errors.As(got, &gotAPIErr) {
+		t.Fatalf("got error type %T, want %T", got, gotAPIErr)
+	}
+
+	if !errors.As(want, &wantAPIErr) {
+		t.Fatalf("want error type should be %T, but is %T", want, wantAPIErr)
+	}
+
+	if gotAPIErr.StatusCode != wantAPIErr.StatusCode {
+		t.Fatalf("got error status %d, want %d", gotAPIErr.StatusCode, wantAPIErr.StatusCode)
+	}
+}
+
+func mustParseBigInt(t *testing.T, s string, base int) *big.Int {
+	t.Helper()
+
+	var n, ok = big.NewInt(0).SetString(s, base)
+	if !ok {
+		t.Fatalf("invalid big integer: %s", s)
+	}
+
+	return n
 }

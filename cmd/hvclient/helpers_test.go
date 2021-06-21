@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"reflect"
 	"testing"
 
 	"github.com/globalsign/hvclient"
 	"github.com/globalsign/hvclient/internal/testhelpers"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestCheckOneValue(t *testing.T) {
@@ -148,7 +148,7 @@ func TestStringToOIDs(t *testing.T) {
 				t.Fatalf("couldn't convert string to OIDs: %v", err)
 			}
 
-			if !reflect.DeepEqual(got, tc.want) {
+			if !cmp.Equal(got, tc.want) {
 				t.Errorf("got %v, want %v", got, tc.want)
 			}
 		})
@@ -214,7 +214,7 @@ func TestStringToIPs(t *testing.T) {
 				t.Fatalf("couldn't convert string to IP addresses: %v", err)
 			}
 
-			if !reflect.DeepEqual(got, tc.want) {
+			if !cmp.Equal(got, tc.want) {
 				t.Errorf("got %s, want %s", got, tc.want)
 			}
 		})
@@ -273,7 +273,7 @@ func TestStringToURIs(t *testing.T) {
 				t.Fatalf("couldn't convert string to URIs: %v", err)
 			}
 
-			if !reflect.DeepEqual(got, tc.want) {
+			if !cmp.Equal(got, tc.want) {
 				t.Errorf("got %v, want %v", got, tc.want)
 			}
 		})
@@ -337,7 +337,7 @@ func TestStringToOIDAndStrings(t *testing.T) {
 				t.Fatalf("couldn't convert string to OIDAndStrings: %v", err)
 			}
 
-			if !reflect.DeepEqual(got, tc.want) {
+			if !cmp.Equal(got, tc.want) {
 				t.Errorf("got %v, want %v", got, tc.want)
 			}
 		})

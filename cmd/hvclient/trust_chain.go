@@ -17,6 +17,7 @@ package main
 
 import (
 	"context"
+	"encoding/pem"
 	"fmt"
 	"log"
 
@@ -35,6 +36,9 @@ func trustChain(clnt *hvclient.Client) {
 	}
 
 	for _, cert := range certs {
-		fmt.Printf("%s", cert)
+		fmt.Printf("%s", string(pem.EncodeToMemory(&pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: cert.Raw,
+		})))
 	}
 }

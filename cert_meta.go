@@ -17,12 +17,14 @@ package hvclient
 
 import (
 	"encoding/json"
+	"fmt"
+	"math/big"
 	"time"
 )
 
 // CertMeta contains certificate metadata.
 type CertMeta struct {
-	SerialNumber string    // Certificate serial number
+	SerialNumber *big.Int  // Certificate serial number
 	NotBefore    time.Time // Certificate not valid before this time
 	NotAfter     time.Time // Certificate not valid after this time
 }
@@ -36,7 +38,7 @@ type jsonCertMeta struct {
 
 // Equal checks if two certificate metadata objects are equivalent.
 func (c CertMeta) Equal(other CertMeta) bool {
-	return c.SerialNumber == other.SerialNumber &&
+	return c.SerialNumber.Cmp(other.SerialNumber) == 0 &&
 		c.NotBefore.Equal(other.NotBefore) &&
 		c.NotAfter.Equal(other.NotAfter)
 }
@@ -44,7 +46,7 @@ func (c CertMeta) Equal(other CertMeta) bool {
 // MarshalJSON returns the JSON encoding of a certificate metadata object.
 func (c CertMeta) MarshalJSON() ([]byte, error) {
 	return json.Marshal(jsonCertMeta{
-		SerialNumber: c.SerialNumber,
+		SerialNumber: fmt.Sprintf("%X", c.SerialNumber),
 		NotBefore:    c.NotBefore.Unix(),
 		NotAfter:     c.NotAfter.Unix(),
 	})
@@ -58,10 +60,15 @@ func (c *CertMeta) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
+	var sn, ok = big.NewInt(0).SetString(data.SerialNumber, 16)
+	if !ok {
+		return fmt.Errorf("invalid serial number: %s", data.SerialNumber)
+	}
+
 	*c = CertMeta{
-		SerialNumber: data.SerialNumber,
-		NotBefore:    time.Unix(data.NotBefore, 0),
-		NotAfter:     time.Unix(data.NotAfter, 0),
+		SerialNumber: sn,
+		NotBefore:    time.Unix(data.NotBefore, 0).UTC(),
+		NotAfter:     time.Unix(data.NotAfter, 0).UTC(),
 	}
 
 	return nil

@@ -20,10 +20,10 @@ import (
 	"bytes"
 	"encoding/asn1"
 	"encoding/json"
-	"reflect"
 	"testing"
 
 	"github.com/globalsign/hvclient"
+	"github.com/google/go-cmp/cmp"
 )
 
 var testPolicyFullJSON = `{
@@ -544,7 +544,7 @@ func TestPolicyMarshalJSON(t *testing.T) {
 				t.Fatalf("couldn't marshal JSON: %v", err)
 			}
 
-			if !reflect.DeepEqual(got, tc.want) {
+			if !cmp.Equal(got, tc.want) {
 				var gotscanner = bufio.NewScanner(bytes.NewReader(got))
 				var wantscanner = bufio.NewScanner(bytes.NewReader(tc.want))
 
@@ -708,7 +708,7 @@ func TestPolicyUnmarshalJSON(t *testing.T) {
 				t.Fatalf("couldn't unmarshal JSON: %v", err)
 			}
 
-			if !reflect.DeepEqual(got, tc.want) {
+			if !cmp.Equal(got, tc.want) {
 				t.Errorf("got %v, want %v", got, tc.want)
 			}
 		})

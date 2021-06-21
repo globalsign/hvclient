@@ -17,15 +17,21 @@ package testhelpers
 
 import (
 	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"log"
+	"math/big"
 	"net/url"
 	"os"
 	"testing"
 
 	"github.com/globalsign/hvclient/internal/pkifile"
+)
+
+const (
+	alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJLKMNOPQRSTUVWXYZ"
 )
 
 // MustGetPublicKeyFromFile successfully retrieves a public key from a
@@ -187,4 +193,24 @@ func MustGetConfigFromEnv(v string) string {
 	}
 
 	return s
+}
+
+// MustMakeRandomIdentifier returns a random alphabetic identifier of length
+// n, or fails the test.
+func MustMakeRandomIdentifier(t *testing.T, n int) string {
+	t.Helper()
+
+	var id = make([]byte, n)
+	var alen = big.NewInt(int64(len(alphabet)))
+
+	for i := range id {
+		var b, err = rand.Int(rand.Reader, alen)
+		if err != nil {
+			t.Fatalf("failed to generate random number: %v", err)
+		}
+
+		id[i] = alphabet[b.Int64()]
+	}
+
+	return string(id)
 }

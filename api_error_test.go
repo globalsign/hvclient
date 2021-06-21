@@ -19,12 +19,12 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 	"strings"
 	"testing"
 	"testing/iotest"
 
 	"github.com/globalsign/hvclient/internal/httputils"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestAPIError(t *testing.T) {
@@ -100,7 +100,7 @@ func TestAPIError(t *testing.T) {
 			t.Parallel()
 
 			var got = newAPIError(tc.in)
-			if !reflect.DeepEqual(got, tc.want) {
+			if !cmp.Equal(got, tc.want) {
 				t.Fatalf("got %v, want %v", got, tc.want)
 			}
 		})

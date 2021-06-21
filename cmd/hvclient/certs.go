@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/big"
 
 	"github.com/globalsign/hvclient"
 )
@@ -29,7 +30,12 @@ func retrieveCert(clnt *hvclient.Client, serialNumber string) {
 	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var cert, err = clnt.CertificateRetrieve(ctx, serialNumber)
+	var sn, ok = big.NewInt(0).SetString(serialNumber, 16)
+	if !ok {
+		log.Fatalf("invalid serial number: %s", serialNumber)
+	}
+
+	var cert, err = clnt.CertificateRetrieve(ctx, sn)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -43,7 +49,12 @@ func retrieveCertStatus(clnt *hvclient.Client, serialNumber string) {
 	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var cert, err = clnt.CertificateRetrieve(ctx, serialNumber)
+	var sn, ok = big.NewInt(0).SetString(serialNumber, 16)
+	if !ok {
+		log.Fatalf("invalid serial number: %s", sn)
+	}
+
+	var cert, err = clnt.CertificateRetrieve(ctx, sn)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -57,7 +68,12 @@ func retrieveCertUpdatedAt(clnt *hvclient.Client, serialNumber string) {
 	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var cert, err = clnt.CertificateRetrieve(ctx, serialNumber)
+	var sn, ok = big.NewInt(0).SetString(serialNumber, 16)
+	if !ok {
+		log.Fatalf("invalid serial number: %s", serialNumber)
+	}
+
+	var cert, err = clnt.CertificateRetrieve(ctx, sn)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -70,7 +86,12 @@ func revokeCert(clnt *hvclient.Client, serialNumber string) {
 	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	if err := clnt.CertificateRevoke(ctx, serialNumber); err != nil {
+	var sn, ok = big.NewInt(0).SetString(serialNumber, 16)
+	if !ok {
+		log.Fatalf("invalid serial number: %s", serialNumber)
+	}
+
+	if err := clnt.CertificateRevoke(ctx, sn); err != nil {
 		log.Fatalf("%v", err)
 	}
 }

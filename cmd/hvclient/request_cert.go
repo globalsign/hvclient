@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"math/big"
 	"os"
 
 	"github.com/globalsign/hvclient"
@@ -107,7 +108,7 @@ func requestCert(clnt *hvclient.Client) error {
 	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var serialNumber string
+	var serialNumber *big.Int
 	if serialNumber, err = clnt.CertificateRequest(ctx, request); err != nil {
 		return fmt.Errorf("couldn't obtain certificate: %v", err)
 	}

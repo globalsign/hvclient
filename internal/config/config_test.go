@@ -17,10 +17,10 @@ package config_test
 
 import (
 	"path/filepath"
-	"reflect"
 	"testing"
 
 	"github.com/globalsign/hvclient/internal/config"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestConfigNewFromFile(t *testing.T) {
@@ -83,7 +83,7 @@ func TestConfigNewFromFile(t *testing.T) {
 				t.Fatalf("couldn't get configuration from file: %v", err)
 			}
 
-			if !reflect.DeepEqual(*got, tc.want) {
+			if !cmp.Equal(*got, tc.want) {
 				t.Errorf("got %v, want %v", *got, tc.want)
 			}
 		})

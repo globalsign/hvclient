@@ -105,6 +105,14 @@ func (s *CertStatus) UnmarshalJSON(b []byte) error {
 
 // Equal checks if two certificate metadata objects are equivalent.
 func (s CertInfo) Equal(other CertInfo) bool {
+	if (s.X509 == nil) != (other.X509 == nil) {
+		return false
+	}
+
+	if s.X509 != nil && !s.X509.Equal(other.X509) {
+		return false
+	}
+
 	return s.PEM == other.PEM &&
 		s.Status == other.Status &&
 		s.UpdatedAt.Equal(other.UpdatedAt)
@@ -143,7 +151,7 @@ func (s *CertInfo) UnmarshalJSON(b []byte) error {
 		PEM:       data.PEM,
 		X509:      cert,
 		Status:    data.Status,
-		UpdatedAt: time.Unix(data.UpdatedAt, 0),
+		UpdatedAt: time.Unix(data.UpdatedAt, 0).UTC(),
 	}
 
 	return nil

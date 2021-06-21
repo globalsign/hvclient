@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Copyright (c) 2019-2021 GMO GlobalSign Pte. Ltd.
 # 
 # Licensed under the MIT License (the "License"); you may not use this file except
@@ -13,8 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Run various linters.
-set -e
-set -v
-go vet ./...
-golangci-lint run --exclude SA1019
+.PHONY: build install lint
+
+default: build
+
+build:
+	./build.sh
+
+install:
+	go build;
+	cd cmd/hvclient; go install
+
+lint:
+	go vet ./...
+	golint -set_exit_status -min_confidence=0.21 ./...
+	golangci-lint run --exclude SA1019

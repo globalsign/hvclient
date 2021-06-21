@@ -17,7 +17,11 @@ package hvclient
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/pem"
+	"errors"
 	"fmt"
+	"math/big"
 	"net/http"
 	"net/url"
 	"time"
@@ -70,7 +74,7 @@ const (
 func (c *Client) CertificateRequest(
 	ctx context.Context,
 	req *Request,
-) (string, error) {
+) (*big.Int, error) {
 	var r, err = c.makeRequest(
 		ctx,
 		endpointCertificates,
@@ -79,21 +83,32 @@ func (c *Client) CertificateRequest(
 		nil,
 	)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return basePathHeaderFromResponse(r, certSNHeaderName)
+	var snString string
+	snString, err = basePathHeaderFromResponse(r, certSNHeaderName)
+	if err != nil {
+		return nil, err
+	}
+
+	var sn, ok = big.NewInt(0).SetString(snString, 16)
+	if !ok {
+		return nil, fmt.Errorf("invalid serial number returned: %s", snString)
+	}
+
+	return sn, nil
 }
 
 // CertificateRetrieve retrieves a certificate.
 func (c *Client) CertificateRetrieve(
 	ctx context.Context,
-	serialNumber string,
+	serial *big.Int,
 ) (*CertInfo, error) {
 	var r CertInfo
 	var _, err = c.makeRequest(
 		ctx,
-		endpointCertificates+"/"+url.QueryEscape(serialNumber),
+		endpointCertificates+"/"+url.QueryEscape(fmt.Sprintf("%X", serial)),
 		http.MethodGet,
 		nil,
 		&r,
@@ -108,11 +123,11 @@ func (c *Client) CertificateRetrieve(
 // CertificateRevoke revokes a certificate.
 func (c *Client) CertificateRevoke(
 	ctx context.Context,
-	serialNumber string,
+	serial *big.Int,
 ) error {
 	var _, err = c.makeRequest(
 		ctx,
-		endpointCertificates+"/"+url.QueryEscape(serialNumber),
+		endpointCertificates+"/"+url.QueryEscape(fmt.Sprintf("%X", serial)),
 		http.MethodDelete,
 		nil,
 		nil,
@@ -122,7 +137,7 @@ func (c *Client) CertificateRevoke(
 
 // TrustChain returns the chain of trust for the certificates issued
 // by the calling account.
-func (c *Client) TrustChain(ctx context.Context) ([]string, error) {
+func (c *Client) TrustChain(ctx context.Context) ([]*x509.Certificate, error) {
 	var chain []string
 	var _, err = c.makeRequest(
 		ctx,
@@ -135,7 +150,24 @@ func (c *Client) TrustChain(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 
-	return chain, nil
+	var certs []*x509.Certificate
+	for _, enc := range chain {
+		var block, rest = pem.Decode([]byte(enc))
+		if block == nil {
+			return nil, errors.New("invalid PEM in response")
+		} else if len(rest) > 0 {
+			return nil, errors.New("trailing data after PEM block in response")
+		}
+
+		var cert, err = x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse certificate in response: %w", err)
+		}
+
+		certs = append(certs, cert)
+	}
+
+	return certs, nil
 }
 
 // Policy returns the calling account's validation policy.
@@ -198,9 +230,9 @@ func (c *Client) countersCommon(
 func (c *Client) StatsExpiring(
 	ctx context.Context,
 	page, perPage int,
-	notBefore, notAfter time.Time,
+	from, to time.Time,
 ) ([]CertMeta, int64, error) {
-	return c.statsCommon(ctx, endpointStatsExpiring, page, perPage, notBefore, notAfter)
+	return c.statsCommon(ctx, endpointStatsExpiring, page, perPage, from, to)
 }
 
 // StatsIssued returns a slice of the certificates which were issued during
@@ -214,9 +246,9 @@ func (c *Client) StatsExpiring(
 func (c *Client) StatsIssued(
 	ctx context.Context,
 	page, perPage int,
-	notBefore, notAfter time.Time,
+	from, to time.Time,
 ) ([]CertMeta, int64, error) {
-	return c.statsCommon(ctx, endpointStatsIssued, page, perPage, notBefore, notAfter)
+	return c.statsCommon(ctx, endpointStatsIssued, page, perPage, from, to)
 }
 
 // StatsRevoked returns a slice of the certificates which were revoked during
@@ -230,9 +262,9 @@ func (c *Client) StatsIssued(
 func (c *Client) StatsRevoked(
 	ctx context.Context,
 	page, perPage int,
-	notBefore, notAfter time.Time,
+	from, to time.Time,
 ) ([]CertMeta, int64, error) {
-	return c.statsCommon(ctx, endpointStatsRevoked, page, perPage, notBefore, notAfter)
+	return c.statsCommon(ctx, endpointStatsRevoked, page, perPage, from, to)
 }
 
 // statsCommon is the common method for all /stats endpoints.
@@ -240,12 +272,12 @@ func (c *Client) statsCommon(
 	ctx context.Context,
 	path string,
 	page, perPage int,
-	notBefore, notAfter time.Time,
+	from, to time.Time,
 ) ([]CertMeta, int64, error) {
 	var stats []CertMeta
 	var r, err = c.makeRequest(
 		ctx,
-		path+paginationString(page, perPage, notBefore, notAfter),
+		path+paginationString(page, perPage, from, to),
 		http.MethodGet,
 		nil,
 		&stats,

@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/globalsign/hvclient"
+	"github.com/globalsign/hvclient/internal/testhelpers"
 )
 
 const testPEM = `-----BEGIN CERTIFICATE-----
@@ -52,6 +53,116 @@ pzODa/yMds7Dt/s0GzE6kGGqeAXcZiT9CNiTKfgSykGPQmI5MSVxWRu6eXZKQ9M1
 awPX0kDyz7BCnA7g6TgOMSLpIpmS+sk0gPbn0L8aSbsr+rVXeuvflMvX6s+83O90
 C5KcdB2n5alI+o4AXFf5Gv4L4isofggpTtUNioHZvXCJE0jpuhgZmcGUWvJe6GfH
 -----END CERTIFICATE-----`
+
+func TestCertInfoEqual(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name   string
+		first  hvclient.CertInfo
+		second hvclient.CertInfo
+		want   bool
+	}{
+		{
+			name: "All/Equal",
+			first: hvclient.CertInfo{
+				PEM:       "some PEM",
+				X509:      testhelpers.MustGetCertFromFile(t, "testdata/test_cert.pem"),
+				Status:    hvclient.StatusIssued,
+				UpdatedAt: time.Date(2021, 6, 21, 18, 43, 30, 0, time.UTC),
+			},
+			second: hvclient.CertInfo{
+				PEM:       "some PEM",
+				X509:      testhelpers.MustGetCertFromFile(t, "testdata/test_cert.pem"),
+				Status:    hvclient.StatusIssued,
+				UpdatedAt: time.Date(2021, 6, 21, 18, 43, 30, 0, time.UTC),
+			},
+			want: true,
+		},
+		{
+			name: "PEM",
+			first: hvclient.CertInfo{
+				PEM: "some PEM",
+			},
+			second: hvclient.CertInfo{
+				PEM: "some other PEM",
+			},
+			want: false,
+		},
+		{
+			name: "X509/Value",
+			first: hvclient.CertInfo{
+				X509: testhelpers.MustGetCertFromFile(t, "testdata/test_cert.pem"),
+			},
+			second: hvclient.CertInfo{
+				X509: testhelpers.MustGetCertFromFile(t, "testdata/test_cert.pem"),
+			},
+			want: true,
+		},
+		{
+			name: "X509/Inequal",
+			first: hvclient.CertInfo{
+				X509: testhelpers.MustGetCertFromFile(t, "testdata/test_cert.pem"),
+			},
+			second: hvclient.CertInfo{
+				X509: testhelpers.MustGetCertFromFile(t, "testdata/test_ica_cert.pem"),
+			},
+			want: false,
+		},
+		{
+			name: "X509/FirstNil",
+			first: hvclient.CertInfo{
+				X509: nil,
+			},
+			second: hvclient.CertInfo{
+				X509: testhelpers.MustGetCertFromFile(t, "testdata/test_cert.pem"),
+			},
+			want: false,
+		},
+		{
+			name: "X509/SecondNil",
+			first: hvclient.CertInfo{
+				X509: testhelpers.MustGetCertFromFile(t, "testdata/test_cert.pem"),
+			},
+			second: hvclient.CertInfo{
+				X509: nil,
+			},
+			want: false,
+		},
+		{
+			name: "Status",
+			first: hvclient.CertInfo{
+				Status: hvclient.StatusIssued,
+			},
+			second: hvclient.CertInfo{
+				Status: hvclient.StatusRevoked,
+			},
+			want: false,
+		},
+		{
+			name: "UpdatedAt",
+			first: hvclient.CertInfo{
+				UpdatedAt: time.Date(2021, 6, 21, 18, 43, 30, 0, time.UTC),
+			},
+			second: hvclient.CertInfo{
+				UpdatedAt: time.Date(2021, 7, 21, 18, 43, 30, 0, time.UTC),
+			},
+			want: false,
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tc.first.Equal(tc.second); got != tc.want {
+				t.Fatalf("got %t, want %t", got, tc.want)
+			}
+		})
+	}
+}
 
 func TestCertInfoMarshalJSON(t *testing.T) {
 	t.Parallel()
@@ -145,6 +256,7 @@ func TestCertInfoUnmarshalJSON(t *testing.T) {
 				strings.Replace(testPEM, "\n", "\\n", -1))),
 			want: hvclient.CertInfo{
 				PEM:       testPEM,
+				X509:      testhelpers.MustParseCert(t, testPEM),
 				Status:    hvclient.StatusIssued,
 				UpdatedAt: time.Unix(1477958400, 0),
 			},
@@ -155,6 +267,7 @@ func TestCertInfoUnmarshalJSON(t *testing.T) {
 				strings.Replace(testPEM, "\n", "\\n", -1))),
 			want: hvclient.CertInfo{
 				PEM:       testPEM,
+				X509:      testhelpers.MustParseCert(t, testPEM),
 				Status:    hvclient.StatusRevoked,
 				UpdatedAt: time.Unix(1477958400, 0),
 			},

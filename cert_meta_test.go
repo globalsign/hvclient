@@ -18,6 +18,7 @@ package hvclient_test
 import (
 	"bytes"
 	"encoding/json"
+	"math/big"
 	"testing"
 	"time"
 
@@ -35,7 +36,7 @@ func TestCertMetaMarshalJSON(t *testing.T) {
 		{
 			name: "OK",
 			entry: hvclient.CertMeta{
-				SerialNumber: "1234",
+				SerialNumber: big.NewInt(0x1234),
 				NotBefore:    time.Unix(1477958400, 0),
 				NotAfter:     time.Unix(1478958400, 0),
 			},
@@ -73,7 +74,7 @@ func TestCertMetaUnmarshalJSON(t *testing.T) {
 			name: "OK",
 			json: []byte(`{"serial_number":"1234","not_before":1477958400,"not_after":1478958400}`),
 			want: hvclient.CertMeta{
-				SerialNumber: "1234",
+				SerialNumber: big.NewInt(0x1234),
 				NotBefore:    time.Unix(1477958400, 0),
 				NotAfter:     time.Unix(1478958400, 0),
 			},
@@ -104,6 +105,7 @@ func TestCertMetaUnmarshalJSONFailure(t *testing.T) {
 
 	var testcases = []string{
 		`{"serial_number":1234}`,
+		`{"serial_number":"not a number"}`,
 	}
 
 	for _, tc := range testcases {

@@ -17,6 +17,9 @@ package hvclient
 
 import (
 	"crypto/rsa"
+	"encoding/json"
+	"errors"
+	"io/ioutil"
 	"reflect"
 	"testing"
 	"time"
@@ -118,6 +121,55 @@ func TestConfigNewFromFileFailure(t *testing.T) {
 
 			if _, err := NewConfigFromFile(tc); err == nil {
 				t.Fatalf("unexpectedly got config from file: %v", err)
+			}
+		})
+	}
+}
+
+func TestConfigUnmarshalJSON(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name     string
+		filename string
+		err      error
+	}{
+		{
+			name:     "OK",
+			filename: "testdata/config_test.conf",
+		},
+		{
+			name:     "BadKey",
+			filename: "testdata/config_test_bad_key.conf",
+			err:      errors.New("bad key"),
+		},
+		{
+			name:     "BadCert",
+			filename: "testdata/config_test_bad_cert.conf",
+			err:      errors.New("bad cert"),
+		},
+		{
+			name:     "BadCert",
+			filename: "testdata/config_test_bad_url.conf",
+			err:      errors.New("bad URL"),
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var data, err = ioutil.ReadFile(tc.filename)
+			if err != nil {
+				t.Fatalf("failed to read file: %v", err)
+			}
+
+			var cfg Config
+			err = json.Unmarshal(data, &cfg)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
 			}
 		})
 	}

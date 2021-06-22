@@ -18,6 +18,7 @@ package hvclient_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -171,6 +172,7 @@ func TestCertInfoMarshalJSON(t *testing.T) {
 		name string
 		info hvclient.CertInfo
 		want []byte
+		err  error
 	}{
 		{
 			name: "Issued",
@@ -192,33 +194,6 @@ func TestCertInfoMarshalJSON(t *testing.T) {
 			want: []byte(fmt.Sprintf(`{"certificate":"%s","status":"REVOKED","updated_at":1477958400}`,
 				strings.Replace(testPEM, "\n", "\\n", -1))),
 		},
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			var got, err = json.Marshal(tc.info)
-			if err != nil {
-				t.Fatalf("couldn't marshal JSON: %v", err)
-			}
-
-			if !bytes.Equal(got, tc.want) {
-				t.Errorf("got %s, want %s", string(got), string(tc.want))
-			}
-		})
-	}
-}
-
-func TestCertInfoMarshalJSONFailure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []struct {
-		name string
-		info hvclient.CertInfo
-	}{
 		{
 			name: "BadStatus",
 			info: hvclient.CertInfo{
@@ -226,6 +201,7 @@ func TestCertInfoMarshalJSONFailure(t *testing.T) {
 				Status:    hvclient.CertStatus(0),
 				UpdatedAt: time.Unix(1477958400, 0),
 			},
+			err: errors.New("invalid status"),
 		},
 	}
 
@@ -235,8 +211,13 @@ func TestCertInfoMarshalJSONFailure(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got, err := json.Marshal(tc.info); err == nil {
-				t.Fatalf("unexpectedly marshalled JSON: %v", got)
+			var got, err = json.Marshal(tc.info)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if !bytes.Equal(got, tc.want) {
+				t.Errorf("got %s, want %s", string(got), string(tc.want))
 			}
 		})
 	}
@@ -249,6 +230,7 @@ func TestCertInfoUnmarshalJSON(t *testing.T) {
 		name string
 		data []byte
 		want hvclient.CertInfo
+		err  error
 	}{
 		{
 			name: "Issued",
@@ -272,6 +254,34 @@ func TestCertInfoUnmarshalJSON(t *testing.T) {
 				UpdatedAt: time.Unix(1477958400, 0),
 			},
 		},
+		{
+			name: "BadStatusValue",
+			data: []byte(fmt.Sprintf(`{"certificate":"%s","status":"BAD STATUS","updated_at":1477958400}`,
+				strings.Replace(testPEM, "\n", "\\n", -1))),
+			err: errors.New("bad status value"),
+		},
+		{
+			name: "BadStatusType",
+			data: []byte(fmt.Sprintf(`{"certificate":"%s","status":1234,"updated_at":1477958400}`,
+				strings.Replace(testPEM, "\n", "\\n", -1))),
+			err: errors.New("bad status type"),
+		},
+		{
+			name: "BadPEM",
+			data: []byte(`{"certificate":"BAD PEM","status":"ISSUED","updated_at":1477958400}`),
+			err:  errors.New("invalid PEM"),
+		},
+		{
+			name: "EmptyPEM",
+			data: []byte(`{"certificate":"","status":"ISSUED","updated_at":1477958400}`),
+			err:  errors.New("missing PEM"),
+		},
+		{
+			name: "InvalidCertificate",
+			data: []byte(fmt.Sprintf(`{"certificate":"%s","status":"ISSUED","updated_at":1477958400}`,
+				strings.Replace(strings.Replace(testPEM, "\n", "\\n", -1), "M", "N", -1))),
+			err: errors.New("invalid certificate"),
+		},
 	}
 
 	for _, tc := range testcases {
@@ -282,58 +292,12 @@ func TestCertInfoUnmarshalJSON(t *testing.T) {
 
 			var got hvclient.CertInfo
 			var err = json.Unmarshal(tc.data, &got)
-			if err != nil {
-				t.Fatalf("couldn't unmarshal JSON: %v", err)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
 			}
 
 			if !got.Equal(tc.want) {
 				t.Errorf("got %v, want %v", got, tc.want)
-			}
-		})
-	}
-}
-
-func TestCertInfoUnmarshalJSONFailure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []struct {
-		name string
-		data []byte
-	}{
-		{
-			name: "BadStatusValue",
-			data: []byte(fmt.Sprintf(`{"certificate":"%s","status":"BAD STATUS","updated_at":1477958400}`,
-				strings.Replace(testPEM, "\n", "\\n", -1))),
-		},
-		{
-			name: "BadStatusType",
-			data: []byte(fmt.Sprintf(`{"certificate":"%s","status":1234,"updated_at":1477958400}`,
-				strings.Replace(testPEM, "\n", "\\n", -1))),
-		},
-		{
-			name: "BadPEM",
-			data: []byte(`{"certificate":"BAD PEM","status":"ISSUED","updated_at":1477958400}`),
-		},
-		{
-			name: "EmptyPEM",
-			data: []byte(`{"certificate":"","status":"ISSUED","updated_at":1477958400}`),
-		},
-		{
-			name: "InvalidPEM",
-			data: []byte(fmt.Sprintf(`{"certificate":"%s","status":"ISSUED","updated_at":1477958400}`,
-				strings.Replace(strings.Replace(testPEM, "\n", "\\n", -1), "M", "N", -1))),
-		},
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			var got hvclient.CertInfo
-			if err := json.Unmarshal(tc.data, &got); err == nil {
-				t.Fatalf("unexpectedly unmarshalled JSON: %v", got)
 			}
 		})
 	}

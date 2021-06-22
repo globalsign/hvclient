@@ -18,6 +18,7 @@ package hvclient_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"math/big"
 	"testing"
 	"time"
@@ -69,6 +70,7 @@ func TestCertMetaUnmarshalJSON(t *testing.T) {
 		name string
 		json []byte
 		want hvclient.CertMeta
+		err  error
 	}{
 		{
 			name: "OK",
@@ -78,6 +80,16 @@ func TestCertMetaUnmarshalJSON(t *testing.T) {
 				NotBefore:    time.Unix(1477958400, 0),
 				NotAfter:     time.Unix(1478958400, 0),
 			},
+		},
+		{
+			name: "BadType",
+			json: []byte(`{"serial_number":1234}`),
+			err:  errors.New("bad type"),
+		},
+		{
+			name: "BadValue",
+			json: []byte(`{"serial_number":"not a number"}`),
+			err:  errors.New("bad value"),
 		},
 	}
 
@@ -89,34 +101,12 @@ func TestCertMetaUnmarshalJSON(t *testing.T) {
 
 			var got *hvclient.CertMeta
 			var err = json.Unmarshal(tc.json, &got)
-			if err != nil {
-				t.Fatalf("couldn't unmarshal JSON: %v", err)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
 			}
 
 			if !got.Equal(tc.want) {
 				t.Errorf("got %v, want %v", *got, tc.want)
-			}
-		})
-	}
-}
-
-func TestCertMetaUnmarshalJSONFailure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []string{
-		`{"serial_number":1234}`,
-		`{"serial_number":"not a number"}`,
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc, func(t *testing.T) {
-			t.Parallel()
-
-			var got *hvclient.CertMeta
-			if err := json.Unmarshal([]byte(tc), &got); err == nil {
-				t.Errorf("unexpectedly unmarshalled JSON")
 			}
 		})
 	}

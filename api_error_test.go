@@ -16,7 +16,7 @@ limitations under the License.
 package hvclient
 
 import (
-	"bytes"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -25,6 +25,13 @@ import (
 	"github.com/globalsign/hvclient/internal/httputils"
 	"github.com/google/go-cmp/cmp"
 )
+
+// errReader implements io.Reader and always returns an error.
+type errReader struct{}
+
+func (e errReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("triggered error")
+}
 
 func TestAPIError(t *testing.T) {
 	t.Parallel()
@@ -65,7 +72,7 @@ func TestAPIError(t *testing.T) {
 		{
 			name: "BadBody",
 			in: &http.Response{
-				Body: ioutil.NopCloser(bytes.NewReader(nil)),
+				Body: ioutil.NopCloser(errReader{}),
 				Header: http.Header{
 					httputils.ContentTypeHeader: []string{httputils.ContentTypeProblemJSON},
 				},

@@ -153,6 +153,11 @@ func TestConfigUnmarshalJSON(t *testing.T) {
 			filename: "testdata/config_test_bad_url.conf",
 			err:      errors.New("bad URL"),
 		},
+		{
+			name:     "BadType",
+			filename: "testdata/config_test_bad_type.conf",
+			err:      errors.New("bad type"),
+		},
 	}
 
 	for _, tc := range testcases {

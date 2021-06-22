@@ -18,12 +18,12 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"math/big"
 	"os"
 
 	"github.com/globalsign/hvclient"
+	"github.com/globalsign/hvclient/internal/pki"
 )
 
 // requestCert requests a new certificate from HVCA and retrieves and outputs
@@ -91,15 +91,7 @@ func requestCert(clnt *hvclient.Client) error {
 			return fmt.Errorf("couldn't generate PKCS#10 request: %v", err)
 		}
 
-		fmt.Printf(
-			"%s",
-			string(pem.EncodeToMemory(
-				&pem.Block{
-					Type:  "CERTIFICATE REQUEST",
-					Bytes: csr.Raw,
-				},
-			)),
-		)
+		fmt.Printf("%s", pki.CSRToPEMString(csr))
 
 		return nil
 	}

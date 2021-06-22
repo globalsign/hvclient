@@ -17,11 +17,11 @@ package main
 
 import (
 	"context"
-	"encoding/pem"
 	"fmt"
 	"log"
 
 	"github.com/globalsign/hvclient"
+	"github.com/globalsign/hvclient/internal/pki"
 )
 
 // trustChain outputs the chain of trust for the certificates issued
@@ -36,9 +36,6 @@ func trustChain(clnt *hvclient.Client) {
 	}
 
 	for _, cert := range certs {
-		fmt.Printf("%s", string(pem.EncodeToMemory(&pem.Block{
-			Type:  "CERTIFICATE",
-			Bytes: cert.Raw,
-		})))
+		fmt.Printf("%s", pki.CertToPEMString(cert))
 	}
 }

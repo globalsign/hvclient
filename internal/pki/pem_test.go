@@ -13,15 +13,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pkifile_test
+package pki_test
 
 import (
 	"crypto/ecdsa"
 	"crypto/rsa"
+	"crypto/x509"
+	"errors"
 	"reflect"
 	"testing"
 
-	"github.com/globalsign/hvclient/internal/pkifile"
+	"github.com/globalsign/hvclient/internal/pki"
+	"github.com/globalsign/hvclient/internal/testhelpers"
 )
 
 func TestFileIsEncryptedPEMBlock(t *testing.T) {
@@ -47,7 +50,7 @@ func TestFileIsEncryptedPEMBlock(t *testing.T) {
 		t.Run(tc.filename, func(t *testing.T) {
 			t.Parallel()
 
-			if got := pkifile.FileIsEncryptedPEMBlock(tc.filename); got != tc.encrypted {
+			if got := pki.FileIsEncryptedPEMBlock(tc.filename); got != tc.encrypted {
 				t.Fatalf("got %t, want %t", got, tc.encrypted)
 			}
 		})
@@ -71,7 +74,7 @@ func TestPrivateKeyFromFileWithPassword(t *testing.T) {
 		var tc = tc
 
 		t.Run(tc.filename, func(t *testing.T) {
-			var key, err = pkifile.PrivateKeyFromFileWithPassword(tc.filename, tc.password)
+			var key, err = pki.PrivateKeyFromFileWithPassword(tc.filename, tc.password)
 			if err != nil {
 				t.Fatalf("couldn't get private key from file: %v", err)
 			}
@@ -104,7 +107,7 @@ func TestPrivateKeyFromFileWithPasswordBad(t *testing.T) {
 		t.Run(tc.filename, func(t *testing.T) {
 			t.Parallel()
 
-			var _, err = pkifile.PrivateKeyFromFileWithPassword(tc.filename, tc.password)
+			var _, err = pki.PrivateKeyFromFileWithPassword(tc.filename, tc.password)
 			if err == nil {
 				t.Fatalf("unexpectedly got private key from file")
 			}
@@ -130,7 +133,7 @@ func TestPublicKeyFromFile(t *testing.T) {
 		t.Run(tc.filename, func(t *testing.T) {
 			t.Parallel()
 
-			var key, err = pkifile.PublicKeyFromFile(tc.filename)
+			var key, err = pki.PublicKeyFromFile(tc.filename)
 			if err != nil {
 				t.Fatalf("couldn't get public key from file: %v", err)
 			}
@@ -157,7 +160,7 @@ func TestPublicKeyFromFileBad(t *testing.T) {
 		t.Run(tc, func(t *testing.T) {
 			t.Parallel()
 
-			var _, err = pkifile.PublicKeyFromFile(tc)
+			var _, err = pki.PublicKeyFromFile(tc)
 			if err == nil {
 				t.Fatalf("case %d, unexpectedly got public key from file", n+1)
 			}
@@ -178,7 +181,7 @@ func TestCSRFromFile(t *testing.T) {
 		t.Run(tc, func(t *testing.T) {
 			t.Parallel()
 
-			var _, err = pkifile.CSRFromFile(tc)
+			var _, err = pki.CSRFromFile(tc)
 			if err != nil {
 				t.Fatalf("case %d, couldn't get CSR from file: %v", n+1, err)
 			}
@@ -199,7 +202,7 @@ func TestCSRFromFileBad(t *testing.T) {
 		t.Run(tc, func(t *testing.T) {
 			t.Parallel()
 
-			var _, err = pkifile.CSRFromFile(tc)
+			var _, err = pki.CSRFromFile(tc)
 			if err == nil {
 				t.Fatalf("case %d, unexpectedly got CSR from file", n+1)
 			}
@@ -220,7 +223,7 @@ func TestCertFromFile(t *testing.T) {
 		t.Run(tc, func(t *testing.T) {
 			t.Parallel()
 
-			var _, err = pkifile.CertFromFile(tc)
+			var _, err = pki.CertFromFile(tc)
 			if err != nil {
 				t.Fatalf("case %d, couldn't get cert from file: %v", n+1, err)
 			}
@@ -241,9 +244,109 @@ func TestCertFromFileBad(t *testing.T) {
 		t.Run(tc, func(t *testing.T) {
 			t.Parallel()
 
-			var _, err = pkifile.CertFromFile(tc)
+			var _, err = pki.CertFromFile(tc)
 			if err == nil {
 				t.Fatalf("case %d, unexpectedly got cert from file", n+1)
+			}
+		})
+	}
+}
+
+func TestCertToPEMString(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name string
+		in   *x509.Certificate
+		want string
+	}{
+		{
+			name: "testdata/cert.pem",
+			in:   testhelpers.MustGetCertFromFile(t, "testdata/cert.pem"),
+			want: string(testhelpers.MustReadFile(t, "testdata/cert.pem")),
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := pki.CertToPEMString(tc.in); got != tc.want {
+				t.Fatalf("got %s, want %s", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestCSRToPEMString(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name string
+		in   *x509.CertificateRequest
+		want string
+	}{
+		{
+			name: "testdata/request.p10",
+			in:   testhelpers.MustGetCSRFromFile(t, "testdata/request.p10"),
+			want: string(testhelpers.MustReadFile(t, "testdata/request.p10")),
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := pki.CSRToPEMString(tc.in); got != tc.want {
+				t.Fatalf("got %s, want %s", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestPublicKeyToPEMString(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name string
+		in   interface{}
+		want string
+		err  error
+	}{
+		{
+			name: "testdata/rsa_pub.key",
+			in:   testhelpers.MustGetPublicKeyFromFile(t, "testdata/rsa_pub.key"),
+			want: string(testhelpers.MustReadFile(t, "testdata/rsa_pub.key")),
+		},
+		{
+			name: "BadType",
+			in:   "not a public key",
+			err:  errors.New("unsupported public key type"),
+		},
+		{
+			name: "testdata/ec_pub.key",
+			in:   testhelpers.MustGetPublicKeyFromFile(t, "testdata/ec_pub.key"),
+			want: string(testhelpers.MustReadFile(t, "testdata/ec_pub.key")),
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var got, err = pki.PublicKeyToPEMString(tc.in)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if got != tc.want {
+				t.Fatalf("got %s, want %s", got, tc.want)
 			}
 		})
 	}

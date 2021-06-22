@@ -19,7 +19,6 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"math/big"
@@ -30,21 +29,23 @@ import (
 
 	"github.com/globalsign/hvclient"
 	"github.com/globalsign/hvclient/internal/httputils"
-	"github.com/globalsign/hvclient/internal/pkifile"
+	"github.com/globalsign/hvclient/internal/pki"
 	"github.com/go-chi/chi"
 )
 
 // Note: mocking up the entire HVCA API service seems a little extreme, and
-// can result in unrealistic testing. However, obtaining a suitable test HVCA
-// account is not a trivial process, and requiring one to perform basic
-// regression tests would be an onerous requirement. In addition, it is not
-// feasible to obtain some responses from the live HVCA service under
-// automated test conditions (for example, an affirmative response that
-// control over a domain has been successfully verified). Accordingly, to
-// provide contributors with a way to perform regression tests in the absence
-// of an HVCA test account, and to allow all code paths to be tested, we do
-// mock up the HVCA service in addition to providing a suite of integration
-// tests for use with the live service.
+// can result in unrealistic testing. However: (1) obtaining a suitable test
+// HVCA account is not a trivial process, and requiring one to perform basic
+// regression tests would be an onerous requirement, particularly for third
+// party contributors; (2) it is not feasible to obtain some responses from
+// the live HVCA service under automated test conditions (for example, an
+// affirmative response that control over a domain has been successfully
+// verified); and (3) it can be difficult to induce appropriate error
+// conditions from the live HVCA service. Accordingly, to provide contributors
+// with a way to perform regression tests in the absence of an HVCA test
+// account, and to allow more code paths to be tested, we do mock up the HVCA
+// service in addition to providing a suite of integration tests for use with
+// the live service.
 
 type mockCertInfo struct {
 	PEM       string `json:"certificate"`
@@ -189,10 +190,33 @@ func newMockServer(t *testing.T) *httptest.Server {
 
 	r.Route("/certificates", func(r chi.Router) {
 		r.Post("/", mockCertificatesRequest)
-
 		r.Route("/{serial}", func(r chi.Router) {
 			r.Get("/", mockCertificatesRetrieve)
 			r.Delete("/", mockCertificatesRevoke)
+		})
+	})
+
+	r.Route("/claims", func(r chi.Router) {
+		r.Route("/domains", func(r chi.Router) {
+			r.Get("/", mockNotImplemented)
+			r.Post("/{domain}", mockNotImplemented)
+			r.Route("/{claim}", func(r chi.Router) {
+				r.Get("/", mockNotImplemented)
+				r.Delete("/", mockNotImplemented)
+				r.Route("/dns", func(r chi.Router) {
+					r.Post("/", mockNotImplemented)
+				})
+				r.Route("/http", func(r chi.Router) {
+					r.Post("/", mockNotImplemented)
+				})
+				r.Route("/email", func(r chi.Router) {
+					r.Get("/", mockNotImplemented)
+					r.Post("/", mockNotImplemented)
+				})
+				r.Route("/reassert", func(r chi.Router) {
+					r.Post("/", mockNotImplemented)
+				})
+			})
 		})
 	})
 
@@ -256,10 +280,7 @@ func mockCertificatesRetrieve(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mockWriteResponse(w, http.StatusOK, mockCertInfo{
-		PEM: string(pem.EncodeToMemory(&pem.Block{
-			Type:  "CERTIFICATE",
-			Bytes: mockCert.Raw,
-		})),
+		PEM:       pki.CertToPEMString(mockCert),
 		Status:    "ISSUED",
 		UpdatedAt: mockDateUpdated.Unix(),
 	})
@@ -349,13 +370,16 @@ func mockStatsRevoked(w http.ResponseWriter, r *http.Request) {
 func mockTrustChain(w http.ResponseWriter, r *http.Request) {
 	var chain = make([]string, len(mockTrustChainCerts))
 	for i := range chain {
-		chain[i] = string(pem.EncodeToMemory(&pem.Block{
-			Type:  "CERTIFICATE",
-			Bytes: mockTrustChainCerts[i].Raw,
-		}))
+		chain[i] = pki.CertToPEMString(mockTrustChainCerts[i])
 	}
 
 	mockWriteResponse(w, http.StatusOK, chain)
+}
+
+// mockNotImplemented is a stub handler that writes a 501 not implemented
+// response.
+func mockNotImplemented(w http.ResponseWriter, r *http.Request) {
+	mockWriteResponse(w, http.StatusNotImplemented, nil)
 }
 
 // mockUnmarshalBody unmarshals an HTTP request body, and writes an appropriate
@@ -414,7 +438,7 @@ func mockWriteResponse(w http.ResponseWriter, status int, obj interface{}) {
 }
 
 func mustReadCertFromFile(filename string) *x509.Certificate {
-	var cert, err = pkifile.CertFromFile(filename)
+	var cert, err = pki.CertFromFile(filename)
 	if err != nil {
 		panic(fmt.Sprintf("failed to open certificate at path %s: %v", filename, err))
 	}

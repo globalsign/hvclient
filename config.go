@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/globalsign/hvclient/internal/config"
-	"github.com/globalsign/hvclient/internal/pkifile"
+	"github.com/globalsign/hvclient/internal/pki"
 )
 
 // Config is a configuration object for an HVCA client.
@@ -156,14 +156,14 @@ func NewConfigFromFile(filename string) (*Config, error) {
 
 	// Get mTLS private key from file, if provided.
 	if fileconf.KeyFile != "" {
-		if newconf.TLSKey, err = pkifile.PrivateKeyFromFileWithPassword(fileconf.KeyFile, fileconf.KeyPassphrase); err != nil {
+		if newconf.TLSKey, err = pki.PrivateKeyFromFileWithPassword(fileconf.KeyFile, fileconf.KeyPassphrase); err != nil {
 			return nil, fmt.Errorf("couldn't get mTLS private key: %v", err)
 		}
 	}
 
 	// Get mTLS certificate from file.
 	if fileconf.CertFile != "" {
-		if newconf.TLSCert, err = pkifile.CertFromFile(fileconf.CertFile); err != nil {
+		if newconf.TLSCert, err = pki.CertFromFile(fileconf.CertFile); err != nil {
 			return nil, fmt.Errorf("couldn't get mTLS certificate: %v", err)
 		}
 	}
@@ -195,7 +195,7 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 
 	// Get mTLS private key from file.
 	if jsonConfig.KeyFile != "" {
-		if newconf.TLSKey, err = pkifile.PrivateKeyFromFileWithPassword(
+		if newconf.TLSKey, err = pki.PrivateKeyFromFileWithPassword(
 			jsonConfig.KeyFile, jsonConfig.KeyPassphrase); err != nil {
 			return fmt.Errorf("couldn't get mTLS private key: %v", err)
 		}
@@ -203,7 +203,7 @@ func (c *Config) UnmarshalJSON(b []byte) error {
 
 	// Get mTLS certificate from file.
 	if jsonConfig.CertFile != "" {
-		if newconf.TLSCert, err = pkifile.CertFromFile(jsonConfig.CertFile); err != nil {
+		if newconf.TLSCert, err = pki.CertFromFile(jsonConfig.CertFile); err != nil {
 			return fmt.Errorf("couldn't get mTLS certificate: %v", err)
 		}
 	}

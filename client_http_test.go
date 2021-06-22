@@ -17,7 +17,6 @@ package hvclient_test
 
 import (
 	"context"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"math/big"
@@ -26,7 +25,7 @@ import (
 	"time"
 
 	"github.com/globalsign/hvclient"
-	"github.com/globalsign/hvclient/internal/pkifile"
+	"github.com/globalsign/hvclient/internal/pki"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -138,7 +137,7 @@ func TestClientMockCertificatesRequest(t *testing.T) {
 			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 
-			var csr, err = pkifile.CSRFromFile("testdata/test_csr.pem")
+			var csr, err = pki.CSRFromFile("testdata/test_csr.pem")
 			if err != nil {
 				t.Fatalf("failed to read CSR: %v", err)
 			}
@@ -184,10 +183,7 @@ func TestClientMockCertificatesRetrieve(t *testing.T) {
 			name:   "OK",
 			serial: big.NewInt(0x741daf9ec2d5f7dc),
 			want: hvclient.CertInfo{
-				PEM: string(pem.EncodeToMemory(&pem.Block{
-					Type:  "CERTIFICATE",
-					Bytes: mockCert.Raw,
-				})),
+				PEM:       pki.CertToPEMString(mockCert),
 				X509:      mockCert,
 				Status:    hvclient.StatusIssued,
 				UpdatedAt: time.Date(2021, 6, 18, 16, 29, 51, 0, time.UTC),

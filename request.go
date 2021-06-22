@@ -26,7 +26,6 @@ import (
 	"encoding/asn1"
 	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"math/big"
@@ -36,6 +35,7 @@ import (
 	"time"
 
 	"github.com/globalsign/hvclient/internal/oids"
+	"github.com/globalsign/hvclient/internal/pki"
 )
 
 // Request is a request to HVCA for the issuance of a new certificate.
@@ -365,12 +365,7 @@ func (r Request) MarshalJSON() ([]byte, error) {
 		}
 
 	case r.CSR != nil:
-		var block = &pem.Block{
-			Type:  "NEW CERTIFICATE REQUEST",
-			Bytes: r.CSR.Raw,
-		}
-
-		publicKey = string(pem.EncodeToMemory(block))
+		publicKey = pki.CSRToPEMString(r.CSR)
 
 		// Remove trailing newline from string, if present.
 		if publicKey[len(publicKey)-1] == '\n' {
@@ -1151,10 +1146,11 @@ func publicKeyBytesAndString(key interface{}) ([]byte, string, error) {
 		return nil, "", fmt.Errorf("type was: %T: %v", key, err)
 	}
 
-	var keyString = string(pem.EncodeToMemory(&pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: keyBytes,
-	}))
+	var keyString string
+	keyString, err = pki.PublicKeyToPEMString(key)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to encode public key: %w", err)
+	}
 
 	// Remove trailing newline from string, if present.
 	if keyString[len(keyString)-1] == '\n' {

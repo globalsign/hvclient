@@ -34,6 +34,7 @@ func TestConfigNewFromFile(t *testing.T) {
 		filename string
 		want     Config
 		keyType  reflect.Type
+		err      error
 	}{
 		{
 			filename: "testdata/config_test.conf",
@@ -67,6 +68,22 @@ func TestConfigNewFromFile(t *testing.T) {
 				Timeout:   time.Second * 60,
 			},
 		},
+		{
+			filename: "testdata/no_such_file.conf",
+			err:      errors.New("no such file"),
+		},
+		{
+			filename: "testdata/config_test_bad_key.conf",
+			err:      errors.New("bad key"),
+		},
+		{
+			filename: "testdata/config_test_bad_cert.conf",
+			err:      errors.New("bad cert"),
+		},
+		{
+			filename: "testdata/config_test_bad_url.conf",
+			err:      errors.New("bad URL"),
+		},
 	}
 
 	for _, tc := range testcases {
@@ -76,8 +93,12 @@ func TestConfigNewFromFile(t *testing.T) {
 			t.Parallel()
 
 			var conf, err = NewConfigFromFile(tc.filename)
-			if err != nil {
-				t.Fatalf("couldn't get config file: %v", err)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if tc.err != nil {
+				return
 			}
 
 			if conf.URL != tc.want.URL {
@@ -98,29 +119,6 @@ func TestConfigNewFromFile(t *testing.T) {
 
 			if (conf.TLSKey == nil) != (tc.keyType == nil) {
 				t.Fatalf("got key type %T, want %v", conf.TLSKey, tc.keyType)
-			}
-		})
-	}
-}
-
-func TestConfigNewFromFileFailure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []string{
-		"testdata/no_such_file.conf",
-		"testdata/config_test_bad_key.conf",
-		"testdata/config_test_bad_cert.conf",
-		"testdata/config_test_bad_url.conf",
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc, func(t *testing.T) {
-			t.Parallel()
-
-			if _, err := NewConfigFromFile(tc); err == nil {
-				t.Fatalf("unexpectedly got config from file: %v", err)
 			}
 		})
 	}
@@ -152,6 +150,11 @@ func TestConfigUnmarshalJSON(t *testing.T) {
 			name:     "BadCert",
 			filename: "testdata/config_test_bad_url.conf",
 			err:      errors.New("bad URL"),
+		},
+		{
+			name:     "BadType",
+			filename: "testdata/config_test_bad_type.conf",
+			err:      errors.New("bad type"),
 		},
 	}
 

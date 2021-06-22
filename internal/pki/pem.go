@@ -13,12 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pkifile
+package pki
 
 import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io/ioutil"
 )
 
@@ -127,4 +128,33 @@ func CertFromFile(filename string) (*x509.Certificate, error) {
 	}
 
 	return x509.ParseCertificate(block.Bytes)
+}
+
+// CertToPEMString encodes a certificate to a PEM-encoded string.
+func CertToPEMString(cert *x509.Certificate) string {
+	return string(pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: cert.Raw,
+	}))
+}
+
+// CSRToPEMString encodes a CSR to a PEM-encoded string.
+func CSRToPEMString(csr *x509.CertificateRequest) string {
+	return string(pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE REQUEST",
+		Bytes: csr.Raw,
+	}))
+}
+
+// PublicKeyToPEMString encodes a PKIX public key to a PEM-encoded string.
+func PublicKeyToPEMString(key interface{}) (string, error) {
+	var b, err = x509.MarshalPKIXPublicKey(key)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal PKIX public key: %w", err)
+	}
+
+	return string(pem.EncodeToMemory(&pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: b,
+	})), nil
 }

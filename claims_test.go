@@ -18,6 +18,7 @@ package hvclient_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
@@ -31,6 +32,7 @@ func TestClaimLogEntryMarshalJSON(t *testing.T) {
 		name  string
 		entry hvclient.ClaimLogEntry
 		want  []byte
+		err   error
 	}{
 		{
 			name: "StatusSuccess",
@@ -50,39 +52,13 @@ func TestClaimLogEntryMarshalJSON(t *testing.T) {
 			},
 			want: []byte(`{"status":"ERROR","description":"All is well","timestamp":1477958400}`),
 		},
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			var got, err = json.Marshal(tc.entry)
-			if err != nil {
-				t.Fatalf("couldn't marshal JSON: %v", err)
-			}
-
-			if !bytes.Equal(got, tc.want) {
-				t.Errorf("got %s, want %s", string(got), string(tc.want))
-			}
-		})
-	}
-}
-
-func TestClaimLogEntryMarshalJSONFailure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []struct {
-		name  string
-		entry hvclient.ClaimLogEntry
-	}{
 		{
 			name: "BadStatus",
 			entry: hvclient.ClaimLogEntry{
 				Description: "All is well",
 				TimeStamp:   time.Unix(1477958400, 0),
 			},
+			err: errors.New("bad status"),
 		},
 	}
 
@@ -92,8 +68,13 @@ func TestClaimLogEntryMarshalJSONFailure(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got, err := json.Marshal(tc.entry); err == nil {
-				t.Fatalf("unexpectedly marshalled JSON: %s", string(got))
+			var got, err = json.Marshal(tc.entry)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("couldn't marshal JSON: %v", err)
+			}
+
+			if !bytes.Equal(got, tc.want) {
+				t.Errorf("got %s, want %s", string(got), string(tc.want))
 			}
 		})
 	}
@@ -105,6 +86,7 @@ func TestClaimLogEntryUnmarshalJSON(t *testing.T) {
 	var testcases = []struct {
 		json string
 		want hvclient.ClaimLogEntry
+		err  error
 	}{
 		{
 			json: `{"status":"SUCCESS","description":"All is well","timestamp":1477958400}`,
@@ -122,6 +104,10 @@ func TestClaimLogEntryUnmarshalJSON(t *testing.T) {
 				TimeStamp:   time.Unix(1477958400, 0),
 			},
 		},
+		{
+			json: `{"status":1234}`,
+			err:  errors.New("bad type"),
+		},
 	}
 
 	for _, tc := range testcases {
@@ -132,33 +118,12 @@ func TestClaimLogEntryUnmarshalJSON(t *testing.T) {
 
 			var got *hvclient.ClaimLogEntry
 			var err = json.Unmarshal([]byte(tc.json), &got)
-			if err != nil {
-				t.Fatalf("couldn't unmarshal JSON: %v", err)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
 			}
 
 			if !got.Equal(tc.want) {
 				t.Errorf("got %v, want %v", *got, tc.want)
-			}
-		})
-	}
-}
-
-func TestClaimLogEntryUnmarshalJSONFailure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []string{
-		`{"status":1234}`,
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc, func(t *testing.T) {
-			t.Parallel()
-
-			var got *hvclient.ClaimLogEntry
-			if err := json.Unmarshal([]byte(tc), &got); err == nil {
-				t.Errorf("unexpectedly unmarshalled JSON")
 			}
 		})
 	}
@@ -220,9 +185,10 @@ func TestClaimMarshalJSON(t *testing.T) {
 		name  string
 		claim hvclient.Claim
 		want  []byte
+		err   error
 	}{
 		{
-			name: "One",
+			name: "Good",
 			claim: hvclient.Claim{
 				ID:        "1234",
 				Status:    hvclient.StatusVerified,
@@ -254,35 +220,8 @@ func TestClaimMarshalJSON(t *testing.T) {
     ]
 }`),
 		},
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			var got, err = json.MarshalIndent(tc.claim, "", "    ")
-			if err != nil {
-				t.Fatalf("couldn't marshal JSON: %v", err)
-			}
-
-			if !bytes.Equal(got, tc.want) {
-				t.Errorf("got %s, want %s", string(got), string(tc.want))
-			}
-		})
-	}
-}
-
-func TestClaimMarshalJSONFailure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []struct {
-		name  string
-		claim hvclient.Claim
-	}{
 		{
-			name: "One",
+			name: "BadValue",
 			claim: hvclient.Claim{
 				ID:        "1234",
 				Status:    hvclient.ClaimStatus(0),
@@ -298,6 +237,7 @@ func TestClaimMarshalJSONFailure(t *testing.T) {
 					},
 				},
 			},
+			err: errors.New("bad value"),
 		},
 	}
 
@@ -307,8 +247,13 @@ func TestClaimMarshalJSONFailure(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got, err := json.Marshal(tc.claim); err == nil {
-				t.Fatalf("unexpectedly marshalled JSON: %v", got)
+			var got, err = json.MarshalIndent(tc.claim, "", "    ")
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if !bytes.Equal(got, tc.want) {
+				t.Errorf("got %s, want %s", string(got), string(tc.want))
 			}
 		})
 	}
@@ -318,10 +263,13 @@ func TestClaimUnmarshalJSON(t *testing.T) {
 	t.Parallel()
 
 	var testcases = []struct {
+		name string
 		json string
 		want hvclient.Claim
+		err  error
 	}{
 		{
+			name: "OK",
 			json: `{
                 "id": "1234",
                 "status": "VERIFIED",
@@ -353,35 +301,24 @@ func TestClaimUnmarshalJSON(t *testing.T) {
 				},
 			},
 		},
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc.json, func(t *testing.T) {
-			t.Parallel()
-
-			var got *hvclient.Claim
-			var err = json.Unmarshal([]byte(tc.json), &got)
-			if err != nil {
-				t.Fatalf("couldn't unmarshal JSON: %v", err)
-			}
-
-			if !got.Equal(tc.want) {
-				t.Errorf("got %v, want %v", *got, tc.want)
-			}
-		})
-	}
-}
-
-func TestClaimUnmarshalJSONFailure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []string{
-		`{"id":1234}`,
-		`{"status":"bad status value"}`,
-		`{"status":1234}`,
-		`{
+		{
+			name: "BadIDType",
+			json: `{"id":1234}`,
+			err:  errors.New("bad type"),
+		},
+		{
+			name: "BadStatusType",
+			json: `{"status":1234}`,
+			err:  errors.New("bad type"),
+		},
+		{
+			name: "BadStatusValue",
+			json: `{"status":"bad status value"}`,
+			err:  errors.New("bad value"),
+		},
+		{
+			name: "BadLogStatusValue",
+			json: `{
             "id": "1234",
             "status": "VERIFIED",
             "domain": "example.com",
@@ -396,17 +333,24 @@ func TestClaimUnmarshalJSONFailure(t *testing.T) {
                 }
             ]
         }`,
+			err: errors.New("bad value"),
+		},
 	}
 
 	for _, tc := range testcases {
 		var tc = tc
 
-		t.Run(tc, func(t *testing.T) {
+		t.Run(tc.json, func(t *testing.T) {
 			t.Parallel()
 
 			var got *hvclient.Claim
-			if err := json.Unmarshal([]byte(tc), &got); err == nil {
-				t.Errorf("unexpectedly unmarshalled JSON")
+			var err = json.Unmarshal([]byte(tc.json), &got)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if !got.Equal(tc.want) {
+				t.Errorf("got %v, want %v", *got, tc.want)
 			}
 		})
 	}
@@ -472,15 +416,21 @@ func TestClaimAssertionInfoUnmarshalJSON(t *testing.T) {
 		name string
 		json []byte
 		want hvclient.ClaimAssertionInfo
+		err  error
 	}{
 		{
-			name: "One",
+			name: "OK",
 			json: []byte(`{"token":"1234","assert_by":1477958400,"id":"/path/to/claim"}`),
 			want: hvclient.ClaimAssertionInfo{
 				Token:    "1234",
 				AssertBy: time.Unix(1477958400, 0),
 				ID:       "/path/to/claim",
 			},
+		},
+		{
+			name: "BadType",
+			json: []byte(`{"token":1234}`),
+			err:  errors.New("bad type"),
 		},
 	}
 
@@ -492,33 +442,12 @@ func TestClaimAssertionInfoUnmarshalJSON(t *testing.T) {
 
 			var got *hvclient.ClaimAssertionInfo
 			var err = json.Unmarshal(tc.json, &got)
-			if err != nil {
-				t.Fatalf("couldn't unmarshal JSON: %v", err)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
 			}
 
 			if !got.Equal(tc.want) {
 				t.Errorf("got %v, want %v", *got, tc.want)
-			}
-		})
-	}
-}
-
-func TestClaimAssertionInfoUnmarshalJSONFailure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []string{
-		`{"token":1234}`,
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc, func(t *testing.T) {
-			t.Parallel()
-
-			var got *hvclient.ClaimAssertionInfo
-			if err := json.Unmarshal([]byte(tc), &got); err == nil {
-				t.Errorf("unexpectedly unmarshalled JSON")
 			}
 		})
 	}

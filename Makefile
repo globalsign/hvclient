@@ -11,12 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: build install lint
+.PHONY: build install inttest lint test
 
 default: build
 
 build:
 	./build.sh
+
+inttest:
+	go test ./... -count=1 -tags integration
 
 install:
 	go build;
@@ -26,3 +29,6 @@ lint:
 	go vet ./...
 	golint -set_exit_status -min_confidence=0.21 ./...
 	golangci-lint run --exclude SA1019
+
+test:
+	go test ./... -count=1

@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"github.com/globalsign/hvclient"
-	"github.com/globalsign/hvclient/internal/pkifile"
+	"github.com/globalsign/hvclient/internal/pki"
 )
 
 type requestValues struct {
@@ -457,7 +457,7 @@ func getKeys(
 	}
 
 	if public != "" {
-		if publickey, err = pkifile.PublicKeyFromFile(public); err != nil {
+		if publickey, err = pki.PublicKeyFromFile(public); err != nil {
 			return nil, nil, nil, err
 		}
 	}
@@ -465,20 +465,20 @@ func getKeys(
 	if private != "" {
 		var password string
 
-		if pkifile.FileIsEncryptedPEMBlock(private) {
+		if pki.FileIsEncryptedPEMBlock(private) {
 			if password, err = passwordFunc("Enter passphrase to decrypt private key", false); err != nil {
 				return nil, nil, nil, err
 			}
 		}
 
-		if privatekey, err = pkifile.PrivateKeyFromFileWithPassword(private,
+		if privatekey, err = pki.PrivateKeyFromFileWithPassword(private,
 			password); err != nil {
 			return nil, nil, nil, fmt.Errorf("couldn't read private key file: %v", err)
 		}
 	}
 
 	if csr != "" {
-		if request, err = pkifile.CSRFromFile(csr); err != nil {
+		if request, err = pki.CSRFromFile(csr); err != nil {
 			return nil, nil, nil, err
 		}
 	}

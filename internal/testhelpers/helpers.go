@@ -21,13 +21,14 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"net/url"
 	"os"
 	"testing"
 
-	"github.com/globalsign/hvclient/internal/pkifile"
+	"github.com/globalsign/hvclient/internal/pki"
 )
 
 const (
@@ -39,7 +40,7 @@ const (
 func MustGetPublicKeyFromFile(t *testing.T, filename string) interface{} {
 	t.Helper()
 
-	var key, err = pkifile.PublicKeyFromFile(filename)
+	var key, err = pki.PublicKeyFromFile(filename)
 	if err != nil {
 		t.Fatalf("couldn't get public key from file: %v", err)
 	}
@@ -52,7 +53,7 @@ func MustGetPublicKeyFromFile(t *testing.T, filename string) interface{} {
 func MustGetPrivateKeyFromFile(t *testing.T, filename string) interface{} {
 	t.Helper()
 
-	var key, err = pkifile.PrivateKeyFromFileWithPassword(filename, "")
+	var key, err = pki.PrivateKeyFromFileWithPassword(filename, "")
 	if err != nil {
 		t.Fatalf("couldn't get private key from file: %v", err)
 	}
@@ -65,7 +66,7 @@ func MustGetPrivateKeyFromFile(t *testing.T, filename string) interface{} {
 func MustGetPrivateKeyFromFileWithPassword(t *testing.T, filename, password string) interface{} {
 	t.Helper()
 
-	var key, err = pkifile.PrivateKeyFromFileWithPassword(filename, password)
+	var key, err = pki.PrivateKeyFromFileWithPassword(filename, password)
 	if err != nil {
 		t.Fatalf("couldn't get private key from file: %v", err)
 	}
@@ -78,7 +79,7 @@ func MustGetPrivateKeyFromFileWithPassword(t *testing.T, filename, password stri
 func MustGetCSRFromFile(t *testing.T, filename string) *x509.CertificateRequest {
 	t.Helper()
 
-	var cert, err = pkifile.CSRFromFile(filename)
+	var cert, err = pki.CSRFromFile(filename)
 	if err != nil {
 		t.Fatalf("couldn't get certificate request from file: %v", err)
 	}
@@ -91,7 +92,7 @@ func MustGetCSRFromFile(t *testing.T, filename string) *x509.CertificateRequest 
 func MustGetCertFromFile(t *testing.T, filename string) *x509.Certificate {
 	t.Helper()
 
-	var cert, err = pkifile.CertFromFile(filename)
+	var cert, err = pki.CertFromFile(filename)
 	if err != nil {
 		t.Fatalf("couldn't get certificate from file: %v", err)
 	}
@@ -213,4 +214,16 @@ func MustMakeRandomIdentifier(t *testing.T, n int) string {
 	}
 
 	return string(id)
+}
+
+// MustReadFile reads the contents of a file or fails the test.
+func MustReadFile(t *testing.T, filename string) []byte {
+	t.Helper()
+
+	var b, err = ioutil.ReadFile(filename)
+	if err != nil {
+		t.Fatalf("failed to read file: %v", err)
+	}
+
+	return b
 }

@@ -14,6 +14,6 @@ limitations under the License.
 */
 
 /*
-Package pkifile provides various generally useful PKI functionality.
+Package pki provides various generally useful PKI functionality.
 */
-package pkifile
+package pki

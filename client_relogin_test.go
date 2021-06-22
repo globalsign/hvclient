@@ -19,10 +19,10 @@ package hvclient
 
 import (
 	"context"
+	"os"
+	"strings"
 	"testing"
 	"time"
-
-	"github.com/globalsign/hvclient/internal/testhelpers"
 )
 
 const (
@@ -30,8 +30,8 @@ const (
 )
 
 var (
-	testReloginConfigFilename = testhelpers.MustGetConfigFromEnv("HVCLIENT_TEST_CONFIG_PKCS8")
-	testTimeout               = time.Second * 5
+	testConfigsEnvVar = "HVCLIENT_TEST_CONFIGS"
+	testTimeout       = time.Second * 30
 )
 
 // TestRelogin tests the ability of an API call to detect an expired token,
@@ -44,12 +44,22 @@ var (
 func TestRelogin(t *testing.T) {
 	t.Parallel()
 
+	// Get configuration files from the environment.
+	var v, ok = os.LookupEnv(testConfigsEnvVar)
+	if !ok {
+		t.Skipf("environment variable %s not set", testConfigsEnvVar)
+	}
+
+	// We only need to run this test with one configuration file, and any
+	// one will do, so we'll just use the first.
+	var cfg = strings.Split(v, ";")[0]
+
 	var ctx, cancel = context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	var clnt, err = NewClientFromFile(ctx, testReloginConfigFilename)
+	var clnt, err = NewClientFromFile(ctx, cfg)
 	if err != nil {
-		t.Fatalf("couldn't get client: %v", err)
+		t.Fatalf("failed to create new client from file: %v", err)
 	}
 
 	var oldToken = clnt.tokenRead()
@@ -58,14 +68,32 @@ func TestRelogin(t *testing.T) {
 		t.Fatalf("couldn't get response: %v", err)
 	}
 
-	clnt.token = expiredToken
-	clnt.lastLogin = time.Time{}
+	// Reset the token, and verify that a new token is automatically
+	// obtained.
+	clnt.tokenReset()
 
 	if _, err = clnt.Policy(ctx); err != nil {
 		t.Fatalf("couldn't get response: %v", err)
 	}
 
 	var newToken = clnt.tokenRead()
+
+	if oldToken == newToken {
+		t.Errorf("old and new tokens unexpectedly compare equal")
+	}
+
+	// Deliberately set the token to an expired but otherwise valid
+	// token, and verify that when the request is declined as unauthenticated,
+	// a new token is automatically obtained.
+	oldToken = newToken
+
+	clnt.tokenSet(expiredToken)
+
+	if _, err = clnt.Policy(ctx); err != nil {
+		t.Fatalf("couldn't get response: %v", err)
+	}
+
+	newToken = clnt.tokenRead()
 
 	if oldToken == newToken {
 		t.Errorf("old and new tokens unexpectedly compare equal")

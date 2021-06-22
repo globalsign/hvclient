@@ -17,7 +17,6 @@ package hvclient_test
 
 import (
 	"context"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"math/big"
@@ -26,7 +25,7 @@ import (
 	"time"
 
 	"github.com/globalsign/hvclient"
-	"github.com/globalsign/hvclient/internal/pkifile"
+	"github.com/globalsign/hvclient/internal/pki"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -138,7 +137,7 @@ func TestClientMockCertificatesRequest(t *testing.T) {
 			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 
-			var csr, err = pkifile.CSRFromFile("testdata/test_csr.pem")
+			var csr, err = pki.CSRFromFile("testdata/test_csr.pem")
 			if err != nil {
 				t.Fatalf("failed to read CSR: %v", err)
 			}
@@ -184,10 +183,7 @@ func TestClientMockCertificatesRetrieve(t *testing.T) {
 			name:   "OK",
 			serial: big.NewInt(0x741daf9ec2d5f7dc),
 			want: hvclient.CertInfo{
-				PEM: string(pem.EncodeToMemory(&pem.Block{
-					Type:  "CERTIFICATE",
-					Bytes: mockCert.Raw,
-				})),
+				PEM:       pki.CertToPEMString(mockCert),
 				X509:      mockCert,
 				Status:    hvclient.StatusIssued,
 				UpdatedAt: time.Date(2021, 6, 18, 16, 29, 51, 0, time.UTC),
@@ -268,6 +264,379 @@ func TestClientMockCertificatesRevoke(t *testing.T) {
 			if tc.err != nil {
 				verifyAPIError(t, err, tc.err)
 				return
+			}
+		})
+	}
+}
+
+func TestClientMockClaimsDomains(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name          string
+		status        hvclient.ClaimStatus
+		page, perPage int
+		want          []hvclient.Claim
+	}{
+		{
+			name:   "Verified",
+			status: hvclient.StatusVerified,
+			want: []hvclient.Claim{
+				{
+					ID:        mockClaimID,
+					Status:    hvclient.StatusVerified,
+					Domain:    "fake.com.",
+					CreatedAt: mockDateCreated,
+					ExpiresAt: mockDateExpiresAt,
+					AssertBy:  mockDateAssertBy,
+					Log: []hvclient.ClaimLogEntry{
+						{
+							Status:      hvclient.VerificationSuccess,
+							Description: "domain claim verified",
+							TimeStamp:   mockDateUpdated,
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "Pending",
+			status: hvclient.StatusPending,
+			want: []hvclient.Claim{
+				{
+					ID:        "pending1",
+					Status:    hvclient.StatusPending,
+					Domain:    "pending1.com.",
+					CreatedAt: mockDateCreated,
+					ExpiresAt: mockDateExpiresAt,
+					AssertBy:  mockDateAssertBy,
+					Log: []hvclient.ClaimLogEntry{
+						{
+							Status:      hvclient.VerificationError,
+							Description: "error verifying domain claim",
+							TimeStamp:   mockDateUpdated,
+						},
+						{
+							Status:      hvclient.VerificationError,
+							Description: "error verifying domain claim",
+							TimeStamp:   mockDateUpdated.Add(time.Hour),
+						},
+					},
+				},
+				{
+					ID:        "pending2",
+					Status:    hvclient.StatusPending,
+					Domain:    "pending2.com.",
+					CreatedAt: mockDateCreated,
+					ExpiresAt: mockDateExpiresAt,
+					AssertBy:  mockDateAssertBy,
+					Log: []hvclient.ClaimLogEntry{
+						{
+							Status:      hvclient.VerificationError,
+							Description: "error verifying domain claim",
+							TimeStamp:   mockDateUpdated,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithCancel(context.Background())
+			defer cancel()
+
+			var got, count, err = client.ClaimsDomains(ctx, tc.page, tc.perPage, tc.status)
+			if err != nil {
+				t.Fatalf("failed to get stats expiring: %v", err)
+			}
+
+			if count != int64(len(tc.want)) {
+				t.Fatalf("got count %d, want %d", count, len(tc.want))
+			}
+
+			if !cmp.Equal(got, tc.want) {
+				t.Fatalf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestClientMockClaimDelete(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name string
+		id   string
+		err  error
+	}{
+		{
+			name: "OK",
+			id:   mockClaimID,
+		},
+		{
+			name: "TriggerError",
+			id:   triggerError,
+			err:  hvclient.APIError{StatusCode: http.StatusNotFound},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			var err = client.ClaimDelete(ctx, tc.id)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if tc.err != nil {
+				verifyAPIError(t, err, tc.err)
+				return
+			}
+		})
+	}
+}
+
+func TestClientMockClaimDNS(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name   string
+		id     string
+		domain string
+		want   bool
+		err    error
+	}{
+		{
+			name:   "Pending",
+			domain: "fake.com",
+			id:     mockClaimID,
+			want:   false,
+		},
+		{
+			name:   "Verified",
+			domain: mockClaimDomainVerified,
+			id:     mockClaimID,
+			want:   true,
+		},
+		{
+			name: "TriggerError",
+			id:   triggerError,
+			err:  hvclient.APIError{StatusCode: http.StatusNotFound},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			var got, err = client.ClaimDNS(ctx, tc.id, tc.domain)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if tc.err != nil {
+				verifyAPIError(t, err, tc.err)
+				return
+			}
+
+			if got != tc.want {
+				t.Fatalf("got %t, want %t", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestClientMockClaimSubmit(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name   string
+		domain string
+		want   hvclient.ClaimAssertionInfo
+		err    error
+	}{
+		{
+			name:   "OK",
+			domain: "fake.com.",
+			want: hvclient.ClaimAssertionInfo{
+				Token:    mockClaimToken,
+				AssertBy: mockDateAssertBy,
+				ID:       mockClaimID,
+			},
+		},
+		{
+			name:   "TriggerError",
+			domain: triggerError,
+			err:    hvclient.APIError{StatusCode: http.StatusUnprocessableEntity},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			var got, err = client.ClaimSubmit(ctx, tc.domain)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if tc.err != nil {
+				verifyAPIError(t, err, tc.err)
+				return
+			}
+
+			if !cmp.Equal(got, &tc.want) {
+				t.Fatalf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestClientMockClaimReassert(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name string
+		id   string
+		want hvclient.ClaimAssertionInfo
+		err  error
+	}{
+		{
+			name: "OK",
+			id:   mockClaimID,
+			want: hvclient.ClaimAssertionInfo{
+				Token:    mockClaimToken,
+				AssertBy: mockDateAssertBy,
+				ID:       mockClaimID,
+			},
+		},
+		{
+			name: "TriggerError",
+			id:   triggerError,
+			err:  hvclient.APIError{StatusCode: http.StatusUnprocessableEntity},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			var got, err = client.ClaimReassert(ctx, tc.id)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if tc.err != nil {
+				verifyAPIError(t, err, tc.err)
+				return
+			}
+
+			if !cmp.Equal(got, &tc.want) {
+				t.Fatalf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestClientMockClaimRetrieve(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name string
+		id   string
+		want hvclient.Claim
+		err  error
+	}{
+		{
+			name: "OK",
+			id:   mockClaimID,
+			want: hvclient.Claim{
+				ID:        mockClaimID,
+				Status:    hvclient.StatusVerified,
+				Domain:    "fake.com.",
+				CreatedAt: mockDateCreated,
+				ExpiresAt: mockDateExpiresAt,
+				AssertBy:  mockDateAssertBy,
+				Log: []hvclient.ClaimLogEntry{
+					{
+						Status:      hvclient.VerificationSuccess,
+						Description: "domain claim verified",
+						TimeStamp:   mockDateUpdated,
+					},
+				},
+			},
+		},
+		{
+			name: "TriggerError",
+			id:   triggerError,
+			err:  hvclient.APIError{StatusCode: http.StatusNotFound},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			var got, err = client.ClaimRetrieve(ctx, tc.id)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if tc.err != nil {
+				verifyAPIError(t, err, tc.err)
+				return
+			}
+
+			if !cmp.Equal(got, &tc.want) {
+				t.Fatalf("got %v, want %v", got, tc.want)
 			}
 		})
 	}

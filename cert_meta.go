@@ -38,8 +38,15 @@ type jsonCertMeta struct {
 
 // Equal checks if two certificate metadata objects are equivalent.
 func (c CertMeta) Equal(other CertMeta) bool {
-	return c.SerialNumber.Cmp(other.SerialNumber) == 0 &&
-		c.NotBefore.Equal(other.NotBefore) &&
+	if (c.SerialNumber == nil) != (other.SerialNumber == nil) {
+		return false
+	}
+
+	if c.SerialNumber != nil && c.SerialNumber.Cmp(other.SerialNumber) != 0 {
+		return false
+	}
+
+	return c.NotBefore.Equal(other.NotBefore) &&
 		c.NotAfter.Equal(other.NotAfter)
 }
 

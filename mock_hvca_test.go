@@ -59,8 +59,34 @@ type mockCertMeta struct {
 	NotAfter     int64  `json:"not_after"`
 }
 
+type mockClaim struct {
+	ID        string              `json:"id"`
+	Status    string              `json:"status"`
+	Domain    string              `json:"domain"`
+	CreatedAt int64               `json:"created_at"`
+	ExpiresAt int64               `json:"expires_at"`
+	AssertBy  int64               `json:"assert_by"`
+	Log       []mockClaimLogEntry `json:"log"`
+}
+
+type mockClaimAssertionInfo struct {
+	Token    string `json:"token"`
+	AssertBy int64  `json:"assert_by"`
+	ID       string `json:"id"`
+}
+
+type mockClaimLogEntry struct {
+	Status      string `json:"status"`
+	Description string `json:"description"`
+	TimeStamp   int64  `json:"timestamp"`
+}
+
 type mockCounter struct {
 	Value int `json:"value"`
+}
+
+type mockDNSRequest struct {
+	AuthorizationDomain string `json:"authorization_domain"`
 }
 
 type mockError struct {
@@ -77,23 +103,86 @@ type mockLoginResponse struct {
 }
 
 const (
-	mockAPIKey            = "mock_api_key"
-	mockAPISecret         = "mock_api_secret"
-	mockCertSerial        = "741DAF9EC2D5F7DC"
-	mockCounterIssued     = 72
-	mockCounterRevoked    = 14
-	mockQuotaIssuance     = 42
-	mockSSLClientSerial   = "0123456789"
-	mockToken             = "mock_token"
-	sslClientSerialHeader = "X-SSL-Client-Serial"
-	triggerError          = "triggererror"
+	mockAPIKey              = "mock_api_key"
+	mockAPISecret           = "mock_api_secret"
+	mockCertSerial          = "741DAF9EC2D5F7DC"
+	mockCounterIssued       = 72
+	mockCounterRevoked      = 14
+	mockClaimDomainVerified = "verified.com."
+	mockClaimID             = "113FED08"
+	mockClaimToken          = "mock_claim_token"
+	mockQuotaIssuance       = 42
+	mockSSLClientSerial     = "0123456789"
+	mockToken               = "mock_token"
+	sslClientSerialHeader   = "X-SSL-Client-Serial"
+	triggerError            = "triggererror"
 )
 
 var (
 	mockBigIntNotFound = big.NewInt(999999)
 	mockCert           = mustReadCertFromFile("testdata/test_cert.pem")
-	mockDateUpdated    = time.Date(2021, 6, 18, 16, 29, 51, 0, time.UTC)
-	mockPolicy         = hvclient.Policy{
+	mockClaimAssert    = mockClaimAssertionInfo{
+		Token:    mockClaimToken,
+		AssertBy: mockDateAssertBy.Unix(),
+		ID:       mockClaimID,
+	}
+	mockClaimsEntries = []mockClaim{
+		{
+			ID:        mockClaimID,
+			Status:    "VERIFIED",
+			Domain:    "fake.com.",
+			CreatedAt: mockDateCreated.Unix(),
+			ExpiresAt: mockDateExpiresAt.Unix(),
+			AssertBy:  mockDateAssertBy.Unix(),
+			Log: []mockClaimLogEntry{
+				{
+					Status:      "SUCCESS",
+					Description: "domain claim verified",
+					TimeStamp:   mockDateUpdated.Unix(),
+				},
+			},
+		},
+		{
+			ID:        "pending1",
+			Status:    "PENDING",
+			Domain:    "pending1.com.",
+			CreatedAt: mockDateCreated.Unix(),
+			ExpiresAt: mockDateExpiresAt.Unix(),
+			AssertBy:  mockDateAssertBy.Unix(),
+			Log: []mockClaimLogEntry{
+				{
+					Status:      "ERROR",
+					Description: "error verifying domain claim",
+					TimeStamp:   mockDateUpdated.Unix(),
+				},
+				{
+					Status:      "ERROR",
+					Description: "error verifying domain claim",
+					TimeStamp:   mockDateUpdated.Add(time.Hour).Unix(),
+				},
+			},
+		},
+		{
+			ID:        "pending2",
+			Status:    "PENDING",
+			Domain:    "pending2.com.",
+			CreatedAt: mockDateCreated.Unix(),
+			ExpiresAt: mockDateExpiresAt.Unix(),
+			AssertBy:  mockDateAssertBy.Unix(),
+			Log: []mockClaimLogEntry{
+				{
+					Status:      "ERROR",
+					Description: "error verifying domain claim",
+					TimeStamp:   mockDateUpdated.Unix(),
+				},
+			},
+		},
+	}
+	mockDateCreated   = time.Date(2021, 6, 16, 4, 19, 25, 0, time.UTC)
+	mockDateExpiresAt = time.Date(2021, 6, 17, 22, 7, 4, 0, time.UTC)
+	mockDateUpdated   = time.Date(2021, 6, 18, 16, 29, 51, 0, time.UTC)
+	mockDateAssertBy  = time.Date(2021, 6, 19, 13, 5, 31, 0, time.UTC)
+	mockPolicy        = hvclient.Policy{
 		Validity: &hvclient.ValidityPolicy{
 			SecondsMin:            3600,
 			SecondsMax:            7776000,
@@ -198,13 +287,13 @@ func newMockServer(t *testing.T) *httptest.Server {
 
 	r.Route("/claims", func(r chi.Router) {
 		r.Route("/domains", func(r chi.Router) {
-			r.Get("/", mockNotImplemented)
-			r.Post("/{domain}", mockNotImplemented)
-			r.Route("/{claim}", func(r chi.Router) {
-				r.Get("/", mockNotImplemented)
-				r.Delete("/", mockNotImplemented)
+			r.Get("/", mockClaimsDomains)
+			r.Route("/{arg}", func(r chi.Router) {
+				r.Post("/", mockClaimsSubmit)
+				r.Get("/", mockClaimsRetrieve)
+				r.Delete("/", mockClaimsDelete)
 				r.Route("/dns", func(r chi.Router) {
-					r.Post("/", mockNotImplemented)
+					r.Post("/", mockClaimsDNS)
 				})
 				r.Route("/http", func(r chi.Router) {
 					r.Post("/", mockNotImplemented)
@@ -214,7 +303,7 @@ func newMockServer(t *testing.T) *httptest.Server {
 					r.Post("/", mockNotImplemented)
 				})
 				r.Route("/reassert", func(r chi.Router) {
-					r.Post("/", mockNotImplemented)
+					r.Post("/", mockClaimsReassert)
 				})
 			})
 		})
@@ -302,6 +391,103 @@ func mockCertificatesRevoke(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mockWriteResponse(w, http.StatusNoContent, nil)
+}
+
+// mockClaimsDelete mocks a DELETE /claims/domains/{id} operation.
+func mockClaimsDelete(w http.ResponseWriter, r *http.Request) {
+	var id = chi.URLParam(r, "arg")
+
+	// Trigger 404 for specific ID
+	if id == triggerError {
+		mockWriteError(w, http.StatusNotFound)
+		return
+	}
+
+	mockWriteResponse(w, http.StatusNoContent, nil)
+}
+
+// mockClaimsDNS mocks a POST /claims/domains/{id}/dns operation.
+func mockClaimsDNS(w http.ResponseWriter, r *http.Request) {
+	var id = chi.URLParam(r, "arg")
+
+	// Trigger 404 for specific ID
+	if id == triggerError {
+		mockWriteError(w, http.StatusNotFound)
+		return
+	}
+
+	// Unmarshal body.
+	var body mockDNSRequest
+	var err = mockUnmarshalBody(w, r, &body)
+	if err != nil {
+		return
+	}
+
+	if body.AuthorizationDomain == mockClaimDomainVerified {
+		mockWriteResponse(w, http.StatusNoContent, nil)
+		return
+	}
+
+	mockWriteResponse(w, http.StatusCreated, nil)
+}
+
+// mockClaimsDomains mocks a GET /claims/domains operation.
+func mockClaimsDomains(w http.ResponseWriter, r *http.Request) {
+	var status string
+	if vals := r.URL.Query()["status"]; len(vals) > 0 {
+		status = vals[0]
+	}
+
+	var entries []mockClaim
+	for _, entry := range mockClaimsEntries {
+		if (entry.Status == "VERIFIED") == (status == "VERIFIED") {
+			entries = append(entries, entry)
+		}
+	}
+
+	w.Header().Set("Total-Count", fmt.Sprintf("%d", len(entries)))
+	mockWriteResponse(w, http.StatusOK, entries)
+}
+
+// mockClaimsSubmit mocks a POST /claims/domains/{domain} operation.
+func mockClaimsSubmit(w http.ResponseWriter, r *http.Request) {
+	var domain = chi.URLParam(r, "arg")
+
+	// Trigger 422 for specific domain
+	if domain == triggerError {
+		mockWriteError(w, http.StatusUnprocessableEntity)
+		return
+	}
+
+	w.Header().Set("Location", fmt.Sprintf("http://local/claims/domains/%s", mockClaimAssert.ID))
+	mockWriteResponse(w, http.StatusCreated, mockClaimAssert)
+}
+
+// mockClaimsReassert mocks a POST /claims/domains/{id}/reassert operation.
+func mockClaimsReassert(w http.ResponseWriter, r *http.Request) {
+	var id = chi.URLParam(r, "arg")
+
+	// Trigger 422 for specific domain
+	if id == triggerError {
+		mockWriteError(w, http.StatusUnprocessableEntity)
+		return
+	}
+
+	w.Header().Set("Location", fmt.Sprintf("http://local/claims/domains/%s", mockClaimAssert.ID))
+	mockWriteResponse(w, http.StatusOK, mockClaimAssert)
+}
+
+// mockClaimsRetrieve mocks a GET /claims/domains/{id} operation.
+func mockClaimsRetrieve(w http.ResponseWriter, r *http.Request) {
+	var id = chi.URLParam(r, "arg")
+
+	// Trigger 404 for specific ID
+	if id == triggerError {
+		mockWriteError(w, http.StatusNotFound)
+		return
+	}
+
+	mockWriteResponse(w, http.StatusOK, mockClaimsEntries[0])
 }
 
 // mockCountersIssued mocks a GET /counters/certificates/issued operation.

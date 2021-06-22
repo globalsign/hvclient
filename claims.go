@@ -251,9 +251,9 @@ func (c *Claim) UnmarshalJSON(b []byte) error {
 		ID:        data.ID,
 		Status:    data.Status,
 		Domain:    data.Domain,
-		CreatedAt: time.Unix(data.CreatedAt, 0),
-		ExpiresAt: time.Unix(data.ExpiresAt, 0),
-		AssertBy:  time.Unix(data.AssertBy, 0),
+		CreatedAt: time.Unix(data.CreatedAt, 0).UTC(),
+		ExpiresAt: time.Unix(data.ExpiresAt, 0).UTC(),
+		AssertBy:  time.Unix(data.AssertBy, 0).UTC(),
 		Log:       data.Log,
 	}
 
@@ -289,7 +289,7 @@ func (l *ClaimLogEntry) UnmarshalJSON(b []byte) error {
 	*l = ClaimLogEntry{
 		Status:      data.Status,
 		Description: data.Description,
-		TimeStamp:   time.Unix(data.TimeStamp, 0),
+		TimeStamp:   time.Unix(data.TimeStamp, 0).UTC(),
 	}
 
 	return nil
@@ -322,7 +322,7 @@ func (c *ClaimAssertionInfo) UnmarshalJSON(b []byte) error {
 
 	*c = ClaimAssertionInfo{
 		Token:    data.Token,
-		AssertBy: time.Unix(data.AssertBy, 0),
+		AssertBy: time.Unix(data.AssertBy, 0).UTC(),
 		ID:       data.ID,
 	}
 

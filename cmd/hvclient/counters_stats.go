@@ -97,7 +97,7 @@ func outputCertsMeta(metas []hvclient.CertMeta, count int64, err error) {
 		fmt.Printf("%d\n", count)
 	} else {
 		for _, meta := range metas {
-			fmt.Printf("%s,%v,%v\n", meta.SerialNumber, meta.NotBefore, meta.NotAfter)
+			fmt.Printf("%x,%v,%v\n", meta.SerialNumber, meta.NotBefore, meta.NotAfter)
 		}
 	}
 }

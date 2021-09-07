@@ -1,5 +1,6 @@
 # hvclient
 
+[![GoDoc](https://godoc.org/github.com/globalsign/hvclient?status.svg)](https://godoc.org/github.com/globalsign/hvclient)
 [![Build Status](https://github.com/globalsign/hvclient/actions/workflows/go.yml/badge.svg)](https://github.com/globalsign/hvclient/actions/workflows/go.yml)
 
 Package hvclient provides an interface to the [GlobalSign Atlas Certificate

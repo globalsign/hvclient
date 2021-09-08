@@ -4,6 +4,7 @@
 
 Package hvclient provides an interface to the [GlobalSign Atlas Certificate
 Management API](https://www.globalsign.com/en/resources/apis/api-documentation/globalsign_atlas_certificate_management_api.html).
+[![asciicast](https://asciinema.org/a/P6MSC1Qqe78GYWsiucs5DAM8B.svg)](https://asciinema.org/a/P6MSC1Qqe78GYWsiucs5DAM8B)
 
 ## Installation
 

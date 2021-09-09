@@ -72,3 +72,6 @@ is used. This should be used only for testing.
 * `extra_headers` are optional additional HTTP headers to include in the
 requests to the server.
 * `timeout` specifies a request timeout in seconds.
+
+## Demo
+[![asciicast](https://asciinema.org/a/P6MSC1Qqe78GYWsiucs5DAM8B.svg)](https://asciinema.org/a/P6MSC1Qqe78GYWsiucs5DAM8B)

@@ -2,17 +2,13 @@
 
 **hvclient** is a simple command line utility to:
 
- * demonstrate the use of the HVCA client library; 
- * provide a convenient command line interface to the HVCA system; and to
- * provide a convenient way to integrate HVCA API calls into client systems,
+ * demonstrate the use of the ATLAS client library; 
+ * provide a convenient command line interface to the ATLAS system; and to
+ * provide a convenient way to integrate ATLAS API calls into client systems,
  as the command line utility can be called from scripts or other programs.
 
 
 ## Installation
-
-If the **hvclient** and library are made publicly available on a github.com
-repo, installation will be more straightforward, but for the moment a bit
-of manual installation is necessary.
 
 Go imports packages via a path beginning at a fixed location, or at one of
 a finite set of fixed locations, so it is important to extract the files to
@@ -157,9 +153,9 @@ and after making the change (make sure to change the path to match your `$GOPATH
 
 Using the **hvclient** utility requires:
 
- 1. An HCVA account;
+ 1. An ATLAS account;
  2. A configuration file; and
- 3. A certificate/key pair for the TLS connection to the HVCA system.
+ 3. A certificate/key pair for the TLS connection to the ATLAS system.
 
 
 ### Configuration file
@@ -200,7 +196,7 @@ Requesting a certificate requires three things:
 3. Specifying the requested values of the certificate fields.
 
 *Note*: in the examples that follow, the `-generate` option will show the
-JSON-encoded request that would be provided to HVCA, without actually making
+JSON-encoded request that would be provided to ATLAS, without actually making
 the certificate request. This is useful for verifying the request that
 HVClient will make before actually submitting it.
 
@@ -222,7 +218,7 @@ format matching `2018-10-31T08:45:12EST`.
 
 #### Providing the public key
 
-A public key must always be provided to request a certificate. An HVCA
+A public key must always be provided to request a certificate. An ATLAS
 account may also be set up to require that the requestor prove they are in
 possession of the private key corresponding to that public key. This proof
 may be in one of two forms:
@@ -230,7 +226,7 @@ may be in one of two forms:
 1. Signing the public key with the private key; or
 
 2. Provided a PKCS#10 certificate signing request (CSR) signed with the private
-key. Note that when a PKCS#10 is provided, HVCA will only consider the public
+key. Note that when a PKCS#10 is provided, ATLAS will only consider the public
 key and the signature, and will ignore all the other fields. If any fields
 in the CSR need to be included in the issued certificate, they must be
 manually requested in the same way as any other field.
@@ -239,18 +235,18 @@ Three options are provided to provide the public key. In all cases, the value
 of the option should be the path to a file containing the PEM-encoded key or
 CSR:
 
-1. `-publickey` - use this option for an HVCA account which does not require
+1. `-publickey` - use this option for an ATLAS account which does not require
 proof-of-possession.
 
-2. `-privatekey` - use this option for an HVCA account which requires
+2. `-privatekey` - use this option for an ATLAS account which requires
 proof-of-possession by signing the public key with the private key. HVClient
 will automatically extract the public key from the private key and compute
 the signature. If the private key is encrypted, HVClient will prompt the user
 for the decryption passphrase.
 
-3. `-csr` - use this option for an HVCA account which requires
+3. `-csr` - use this option for an ATLAS account which requires
 proof-of-possesion by providing a PKCS#10 CSR signed with the private key.
-As a convenience, in the event the user has this kind of HVCA account but
+As a convenience, in the event the user has this kind of ATLAS account but
 doesn't have a PKCS#10 CSR, the `-gencsr` option can be combined with the
 `-privatekey` option and HVClient will automatically generate a CSR and
 sign it with that private key.
@@ -622,7 +618,7 @@ Example usage:
 
 #### List-producing APIs - time window
 
-A number of HVCA APIs return a list of items for a given time period. Examples include:
+A number of ATLAS APIs return a list of items for a given time period. Examples include:
 
  * `-certsissued` - a list of certificates issued over a given time period
  * `-certsrevoked` - a list of certificates revoked over a given time period
@@ -662,7 +658,7 @@ The fields shown above are the certificate ID, the not-before time, and the not-
 
 #### List-producing APIs - pages
 
-A number of HVCA APIs return a list of items in a paged format. This includes the three APIs
+A number of ATLAS APIs return a list of items in a paged format. This includes the three APIs
 in the preceding section, as well as:
 
  * `-claims` - a list of domain claims. If the `-pending` option is also specified, only

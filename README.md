@@ -20,14 +20,14 @@ Basic usage is straightforward:
 
 1. Create a `Client` object
 
-2. Use it to make HVCA API calls.
+2. Use it to make ATLAS API calls.
 
 Creating a `Client` object requires:
 
 1. An API key and API secret provided by GlobalSign during account set-up; and
 
 2. A private key and a certificate to use for mutual TLS authentication
-with the HVCA server. The private key should be the one associated with
+with the ATLAS server. The private key should be the one associated with
 the public key that was provided to GlobalSign during account set-up, and
 the certificate should be the one provided by GlobalSign along with the API
 key and API secret.

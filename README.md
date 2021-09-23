@@ -73,5 +73,5 @@ is used. This should be used only for testing.
 requests to the server.
 * `timeout` specifies a request timeout in seconds.
 
-## Demo [hvclient command line utility](https://github.com/globalsign/hvclient/blob/master/cmd/hvclient/README.md)
+## Demo - [hvclient CLU](https://github.com/globalsign/hvclient/blob/master/cmd/hvclient/README.md)
 [![asciicast](https://asciinema.org/a/P6MSC1Qqe78GYWsiucs5DAM8B.svg)](https://asciinema.org/a/P6MSC1Qqe78GYWsiucs5DAM8B)

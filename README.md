@@ -20,14 +20,14 @@ Basic usage is straightforward:
 
 1. Create a `Client` object
 
-2. Use it to make ATLAS API calls.
+2. Use it to make GlobalSign Atlas Certificate Management API calls.
 
 Creating a `Client` object requires:
 
 1. An API key and API secret provided by GlobalSign during account set-up; and
 
 2. A private key and a certificate to use for mutual TLS authentication
-with the ATLAS server. The private key should be the one associated with
+with the GlobalSign Atlas platform. The private key should be the one associated with
 the public key that was provided to GlobalSign during account set-up, and
 the certificate should be the one provided by GlobalSign along with the API
 key and API secret.
@@ -73,5 +73,5 @@ is used. This should be used only for testing.
 requests to the server.
 * `timeout` specifies a request timeout in seconds.
 
-## Demo
+## Demo [hvclient command line utility](https://github.com/globalsign/hvclient/blob/master/cmd/hvclient/README.md)
 [![asciicast](https://asciinema.org/a/P6MSC1Qqe78GYWsiucs5DAM8B.svg)](https://asciinema.org/a/P6MSC1Qqe78GYWsiucs5DAM8B)

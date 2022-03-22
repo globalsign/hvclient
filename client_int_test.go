@@ -420,7 +420,7 @@ func TestClaims(t *testing.T) {
 
 			// Assert (falsely) ownership with DNS method.
 			var verified bool
-			verified, err = client.ClaimDNS(ctx, claim.ID, testDomain)
+			verified, err = client.ClaimAssert(ctx, claim.ID, hvclient.PathDNS, hvclient.ClaimsDNSRequest{AuthorizationDomain: testDomain})
 			if err != nil {
 				t.Fatalf("failed to assert ownership: %v", err)
 			}

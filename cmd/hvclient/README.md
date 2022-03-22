@@ -822,3 +822,17 @@ Example usage:
 
 The response will be `CREATED` until the domain control has been verified, at which point
 the response will be `VERIFIED`.
+
+#### Requesting assertion of domain control using HTTP
+
+Assertion of domain control using HTTP can be requested with the `-claimhttp` option, once
+the token has been appropriately placed.
+
+Example usage:
+
+    user@host:hvclient$ hvclient -claimhttp="01A4B882B7A8FBFBF01AECE65F84C20C" -authdomain=test.com
+    CREATED
+    user@host:hvclient$ 
+
+The response will be `CREATED` until the domain control has been verified, at which point
+the response will be `VERIFIED`.

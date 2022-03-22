@@ -412,31 +412,76 @@ func TestClientMockClaimDelete(t *testing.T) {
 	}
 }
 
-func TestClientMockClaimDNS(t *testing.T) {
+func TestClientMockClaimAssert(t *testing.T) {
 	t.Parallel()
 
 	var testcases = []struct {
-		name   string
-		id     string
-		domain string
-		want   bool
-		err    error
+		name string
+		id   string
+		body interface{}
+		path string
+
+		want bool
+		err  error
 	}{
 		{
-			name:   "Pending",
-			domain: "fake.com",
-			id:     mockClaimID,
-			want:   false,
+			name: "ok - DNS Pending",
+			id:   mockClaimID,
+			body: hvclient.ClaimsDNSRequest{AuthorizationDomain: "fake.com"},
+			path: hvclient.PathDNS,
+
+			want: false,
+			err:  nil,
 		},
 		{
-			name:   "Verified",
-			domain: mockClaimDomainVerified,
-			id:     mockClaimID,
-			want:   true,
+			name: "ok - DNS Verified",
+			id:   mockClaimID,
+			body: hvclient.ClaimsDNSRequest{AuthorizationDomain: mockClaimDomainVerified},
+			path: hvclient.PathDNS,
+
+			want: true,
+			err:  nil,
 		},
 		{
-			name: "TriggerError",
+			name: "ok - HTTP Pending",
+			id:   mockClaimID,
+			body: hvclient.ClaimsHTTPRequest{
+				AuthorizationDomain: "fake.com",
+				Scheme:              "http",
+			},
+			path: hvclient.PathHTTP,
+
+			want: false,
+			err:  nil,
+		},
+		{
+			name: "ok - HTTP Verified",
+			id:   mockClaimID,
+			body: hvclient.ClaimsHTTPRequest{
+				AuthorizationDomain: mockClaimDomainVerified,
+				Scheme:              "http",
+			},
+			path: hvclient.PathHTTP,
+
+			want: true,
+			err:  nil,
+		},
+		{
+			name: "error - DNS triggerError",
 			id:   triggerError,
+			body: hvclient.ClaimsDNSRequest{},
+			path: hvclient.PathDNS,
+
+			want: false,
+			err:  hvclient.APIError{StatusCode: http.StatusNotFound},
+		},
+		{
+			name: "error - HTTP triggerError",
+			id:   triggerError,
+			body: hvclient.ClaimsHTTPRequest{},
+			path: hvclient.PathHTTP,
+
+			want: false,
 			err:  hvclient.APIError{StatusCode: http.StatusNotFound},
 		},
 	}
@@ -453,7 +498,7 @@ func TestClientMockClaimDNS(t *testing.T) {
 			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 
-			var got, err = client.ClaimDNS(ctx, tc.id, tc.domain)
+			var got, err = client.ClaimAssert(ctx, tc.id, tc.path, tc.body)
 			if (err == nil) != (tc.err == nil) {
 				t.Fatalf("got error %v, want %v", err, tc.err)
 			}

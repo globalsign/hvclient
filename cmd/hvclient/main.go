@@ -168,7 +168,10 @@ func main() {
 		claimDelete(clnt, *fClaimDelete)
 
 	case *fClaimDNS != "":
-		claimDNS(clnt, *fClaimDNS)
+		claimDNS(clnt, *fClaimDNS, *fAuthDomain)
+
+	case *fClaimHTTP != "":
+		claimHTTP(clnt, *fClaimHTTP, *fScheme, *fAuthDomain)
 
 	case *fClaimReassert != "":
 		claimReassert(clnt, *fClaimReassert)

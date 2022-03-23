@@ -33,13 +33,13 @@ type counter struct {
 	Value int64 `json:"value"`
 }
 
-// ClaimsDNSRequest represents the body used for an HVCA request to assert domain control through DNS validation method
-type ClaimsDNSRequest struct {
+// claimsDNSRequest represents the body used for an HVCA request to assert domain control through DNS validation method
+type claimsDNSRequest struct {
 	AuthorizationDomain string `json:"authorization_domain,omitempty"`
 }
 
-// ClaimsHTTPRequest represents the body used for an HVCA request to assert domain control through HTTP validation method
-type ClaimsHTTPRequest struct {
+// claimsHTTPRequest represents the body used for an HVCA request to assert domain control through HTTP validation method
+type claimsHTTPRequest struct {
 	AuthorizationDomain string `json:"authorization_domain,omitempty"`
 	Scheme              string `json:"scheme"`
 }
@@ -71,13 +71,8 @@ const (
 	endpointTrustChain                  = "/trustchain"
 	endpointPolicy                      = "/validationpolicy"
 	pathReassert                        = "/reassert"
-)
-
-var (
-	// PathDNS represents the path to assert a domain claim through DNS
-	PathDNS = "/dns"
-	// PathHTTP represents the path to assert a domain claim through HTTP
-	PathHTTP = "/http"
+	pathDNS                             = "/dns"
+	pathHTTP                            = "/http"
 )
 
 // CertificateRequest requests a new certificate based. The HVCA API is
@@ -399,30 +394,36 @@ func (c *Client) ClaimDelete(ctx context.Context, id string) error {
 	return err
 }
 
-// ClaimAssert requests assertion of domain control using DNS or HTTP once the appropriate
-// token has been placed in the relevant DNS records or at the expected path. A return value of false
+// ClaimDNS requests assertion of domain control using DNS once the appropriate
+// token has been placed in the relevant DNS records. A return value of false
 // indicates that the assertion request was created. A return value of true
 // indicates that domain control was verified.
-func (c *Client) ClaimAssert(ctx context.Context, id, path string, body interface{}) (bool, error) {
-	var response, err = c.makeRequest(
-		ctx,
-		endpointClaimsDomains+"/"+url.QueryEscape(id)+path,
-		http.MethodPost,
-		body,
-		nil,
-	)
-	if err != nil {
-		return false, err
+func (c *Client) ClaimDNS(ctx context.Context, id, authDomain string) (bool, error) {
+	var body interface{}
+	// The HVCA API documentation indicates that the request body is
+	// required, but practice suggests that it is not. The request does
+	// definitely fail if the empty string is provided as the authorization
+	// domain, however, so we'll only include the body in the request if
+	// an authorization domain was provided.
+	//
+	if authDomain != "" {
+		body = claimsDNSRequest{AuthorizationDomain: authDomain}
 	}
 
-	switch response.StatusCode {
-	case http.StatusCreated:
-		return false, nil
-	case http.StatusNoContent:
-		return true, nil
+	return c.claimAssert(ctx, body, id, pathDNS)
+}
+
+// ClaimHTTP requests assertion of domain control using HTTP once the appropriate
+// token has been placed at the expected path. A return value of false
+// indicates that the assertion request was created. A return value of true
+// indicates that domain control was verified.
+func (c *Client) ClaimHTTP(ctx context.Context, id, authDomain, scheme string) (bool, error) {
+	var body = claimsHTTPRequest{
+		AuthorizationDomain: authDomain,
+		Scheme:              scheme,
 	}
 
-	return false, fmt.Errorf("unexpected status code: %d", response.StatusCode)
+	return c.claimAssert(ctx, body, id, pathHTTP)
 }
 
 // ClaimReassert reasserts an existing domain claim, for example if the
@@ -449,4 +450,26 @@ func (c *Client) ClaimReassert(ctx context.Context, id string) (*ClaimAssertionI
 	info.ID = location
 
 	return &info, err
+}
+
+func (c *Client) claimAssert(ctx context.Context, body interface{}, id, path string) (bool, error) {
+	var response, err = c.makeRequest(
+		ctx,
+		endpointClaimsDomains+"/"+url.QueryEscape(id)+path,
+		http.MethodPost,
+		body,
+		nil,
+	)
+	if err != nil {
+		return false, err
+	}
+
+	switch response.StatusCode {
+	case http.StatusCreated:
+		return false, nil
+	case http.StatusNoContent:
+		return true, nil
+	}
+
+	return false, fmt.Errorf("unexpected status code: %d", response.StatusCode)
 }

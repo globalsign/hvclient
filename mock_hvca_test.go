@@ -89,6 +89,11 @@ type mockDNSRequest struct {
 	AuthorizationDomain string `json:"authorization_domain"`
 }
 
+type mockHTTPRequest struct {
+	AuthorizationDomain string `json:"authorization_domain,omitempty"`
+	Scheme              string `json:"scheme"`
+}
+
 type mockError struct {
 	Description string `json:"description"`
 }
@@ -442,7 +447,7 @@ func mockClaimsHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Unmarshal body.
-	var body hvclient.ClaimsHTTPRequest
+	var body mockHTTPRequest
 	var err = mockUnmarshalBody(w, r, &body)
 	if err != nil {
 		return

@@ -94,18 +94,7 @@ func claimDNS(clnt *hvclient.Client, id, authDomain string) {
 	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var body interface{}
-	// The HVCA API documentation indicates that the request body is
-	// required, but practice suggests that it is not. The request does
-	// definitely fail if the empty string is provided as the authorization
-	// domain, however, so we'll only include the body in the request if
-	// an authorization domain was provided.
-	//
-	if authDomain != "" {
-		body = hvclient.ClaimsDNSRequest{AuthorizationDomain: authDomain}
-	}
-
-	var clm, err = clnt.ClaimAssert(ctx, id, hvclient.PathDNS, body)
+	var clm, err = clnt.ClaimDNS(ctx, id, authDomain)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -123,12 +112,7 @@ func claimHTTP(clnt *hvclient.Client, id, scheme, authDomain string) {
 	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var body = hvclient.ClaimsHTTPRequest{
-		AuthorizationDomain: authDomain,
-		Scheme:              scheme,
-	}
-
-	var clm, err = clnt.ClaimAssert(ctx, id, hvclient.PathHTTP, body)
+	var clm, err = clnt.ClaimHTTP(ctx, id, authDomain, scheme)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}

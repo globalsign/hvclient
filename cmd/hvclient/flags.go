@@ -128,7 +128,7 @@ var (
 	fClaimDelete   = flag.String("claimdelete", "", "delete the domain claim with the specified ID")
 	fClaimDNS      = flag.String("claimdns", "", "request assertion of domain control using DNS for the domain claim with the specified ID")
 	fClaimHTTP     = flag.String("claimhttp", "", "request assertion of domain control using HTTP for the domain claim with the specified ID")
-	fScheme        = flag.String("scheme", "http", "protocol used to verify assertion of domain control using HTTP for the domain claim")
+	fScheme        = flag.String("scheme", "https", "protocol used to verify assertion of domain control using HTTP for the domain claim")
 	fAuthDomain    = flag.String("authdomain", "", "authorization domain name used to verify assertion of domain control for the domain claim")
 	fClaimReassert = flag.String("claimreassert", "", "reassert the domain claim with the specified ID")
 )

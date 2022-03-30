@@ -419,24 +419,32 @@ func TestClientMockClaimDNS(t *testing.T) {
 		name   string
 		id     string
 		domain string
-		want   bool
-		err    error
+
+		want bool
+		err  error
 	}{
 		{
-			name:   "Pending",
+			name:   "ok - DNS Pending",
+			id:     mockClaimID,
 			domain: "fake.com",
-			id:     mockClaimID,
-			want:   false,
+
+			want: false,
+			err:  nil,
 		},
 		{
-			name:   "Verified",
+			name:   "ok - DNS Verified",
+			id:     mockClaimID,
 			domain: mockClaimDomainVerified,
-			id:     mockClaimID,
-			want:   true,
+
+			want: true,
+			err:  nil,
 		},
 		{
-			name: "TriggerError",
-			id:   triggerError,
+			name:   "error - DNS triggerError",
+			id:     triggerError,
+			domain: "",
+
+			want: false,
 			err:  hvclient.APIError{StatusCode: http.StatusNotFound},
 		},
 	}
@@ -454,6 +462,72 @@ func TestClientMockClaimDNS(t *testing.T) {
 			defer cancel()
 
 			var got, err = client.ClaimDNS(ctx, tc.id, tc.domain)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if tc.err != nil {
+				verifyAPIError(t, err, tc.err)
+				return
+			}
+
+			if got != tc.want {
+				t.Fatalf("got %t, want %t", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestClientMockClaimHTTP(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name   string
+		id     string
+		domain string
+
+		want bool
+		err  error
+	}{
+		{
+			name:   "ok - HTTP Pending",
+			id:     mockClaimID,
+			domain: "fake.com",
+
+			want: false,
+			err:  nil,
+		},
+		{
+			name:   "ok - HTTP Verified",
+			id:     mockClaimID,
+			domain: mockClaimDomainVerified,
+
+			want: true,
+			err:  nil,
+		},
+		{
+			name:   "error - HTTP triggerError",
+			id:     triggerError,
+			domain: "",
+
+			want: false,
+			err:  hvclient.APIError{StatusCode: http.StatusNotFound},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			var got, err = client.ClaimHTTP(ctx, tc.id, tc.domain, "HTTP")
 			if (err == nil) != (tc.err == nil) {
 				t.Fatalf("got error %v, want %v", err, tc.err)
 			}

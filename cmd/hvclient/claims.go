@@ -90,11 +90,29 @@ func claimDelete(clnt *hvclient.Client, id string) {
 
 // claimDNS requests assertion of domain control using DNS for
 // the specified claim ID.
-func claimDNS(clnt *hvclient.Client, id string) {
+func claimDNS(clnt *hvclient.Client, id, authDomain string) {
 	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var clm, err = clnt.ClaimDNS(ctx, id, "")
+	var clm, err = clnt.ClaimDNS(ctx, id, authDomain)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+
+	if clm {
+		fmt.Printf("VERIFIED\n")
+	} else {
+		fmt.Printf("CREATED\n")
+	}
+}
+
+// claimHTTP requests assertion of domain control using HTTP for
+// the specified claim ID.
+func claimHTTP(clnt *hvclient.Client, id, scheme, authDomain string) {
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	var clm, err = clnt.ClaimHTTP(ctx, id, authDomain, scheme)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}

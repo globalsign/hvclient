@@ -168,6 +168,11 @@ Domain claim options:
   -claimdelete=<id>     Delete the domain claim with the specified ID
   -claimdns=<id>        Request assertion of domain control using DNS for the
                         claim with the specified ID
+  -claimhttp=<id>       Request assertion of domain control using HTTP for the
+                        claim with the specified ID
+
+      -scheme=<scheme>  Used with -claimhttp, specifies the protocol used to verify assertion of domain control
+  -authdomain=<authdomain> Used with -claimhttp and -claimsdns, specifies the authorization domain used to verify assertion of domain control
 
 List-producing API options:
 

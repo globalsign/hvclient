@@ -89,6 +89,11 @@ type mockDNSRequest struct {
 	AuthorizationDomain string `json:"authorization_domain"`
 }
 
+type mockHTTPRequest struct {
+	AuthorizationDomain string `json:"authorization_domain,omitempty"`
+	Scheme              string `json:"scheme"`
+}
+
 type mockError struct {
 	Description string `json:"description"`
 }
@@ -296,7 +301,7 @@ func newMockServer(t *testing.T) *httptest.Server {
 					r.Post("/", mockClaimsDNS)
 				})
 				r.Route("/http", func(r chi.Router) {
-					r.Post("/", mockNotImplemented)
+					r.Post("/", mockClaimsHTTP)
 				})
 				r.Route("/email", func(r chi.Router) {
 					r.Get("/", mockNotImplemented)
@@ -418,6 +423,31 @@ func mockClaimsDNS(w http.ResponseWriter, r *http.Request) {
 
 	// Unmarshal body.
 	var body mockDNSRequest
+	var err = mockUnmarshalBody(w, r, &body)
+	if err != nil {
+		return
+	}
+
+	if body.AuthorizationDomain == mockClaimDomainVerified {
+		mockWriteResponse(w, http.StatusNoContent, nil)
+		return
+	}
+
+	mockWriteResponse(w, http.StatusCreated, nil)
+}
+
+// mockClaimsHTTP mocks a POST /claims/domains/{id}/http operation.
+func mockClaimsHTTP(w http.ResponseWriter, r *http.Request) {
+	var id = chi.URLParam(r, "arg")
+
+	// Trigger 404 for specific ID
+	if id == triggerError {
+		mockWriteError(w, http.StatusNotFound)
+		return
+	}
+
+	// Unmarshal body.
+	var body mockHTTPRequest
 	var err = mockUnmarshalBody(w, r, &body)
 	if err != nil {
 		return

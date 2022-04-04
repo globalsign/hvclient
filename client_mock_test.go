@@ -544,6 +544,70 @@ func TestClientMockClaimHTTP(t *testing.T) {
 	}
 }
 
+func TestClientMockClaimEmail(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name  string
+		id    string
+		email string
+
+		want bool
+		err  error
+	}{
+		{
+			name:  "ok - Email Pending",
+			id:    mockClaimID,
+			email: "khan@earth.com",
+
+			want: false,
+			err:  nil,
+		},
+		{
+			name:  "ok - Email Verified",
+			id:    mockClaimID,
+			email: mockClaimEmail,
+
+			want: true,
+			err:  nil,
+		},
+		{
+			name:  "error - Email triggerError",
+			id:    triggerError,
+			email: "",
+
+			want: false,
+			err:  hvclient.APIError{StatusCode: http.StatusNotFound},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			var got, err = client.ClaimEmail(ctx, tc.id, tc.email)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if tc.err != nil {
+				verifyAPIError(t, err, tc.err)
+				return
+			}
+
+			if got != tc.want {
+				t.Fatalf("got %t, want %t", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestClientMockClaimSubmit(t *testing.T) {
 	t.Parallel()
 

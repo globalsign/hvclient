@@ -44,6 +44,11 @@ type claimsHTTPRequest struct {
 	Scheme              string `json:"scheme"`
 }
 
+// claimsEmailRequest represents the body used for an HVCA request to assert domain control through Email validation method
+type claimsEmailRequest struct {
+	Email string `json:"email_address"`
+}
+
 const (
 	// certSNHeaderName is the name of the HTTP header in which the
 	// URL of a certificate can be found.
@@ -73,6 +78,7 @@ const (
 	pathReassert                        = "/reassert"
 	pathDNS                             = "/dns"
 	pathHTTP                            = "/http"
+	pathEmail                           = "/email"
 )
 
 // CertificateRequest requests a new certificate based. The HVCA API is
@@ -413,7 +419,7 @@ func (c *Client) ClaimDNS(ctx context.Context, id, authDomain string) (bool, err
 	return c.claimAssert(ctx, body, id, pathDNS)
 }
 
-// ClaimHTTP requests assertion of domain control using HTTP once the appropriate
+// ClaimHTTP requests assEmailertion of domain control using HTTP once the appropriate
 // token has been placed at the expected path. A return value of false
 // indicates that the assertion request was created. A return value of true
 // indicates that domain control was verified.
@@ -424,6 +430,18 @@ func (c *Client) ClaimHTTP(ctx context.Context, id, authDomain, scheme string) (
 	}
 
 	return c.claimAssert(ctx, body, id, pathHTTP)
+}
+
+// ClaimEmail requests assertion of domain control using Email once the appropriate
+// token has been placed at the expected path. A return value of false
+// indicates that the assertion request was created. A return value of true
+// indicates that domain control was verified.
+func (c *Client) ClaimEmail(ctx context.Context, id, email string) (bool, error) {
+	var body = claimsEmailRequest{
+		Email: email,
+	}
+
+	return c.claimAssert(ctx, body, id, pathEmail)
 }
 
 // ClaimReassert reasserts an existing domain claim, for example if the

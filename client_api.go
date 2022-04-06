@@ -58,8 +58,8 @@ type AuthorisedEmails struct {
 // DNSResults is a set of maps for all queried record types. Record types are the keys of the maps.
 type DNSResults struct {
 	SOA SOAResults `json:"SOA"`
-	//TXT is not supported
-	//CAA is not supported
+	// TXT is not supported
+	// CAA is not supported
 }
 
 // SOAResults is a map of SOA records for DNS results

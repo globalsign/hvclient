@@ -46,7 +46,7 @@ type claimsHTTPRequest struct {
 
 // claimsEmailRequest represents the body used for an HVCA request to assert domain control through Email validation method
 type claimsEmailRequest struct {
-	Email string `json:"email_address"`
+	EmailAddress string `json:"email_address"`
 }
 
 const (
@@ -436,9 +436,9 @@ func (c *Client) ClaimHTTP(ctx context.Context, id, authDomain, scheme string) (
 // token has been placed at the expected path. A return value of false
 // indicates that the assertion request was created. A return value of true
 // indicates that domain control was verified.
-func (c *Client) ClaimEmail(ctx context.Context, id, email string) (bool, error) {
+func (c *Client) ClaimEmail(ctx context.Context, id, emailAddress string) (bool, error) {
 	var body = claimsEmailRequest{
-		Email: email,
+		EmailAddress: emailAddress,
 	}
 
 	return c.claimAssert(ctx, body, id, pathEmail)

@@ -111,6 +111,19 @@ type mockLoginResponse struct {
 	Token string `json:"access_token"`
 }
 
+type mockAuthorisedEmails struct {
+	Constructed []string       `json:"constructed"`
+	DNS         mockDNSResults `json:"DNS"`
+}
+
+type mockDNSResults struct {
+	SOA mockSOAResults `json:"SOA"`
+}
+
+type mockSOAResults struct {
+	Emails []string `json:"emails,omitempty"`
+}
+
 const (
 	mockAPIKey              = "mock_api_key"
 	mockAPISecret           = "mock_api_secret"
@@ -476,19 +489,24 @@ func mockClaimsEmailRetrieve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Unmarshal body.
-	var body mockHTTPRequest
-	var err = mockUnmarshalBody(w, r, &body)
-	if err != nil {
-		return
+	var mockResponse = mockAuthorisedEmails{
+		Constructed: []string{
+			"admin@test.com",
+			"administrator@test.com",
+			"webmaster@test.com",
+			"hostmaster@test.com",
+			"postmaster@test.com",
+		},
+		DNS: mockDNSResults{
+			SOA: mockSOAResults{
+				Emails: []string{
+					"example@test.com",
+				},
+			},
+		},
 	}
 
-	if body.AuthorizationDomain == mockClaimDomainVerified {
-		mockWriteResponse(w, http.StatusNoContent, nil)
-		return
-	}
-
-	mockWriteResponse(w, http.StatusCreated, nil)
+	mockWriteResponse(w, http.StatusOK, &mockResponse)
 }
 
 // mockClaimsHTTP mocks a POST /claims/domains/{id}/http operation.

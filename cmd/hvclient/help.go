@@ -174,6 +174,7 @@ Domain claim options:
   -claimemail=<id>      Request assertion of domain control using Email for the
                         claim with the specified ID
       -address=<email>  Used with -claimemail, specifies the email address to send the verification email to verify assertion of domain control to.
+  -claimemailslist=<id> Get a list of emails authorized to perform email validation for the claim with the specified ID
   -authdomain=<authdomain> Used with -claimhttp and -claimsdns, specifies the authorization domain used to verify assertion of domain control
 
 List-producing API options:

@@ -176,6 +176,9 @@ func main() {
 	case *fClaimEmail != "":
 		claimEmail(clnt, *fClaimEmail, *fEmailAddress)
 
+	case *fClaimEmailList != "":
+		claimEmailRetrieve(clnt, *fClaimEmailList, *fEmailAddress)
+
 	case *fClaimReassert != "":
 		claimReassert(clnt, *fClaimReassert)
 

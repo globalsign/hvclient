@@ -608,6 +608,42 @@ func TestClientMockClaimEmail(t *testing.T) {
 	}
 }
 
+func TestClientMockClaimEmailRetrieve(t *testing.T) {
+	t.Parallel()
+
+	var want = hvclient.AuthorisedEmails{
+		Constructed: []string{
+			"admin@test.com",
+			"administrator@test.com",
+			"webmaster@test.com",
+			"hostmaster@test.com",
+			"postmaster@test.com",
+		},
+		DNS: hvclient.DNSResults{
+			SOA: hvclient.SOAResults{
+				Emails: []string{
+					"example@test.com",
+				},
+			},
+		},
+	}
+
+	var client, closefunc = newMockClient(t)
+	defer closefunc()
+
+	var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	var got, err = client.ClaimEmailRetrieve(ctx, mockClaimID)
+	if err != nil {
+		t.Fatalf("got error %v, want %v", err, nil)
+	}
+
+	if cmp.Equal(got, want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+}
+
 func TestClientMockClaimSubmit(t *testing.T) {
 	t.Parallel()
 

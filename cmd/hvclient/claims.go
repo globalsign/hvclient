@@ -142,6 +142,22 @@ func claimEmail(clnt *hvclient.Client, id, emailAddress string) {
 	}
 }
 
+// claimEmailRetrieve retrieves a list of email addresses authorised to perform
+// email validation for the specified claim ID.
+func claimEmailRetrieve(clnt *hvclient.Client, id, emailAddress string) {
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	var authorisedEmails, err = clnt.ClaimEmailRetrieve(ctx, id)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+
+	fmt.Printf("Constructed: %v\n", authorisedEmails.Constructed)
+	fmt.Printf("DNS: %v\n", authorisedEmails.DNS.SOA.Emails)
+	fmt.Printf("Errors: %v\n", authorisedEmails.DNS.SOA.Errors)
+}
+
 // claimReassert reasserts an existing domain claim with the specified
 // id and outputs the claim token, and assert-by date.
 func claimReassert(clnt *hvclient.Client, id string) {

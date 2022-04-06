@@ -124,6 +124,24 @@ func claimHTTP(clnt *hvclient.Client, id, scheme, authDomain string) {
 	}
 }
 
+// claimEmail requests assertion of domain control using Email for
+// the specified claim ID.
+func claimEmail(clnt *hvclient.Client, id, emailAddress string) {
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	var clm, err = clnt.ClaimEmail(ctx, id, emailAddress)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+
+	if clm {
+		fmt.Printf("VERIFIED\n")
+	} else {
+		fmt.Printf("CREATED\n")
+	}
+}
+
 // claimReassert reasserts an existing domain claim with the specified
 // id and outputs the claim token, and assert-by date.
 func claimReassert(clnt *hvclient.Client, id string) {

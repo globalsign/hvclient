@@ -438,7 +438,7 @@ func (c *Client) ClaimDNS(ctx context.Context, id, authDomain string) (bool, err
 	return c.claimAssert(ctx, body, id, pathDNS)
 }
 
-// ClaimHTTP requests assEmailertion of domain control using HTTP once the appropriate
+// ClaimHTTP requests assertion of domain control using HTTP once the appropriate
 // token has been placed at the expected path. A return value of false
 // indicates that the assertion request was created. A return value of true
 // indicates that domain control was verified.
@@ -451,8 +451,9 @@ func (c *Client) ClaimHTTP(ctx context.Context, id, authDomain, scheme string) (
 	return c.claimAssert(ctx, body, id, pathHTTP)
 }
 
-// ClaimEmail requests assertion of domain control using Email once the appropriate
-// token has been placed at the expected path. A return value of false
+// ClaimEmail requests for an email with a verification link be sent to the
+// provided emailAddress in order for the user to assert control of domain
+// control by following the link inside the sent email. A return value of false
 // indicates that the assertion request was created. A return value of true
 // indicates that domain control was verified.
 func (c *Client) ClaimEmail(ctx context.Context, id, emailAddress string) (bool, error) {

@@ -665,14 +665,6 @@ func mockTrustChain(w http.ResponseWriter, r *http.Request) {
 	mockWriteResponse(w, http.StatusOK, chain)
 }
 
-// mockNotImplemented is a stub handler that writes a 501 not implemented
-// response.
-/* This is commented out because the linter is complaining >:(
-func mockNotImplemented(w http.ResponseWriter, r *http.Request) {
-	mockWriteResponse(w, http.StatusNotImplemented, nil)
-}
-*/
-
 // mockUnmarshalBody unmarshals an HTTP request body, and writes an appropriate
 // HTTP error response on failure.
 func mockUnmarshalBody(w http.ResponseWriter, r *http.Request, out interface{}) error {

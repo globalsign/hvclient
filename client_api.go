@@ -44,6 +44,30 @@ type claimsHTTPRequest struct {
 	Scheme              string `json:"scheme"`
 }
 
+// claimsEmailRequest represents the body used for an HVCA request to assert domain control through Email validation method
+type claimsEmailRequest struct {
+	EmailAddress string `json:"email_address"`
+}
+
+// AuthorisedEmails represents the body of a request returned when retrieving emails used for verifying DNS records
+type AuthorisedEmails struct {
+	Constructed []string   `json:"constructed"`
+	DNS         DNSResults `json:"DNS"`
+}
+
+// DNSResults is a set of maps for all queried record types. Record types are the keys of the maps.
+type DNSResults struct {
+	SOA SOAResults `json:"SOA"`
+	// TXT is not supported
+	// CAA is not supported
+}
+
+// SOAResults is a map of SOA records for DNS results
+type SOAResults struct {
+	Emails []string `json:"emails"`
+	Errors []string `json:"errors,omitempty"`
+}
+
 const (
 	// certSNHeaderName is the name of the HTTP header in which the
 	// URL of a certificate can be found.
@@ -73,6 +97,7 @@ const (
 	pathReassert                        = "/reassert"
 	pathDNS                             = "/dns"
 	pathHTTP                            = "/http"
+	pathEmail                           = "/email"
 )
 
 // CertificateRequest requests a new certificate based. The HVCA API is
@@ -424,6 +449,42 @@ func (c *Client) ClaimHTTP(ctx context.Context, id, authDomain, scheme string) (
 	}
 
 	return c.claimAssert(ctx, body, id, pathHTTP)
+}
+
+// ClaimEmail requests for an email with a verification link be sent to the
+// provided emailAddress in order for the user to assert control of a domain by
+// following the link inside the sent email. A return value of false indicates
+// that the assertion request was created. A return value of true indicates
+// that domain control was verified.
+func (c *Client) ClaimEmail(ctx context.Context, id, emailAddress string) (bool, error) {
+	var body = claimsEmailRequest{
+		EmailAddress: emailAddress,
+	}
+
+	return c.claimAssert(ctx, body, id, pathEmail)
+}
+
+// ClaimEmailRetrieve retrieves a list of email addresses authorized to perform
+// Email validation.
+func (c *Client) ClaimEmailRetrieve(ctx context.Context, id string) (*AuthorisedEmails, error) {
+	var authorisedEmails AuthorisedEmails
+	var response, err = c.makeRequest(
+		ctx,
+		endpointClaimsDomains+"/"+url.QueryEscape(id)+pathEmail,
+		http.MethodGet,
+		nil,
+		&authorisedEmails,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	switch response.StatusCode {
+	case http.StatusOK:
+		return &authorisedEmails, nil
+	}
+
+	return nil, fmt.Errorf("unexpected status code: %d", response.StatusCode)
 }
 
 // ClaimReassert reasserts an existing domain claim, for example if the

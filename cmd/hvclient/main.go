@@ -173,6 +173,12 @@ func main() {
 	case *fClaimHTTP != "":
 		claimHTTP(clnt, *fClaimHTTP, *fScheme, *fAuthDomain)
 
+	case *fClaimEmail != "":
+		claimEmail(clnt, *fClaimEmail, *fEmailAddress)
+
+	case *fClaimEmailList != "":
+		claimEmailRetrieve(clnt, *fClaimEmailList, *fEmailAddress)
+
 	case *fClaimReassert != "":
 		claimReassert(clnt, *fClaimReassert)
 

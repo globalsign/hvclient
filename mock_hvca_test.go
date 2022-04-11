@@ -94,6 +94,10 @@ type mockHTTPRequest struct {
 	Scheme              string `json:"scheme"`
 }
 
+type mockEmailRequest struct {
+	Email string `json:"email_address"`
+}
+
 type mockError struct {
 	Description string `json:"description"`
 }
@@ -107,6 +111,19 @@ type mockLoginResponse struct {
 	Token string `json:"access_token"`
 }
 
+type mockAuthorisedEmails struct {
+	Constructed []string       `json:"constructed"`
+	DNS         mockDNSResults `json:"DNS"`
+}
+
+type mockDNSResults struct {
+	SOA mockSOAResults `json:"SOA"`
+}
+
+type mockSOAResults struct {
+	Emails []string `json:"emails,omitempty"`
+}
+
 const (
 	mockAPIKey              = "mock_api_key"
 	mockAPISecret           = "mock_api_secret"
@@ -114,6 +131,7 @@ const (
 	mockCounterIssued       = 72
 	mockCounterRevoked      = 14
 	mockClaimDomainVerified = "verified.com."
+	mockClaimEmail          = "spock@enterprise.org"
 	mockClaimID             = "113FED08"
 	mockClaimToken          = "mock_claim_token"
 	mockQuotaIssuance       = 42
@@ -304,8 +322,8 @@ func newMockServer(t *testing.T) *httptest.Server {
 					r.Post("/", mockClaimsHTTP)
 				})
 				r.Route("/email", func(r chi.Router) {
-					r.Get("/", mockNotImplemented)
-					r.Post("/", mockNotImplemented)
+					r.Get("/", mockClaimsEmailRetrieve)
+					r.Post("/", mockClaimsEmail)
 				})
 				r.Route("/reassert", func(r chi.Router) {
 					r.Post("/", mockClaimsReassert)
@@ -434,6 +452,61 @@ func mockClaimsDNS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mockWriteResponse(w, http.StatusCreated, nil)
+}
+
+// mockClaimsEmail mocks a POST /claims/domains/{id}/email operation.
+func mockClaimsEmail(w http.ResponseWriter, r *http.Request) {
+	var id = chi.URLParam(r, "arg")
+
+	// Trigger 404 for specific ID
+	if id == triggerError {
+		mockWriteError(w, http.StatusNotFound)
+		return
+	}
+
+	// Unmarshal body.
+	var body mockEmailRequest
+	var err = mockUnmarshalBody(w, r, &body)
+	if err != nil {
+		return
+	}
+
+	if body.Email == mockClaimEmail {
+		mockWriteResponse(w, http.StatusNoContent, nil)
+		return
+	}
+
+	mockWriteResponse(w, http.StatusCreated, nil)
+}
+
+// mockClaimsEmailRetrieve mocks a GET /claims/domains/{id}/email operation.
+func mockClaimsEmailRetrieve(w http.ResponseWriter, r *http.Request) {
+	var id = chi.URLParam(r, "arg")
+
+	// Trigger 404 for specific ID
+	if id == triggerError {
+		mockWriteError(w, http.StatusNotFound)
+		return
+	}
+
+	var mockResponse = mockAuthorisedEmails{
+		Constructed: []string{
+			"admin@test.com",
+			"administrator@test.com",
+			"webmaster@test.com",
+			"hostmaster@test.com",
+			"postmaster@test.com",
+		},
+		DNS: mockDNSResults{
+			SOA: mockSOAResults{
+				Emails: []string{
+					"example@test.com",
+				},
+			},
+		},
+	}
+
+	mockWriteResponse(w, http.StatusOK, &mockResponse)
 }
 
 // mockClaimsHTTP mocks a POST /claims/domains/{id}/http operation.
@@ -590,12 +663,6 @@ func mockTrustChain(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mockWriteResponse(w, http.StatusOK, chain)
-}
-
-// mockNotImplemented is a stub handler that writes a 501 not implemented
-// response.
-func mockNotImplemented(w http.ResponseWriter, r *http.Request) {
-	mockWriteResponse(w, http.StatusNotImplemented, nil)
 }
 
 // mockUnmarshalBody unmarshals an HTTP request body, and writes an appropriate

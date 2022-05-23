@@ -269,6 +269,57 @@ func TestClientMockCertificatesRevoke(t *testing.T) {
 	}
 }
 
+func TestClientMockCertificatesRevokeWithReason(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name   string
+		serial *big.Int
+		reason hvclient.RevocationReason
+		err    error
+	}{
+		{
+			name:   "OK",
+			serial: big.NewInt(0x741daf9ec2d5f7dc),
+			reason: "unspecified",
+		},
+		{
+			name:   "Not a valid reason",
+			serial: big.NewInt(0x741daf9ec2d5f7dc),
+			reason: "not a reason",
+		},
+		{
+			name:   "NotFound",
+			serial: mockBigIntNotFound,
+			err:    hvclient.APIError{StatusCode: http.StatusNotFound},
+		},
+	}
+
+	for _, tc := range testcases {
+		var tc = tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var client, closefunc = newMockClient(t)
+			defer closefunc()
+
+			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+
+			var err = client.CertificateRevokeWithReason(ctx, tc.serial, tc.reason)
+			if (err == nil) != (tc.err == nil) {
+				t.Fatalf("got error %v, want %v", err, tc.err)
+			}
+
+			if tc.err != nil {
+				verifyAPIError(t, err, tc.err)
+				return
+			}
+		})
+	}
+}
+
 func TestClientMockClaimsDomains(t *testing.T) {
 	t.Parallel()
 

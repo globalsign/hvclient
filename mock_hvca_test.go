@@ -124,6 +124,11 @@ type mockSOAResults struct {
 	Emails []string `json:"emails,omitempty"`
 }
 
+type mockRevocationBody struct {
+	RevocationReason string `json:"revocation_reason"`
+	RevocationTime   int64  `json:"revocation_time"`
+}
+
 const (
 	mockAPIKey              = "mock_api_key"
 	mockAPISecret           = "mock_api_secret"
@@ -304,7 +309,7 @@ func newMockServer(t *testing.T) *httptest.Server {
 		r.Post("/", mockCertificatesRequest)
 		r.Route("/{serial}", func(r chi.Router) {
 			r.Get("/", mockCertificatesRetrieve)
-			r.Delete("/", mockCertificatesRevoke)
+			r.Patch("/", mockCertificatesRevoke)
 		})
 	})
 
@@ -404,6 +409,14 @@ func mockCertificatesRevoke(w http.ResponseWriter, r *http.Request) {
 	var sn, ok = big.NewInt(0).SetString(chi.URLParam(r, "serial"), 16)
 	if !ok {
 		mockWriteError(w, http.StatusUnprocessableEntity)
+		return
+	}
+
+	// Unmarshal body.
+	var body mockRevocationBody
+	var err = mockUnmarshalBody(w, r, &body)
+	if err != nil {
+		fmt.Printf("%s\n", err)
 		return
 	}
 

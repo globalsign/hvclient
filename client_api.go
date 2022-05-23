@@ -68,6 +68,18 @@ type SOAResults struct {
 	Errors []string `json:"errors,omitempty"`
 }
 
+// RevocationReason is a type for specifying the reason why a certificate is being
+// revoked when requesting revocation.
+type RevocationReason string
+
+const (
+	revocationReasonUnspecified          = "unspecified"
+	revocationReasonKeyCompromise        = "keyCompromise"
+	revocationReasonAffiliationChanged   = "affiliationChanged"
+	revocationReasonCessationOfOperation = "cessationOfOperation"
+	revocationReasonSuperseded           = "superseded"
+)
+
 const (
 	// certSNHeaderName is the name of the HTTP header in which the
 	// URL of a certificate can be found.
@@ -158,13 +170,33 @@ func (c *Client) CertificateRevoke(
 	ctx context.Context,
 	serial *big.Int,
 ) error {
+	return c.CertificateRevokeWithReason(ctx, serial, revocationReasonUnspecified)
+}
+
+// CertificateRevokeWithReason revokes a certificate with a specified reason.
+func (c *Client) CertificateRevokeWithReason(
+	ctx context.Context,
+	serial *big.Int,
+	reason RevocationReason,
+) error {
+	type certificatePatch struct {
+		RevocationReason RevocationReason `json:"revocation_reason"`
+		RevocationTime   int64            `json:"revocation_time"`
+	}
+
+	var patch = certificatePatch{
+		RevocationReason: revocationReasonUnspecified,
+		RevocationTime:   0, // A value of 0 is ignored and the server will just use the current time
+	}
+
 	var _, err = c.makeRequest(
 		ctx,
 		endpointCertificates+"/"+url.QueryEscape(fmt.Sprintf("%X", serial)),
-		http.MethodDelete,
-		nil,
+		http.MethodPatch,
+		&patch,
 		nil,
 	)
+
 	return err
 }
 

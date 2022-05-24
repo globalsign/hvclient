@@ -284,11 +284,6 @@ func TestClientMockCertificatesRevokeWithReason(t *testing.T) {
 			reason: "unspecified",
 		},
 		{
-			name:   "Not a valid reason",
-			serial: big.NewInt(0x741daf9ec2d5f7dc),
-			reason: "not a reason",
-		},
-		{
 			name:   "NotFound",
 			serial: mockBigIntNotFound,
 			err:    hvclient.APIError{StatusCode: http.StatusNotFound},

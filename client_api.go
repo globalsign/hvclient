@@ -181,12 +181,10 @@ func (c *Client) CertificateRevokeWithReason(
 ) error {
 	type certificatePatch struct {
 		RevocationReason RevocationReason `json:"revocation_reason"`
-		RevocationTime   int64            `json:"revocation_time"`
 	}
 
 	var patch = certificatePatch{
 		RevocationReason: revocationReasonUnspecified,
-		RevocationTime:   0, // A value of 0 is ignored and the server will just use the current time
 	}
 
 	var _, err = c.makeRequest(

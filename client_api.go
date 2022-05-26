@@ -72,12 +72,14 @@ type SOAResults struct {
 // revoked when requesting revocation.
 type RevocationReason string
 
+// Revocation reasons to provide when revoking a certificate and providing a
+// reason for its revocation.
 const (
-	revocationReasonUnspecified          = "unspecified"
-	revocationReasonKeyCompromise        = "keyCompromise"
-	revocationReasonAffiliationChanged   = "affiliationChanged"
-	revocationReasonCessationOfOperation = "cessationOfOperation"
-	revocationReasonSuperseded           = "superseded"
+	RevocationReasonUnspecified          = "unspecified"
+	RevocationReasonKeyCompromise        = "keyCompromise"
+	RevocationReasonAffiliationChanged   = "affiliationChanged"
+	RevocationReasonCessationOfOperation = "cessationOfOperation"
+	RevocationReasonSuperseded           = "superseded"
 )
 
 const (

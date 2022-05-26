@@ -281,7 +281,7 @@ func TestClientMockCertificatesRevokeWithReason(t *testing.T) {
 		{
 			name:   "OK",
 			serial: big.NewInt(0x741daf9ec2d5f7dc),
-			reason: "unspecified",
+			reason: hvclient.RevocationReasonUnspecified,
 		},
 		{
 			name:   "NotFound",

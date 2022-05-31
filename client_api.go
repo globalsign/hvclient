@@ -172,7 +172,7 @@ func (c *Client) CertificateRevoke(
 	ctx context.Context,
 	serial *big.Int,
 ) error {
-	return c.CertificateRevokeWithReason(ctx, serial, revocationReasonUnspecified)
+	return c.CertificateRevokeWithReason(ctx, serial, RevocationReasonUnspecified)
 }
 
 // CertificateRevokeWithReason revokes a certificate with a specified reason.
@@ -186,7 +186,7 @@ func (c *Client) CertificateRevokeWithReason(
 	}
 
 	var patch = certificatePatch{
-		RevocationReason: revocationReasonUnspecified,
+		RevocationReason: RevocationReasonUnspecified,
 	}
 
 	var _, err = c.makeRequest(

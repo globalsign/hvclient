@@ -75,11 +75,11 @@ type RevocationReason string
 // Revocation reasons to provide when revoking a certificate and providing a
 // reason for its revocation.
 const (
-	RevocationReasonUnspecified          = "unspecified"
-	RevocationReasonKeyCompromise        = "keyCompromise"
-	RevocationReasonAffiliationChanged   = "affiliationChanged"
-	RevocationReasonCessationOfOperation = "cessationOfOperation"
-	RevocationReasonSuperseded           = "superseded"
+	RevocationReasonUnspecified          = RevocationReason("unspecified")
+	RevocationReasonKeyCompromise        = RevocationReason("keyCompromise")
+	RevocationReasonAffiliationChanged   = RevocationReason("affiliationChanged")
+	RevocationReasonCessationOfOperation = RevocationReason("cessationOfOperation")
+	RevocationReasonSuperseded           = RevocationReason("superseded")
 )
 
 const (
@@ -186,7 +186,7 @@ func (c *Client) CertificateRevokeWithReason(
 	}
 
 	var patch = certificatePatch{
-		RevocationReason: RevocationReasonUnspecified,
+		RevocationReason: reason,
 	}
 
 	var _, err = c.makeRequest(

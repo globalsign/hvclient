@@ -195,6 +195,7 @@ var testRequestFullRequest = hvclient.Request{
 	},
 	Subject: &hvclient.DN{
 		CommonName:    "John Doe",
+		SerialNumber:  "1",
 		Country:       "GB",
 		State:         "London",
 		Locality:      "London",

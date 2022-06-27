@@ -40,6 +40,7 @@ func requestCert(clnt *hvclient.Client) error {
 			},
 			subject: subjectValues{
 				commonName:         *fSubjectCommonName,
+				serialNumber:       *fSubjectSerialNumber,
 				organization:       *fSubjectOrganization,
 				organizationalUnit: *fSubjectOrganizationalUnit,
 				streetAddress:      *fSubjectStreetAddress,

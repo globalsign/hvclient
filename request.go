@@ -91,12 +91,12 @@ type DN struct {
 	Organization       string         `json:"organization,omitempty"`
 	OrganizationalUnit []string       `json:"organizational_unit,omitempty"`
 	CommonName         string         `json:"common_name,omitempty"`
+	SerialNumber       string         `json:"serial_number,omitempty"`
 	Email              string         `json:"email,omitempty"`
 	JOILocality        string         `json:"jurisdiction_of_incorporation_locality_name,omitempty"`
 	JOIState           string         `json:"jurisdiction_of_incorporation_state_or_province_name,omitempty"`
 	JOICountry         string         `json:"jurisdiction_of_incorporation_country_name,omitempty"`
 	BusinessCategory   string         `json:"business_category,omitempty"`
-	SerialNumber       string         `json:"serial_number,omitempty"`
 	ExtraAttributes    []OIDAndString `json:"extra_attributes,omitempty"`
 }
 

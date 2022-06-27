@@ -633,6 +633,19 @@ func TestRequestNotEqual(t *testing.T) {
 			},
 		},
 		{
+			name: "SubjectSerialNumber",
+			first: hvclient.Request{
+				Subject: &hvclient.DN{
+					SerialNumber: "a value",
+				},
+			},
+			second: hvclient.Request{
+				Subject: &hvclient.DN{
+					SerialNumber: "a different value",
+				},
+			},
+		},
+		{
 			name: "SubjectStreetAddress",
 			first: hvclient.Request{
 				Subject: &hvclient.DN{

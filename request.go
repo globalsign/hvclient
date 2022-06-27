@@ -96,6 +96,7 @@ type DN struct {
 	JOIState           string         `json:"jurisdiction_of_incorporation_state_or_province_name,omitempty"`
 	JOICountry         string         `json:"jurisdiction_of_incorporation_country_name,omitempty"`
 	BusinessCategory   string         `json:"business_category,omitempty"`
+	SerialNumber       string         `json:"serial_number,omitempty"`
 	ExtraAttributes    []OIDAndString `json:"extra_attributes,omitempty"`
 }
 
@@ -602,14 +603,16 @@ func (n *DN) Equal(other *DN) bool {
 		n.JOILocality == other.JOILocality &&
 		n.JOIState == other.JOIState &&
 		n.JOICountry == other.JOICountry &&
-		n.BusinessCategory == other.BusinessCategory
+		n.BusinessCategory == other.BusinessCategory &&
+		n.SerialNumber == other.SerialNumber
 }
 
 // PKIXName converts a subject distinguished name into a pkix.Name object.
 func (n *DN) PKIXName() pkix.Name {
-	// Initialize name with common name.
+	// Initialize name with all single-value fields.
 	var name = pkix.Name{
-		CommonName: n.CommonName,
+		CommonName:   n.CommonName,
+		SerialNumber: n.SerialNumber,
 	}
 
 	// Copy across fields with single values.

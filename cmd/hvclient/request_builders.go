@@ -53,6 +53,7 @@ type validityValues struct {
 // specified at the command line for ease of passing to functions.
 type subjectValues struct {
 	commonName         string
+	serialNumber       string
 	organization       string
 	organizationalUnit string
 	streetAddress      string
@@ -78,6 +79,7 @@ type sanValues struct {
 func (s subjectValues) isEmpty() bool {
 	return checkAllEmpty(
 		s.commonName,
+		s.serialNumber,
 		s.organization,
 		s.organizationalUnit,
 		s.streetAddress,
@@ -297,6 +299,7 @@ func buildDN(dn *hvclient.DN, values subjectValues) (*hvclient.DN, error) {
 		from string
 		to   *string
 	}{
+		{values.serialNumber, &dn.SerialNumber},
 		{values.commonName, &dn.CommonName},
 		{values.organization, &dn.Organization},
 		{values.streetAddress, &dn.StreetAddress},

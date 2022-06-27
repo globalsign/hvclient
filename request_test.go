@@ -102,6 +102,7 @@ const testRequestFullJSON = `{
             "Development"
         ],
         "common_name": "John Doe",
+        "serial_number": "1",
         "email": "john.doe@demo.hvca.globalsign.com",
         "jurisdiction_of_incorporation_locality_name": "London",
         "jurisdiction_of_incorporation_state_or_province_name": "London",
@@ -195,6 +196,7 @@ var testRequestFullRequest = hvclient.Request{
 	},
 	Subject: &hvclient.DN{
 		CommonName:    "John Doe",
+		SerialNumber:  "1",
 		Country:       "GB",
 		State:         "London",
 		Locality:      "London",
@@ -629,6 +631,19 @@ func TestRequestNotEqual(t *testing.T) {
 			second: hvclient.Request{
 				Subject: &hvclient.DN{
 					Locality: "a different value",
+				},
+			},
+		},
+		{
+			name: "SubjectSerialNumber",
+			first: hvclient.Request{
+				Subject: &hvclient.DN{
+					SerialNumber: "a value",
+				},
+			},
+			second: hvclient.Request{
+				Subject: &hvclient.DN{
+					SerialNumber: "a different value",
 				},
 			},
 		},

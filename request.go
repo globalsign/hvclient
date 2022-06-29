@@ -609,13 +609,14 @@ func (n *DN) Equal(other *DN) bool {
 
 // PKIXName converts a subject distinguished name into a pkix.Name object.
 func (n *DN) PKIXName() pkix.Name {
-	// Initialize name with all single-value fields.
+	// Initialize name with all fields that are single-value in both structs.
 	var name = pkix.Name{
 		CommonName:   n.CommonName,
 		SerialNumber: n.SerialNumber,
 	}
 
-	// Copy across fields with single values.
+	// Next copy over all fields that are single-value in n but are are
+	// multi-value in pkix.Name.
 	for _, field := range []struct {
 		value    string
 		location *[]string

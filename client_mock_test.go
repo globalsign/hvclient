@@ -276,12 +276,14 @@ func TestClientMockCertificatesRevokeWithReason(t *testing.T) {
 		name   string
 		serial *big.Int
 		reason hvclient.RevocationReason
+		time   int64
 		err    error
 	}{
 		{
 			name:   "OK",
 			serial: big.NewInt(0x741daf9ec2d5f7dc),
 			reason: hvclient.RevocationReasonUnspecified,
+			time:   0,
 		},
 		{
 			name:   "NotFound",
@@ -302,7 +304,7 @@ func TestClientMockCertificatesRevokeWithReason(t *testing.T) {
 			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 
-			var err = client.CertificateRevokeWithReason(ctx, tc.serial, tc.reason)
+			var err = client.CertificateRevokeWithReason(ctx, tc.serial, tc.reason, tc.time)
 			if (err == nil) != (tc.err == nil) {
 				t.Fatalf("got error %v, want %v", err, tc.err)
 			}

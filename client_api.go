@@ -76,10 +76,11 @@ type RevocationReason string
 // reason for its revocation.
 const (
 	RevocationReasonUnspecified          = RevocationReason("unspecified")
-	RevocationReasonKeyCompromise        = RevocationReason("keyCompromise")
 	RevocationReasonAffiliationChanged   = RevocationReason("affiliationChanged")
-	RevocationReasonCessationOfOperation = RevocationReason("cessationOfOperation")
+	RevocationReasonKeyCompromise        = RevocationReason("keyCompromise")
 	RevocationReasonSuperseded           = RevocationReason("superseded")
+	RevocationReasonCessationOfOperation = RevocationReason("cessationOfOperation")
+	RevocationReasonPrivilegeWithdrawn   = RevocationReason("privilegeWithdrawn")
 )
 
 const (
@@ -172,21 +173,27 @@ func (c *Client) CertificateRevoke(
 	ctx context.Context,
 	serial *big.Int,
 ) error {
-	return c.CertificateRevokeWithReason(ctx, serial, RevocationReasonUnspecified)
+	return c.CertificateRevokeWithReason(ctx, serial, RevocationReasonUnspecified, 0)
 }
 
-// CertificateRevokeWithReason revokes a certificate with a specified reason.
+// CertificateRevokeWithReason revokes a certificate with a specified reason
+// and UTC UNIX timestamp indicating when the private key was compromised if
+// supported by the HVCA server. A special case holds when time is 0 which
+// indicates that the current time should be used.
 func (c *Client) CertificateRevokeWithReason(
 	ctx context.Context,
 	serial *big.Int,
 	reason RevocationReason,
+	time int64,
 ) error {
 	type certificatePatch struct {
 		RevocationReason RevocationReason `json:"revocation_reason"`
+		RevocationTime   int64            `json:"revocation_time,omitempty"`
 	}
 
 	var patch = certificatePatch{
 		RevocationReason: reason,
+		RevocationTime:   time,
 	}
 
 	var _, err = c.makeRequest(

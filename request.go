@@ -615,7 +615,7 @@ func (n *DN) PKIXName() pkix.Name {
 		SerialNumber: n.SerialNumber,
 	}
 
-	// Next copy over all fields that are single-value in n but are are
+	// Next copy over all fields that are single-value in n but are
 	// multi-value in pkix.Name.
 	for _, field := range []struct {
 		value    string

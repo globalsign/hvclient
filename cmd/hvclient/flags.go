@@ -59,6 +59,7 @@ var (
 // Subject distinguished name flags.
 var (
 	fSubjectCommonName         = flag.String("commonname", "", "subject common name")
+	fSubjectSerialNumber       = flag.String("serialnumber", "", "subject serial number (distinct from certificate serial number)")
 	fSubjectOrganization       = flag.String("organization", "", "subject organization")
 	fSubjectOrganizationalUnit = flag.String("organizationalunit", "", "comma-separated list of subject organizational unit(s)")
 	fSubjectStreetAddress      = flag.String("streetaddress", "", "subject street address")

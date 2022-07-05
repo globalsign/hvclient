@@ -86,6 +86,7 @@ Certificate request options:
     At least one of these options should normally be selected.
 
     -commonname=<string>          Subject distinguished name (DN) common name
+    -serialnumber=<string>        Subject DN serial number
     -organization=<string>        Subject DN organization
     -organizationalunit=<string>  Comma-separated list of subject DN
                                   organizational units

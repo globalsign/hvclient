@@ -68,7 +68,7 @@ func (c *Client) login(ctx context.Context) error {
 		return fmt.Errorf("failed to login: %w", err)
 	}
 
-	c.tokenSet(resp.AccessToken)
+	c.SetToken(resp.AccessToken)
 
 	return nil
 }
@@ -121,9 +121,9 @@ func (c *Client) tokenReset() {
 	c.lastLogin = time.Time{}
 }
 
-// tokenSet sets the stored authentication token and sets the last login time
+// SetToken sets the stored authentication token and sets the last login time
 // to the current time.
-func (c *Client) tokenSet(token string) {
+func (c *Client) SetToken(token string) {
 	c.tokenMtx.Lock()
 	defer c.tokenMtx.Unlock()
 
@@ -131,10 +131,12 @@ func (c *Client) tokenSet(token string) {
 	c.lastLogin = time.Now()
 }
 
-// tokenRead performs a synchronized read of the stored authentication token.
-func (c *Client) tokenRead() string {
+// GetToken performs a synchronized read of the stored authentication token.
+func (c *Client) GetToken() string {
 	c.tokenMtx.RLock()
 	defer c.tokenMtx.RUnlock()
 
 	return c.token
 }
+
+//

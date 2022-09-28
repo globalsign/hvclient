@@ -25,7 +25,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 	"sync"
 	"time"
 
@@ -50,13 +49,16 @@ import (
 type Client struct {
 	BaseURL    *url.URL
 	HTTPClient *http.Client
+	Authorizer Authorizer
 
-	config    *Config
-	token     string
-	lastLogin time.Time
-	tokenMtx  sync.RWMutex
-	loginMtx  sync.Mutex
+	config   *Config
+	loginMtx sync.Mutex
 }
+
+// HVCA API endpoints.
+const (
+	endpointLogin = "/login"
+)
 
 const (
 	// numberOfRetries is the number of times to retry a request.
@@ -110,18 +112,15 @@ func (c *Client) makeRequest(
 			request.Header.Add(key, value)
 		}
 
-		// Perform specific processing for non-login requests.
-		if !strings.HasPrefix(path, endpointLogin) {
-			// Since this is not a login request, preemptively login again if
-			// the stored authentication token is believed to be expired.
-			err = c.loginIfTokenHasExpired(ctx)
-			if err != nil {
-				return nil, err
-			}
-
-			// Add the authentication token to all requests except login requests.
-			request.Header.Set(httputils.AuthorizationHeader, "Bearer "+c.GetToken())
+		// Since this is not a login request, preemptively login again if
+		// the stored authentication token is believed to be expired.
+		err = c.loginIfTokenHasExpired(ctx)
+		if err != nil {
+			return nil, err
 		}
+
+		// Add the authentication token to all requests except login requests.
+		request.Header.Set(httputils.AuthorizationHeader, "Bearer "+c.Authorizer.Token(ctx))
 
 		// Execute the request.
 		if response, err = c.HTTPClient.Do(request); err != nil {
@@ -138,23 +137,16 @@ func (c *Client) makeRequest(
 			// Depending on the status code, we may want to retry the request.
 			switch apiErr.StatusCode {
 			case http.StatusUnauthorized:
-				// If we get an unauthorized status from a login request
-				// then we just have bad login credentials. This is a
-				// fatal error, so just stop and return it.
-				if strings.HasPrefix(path, endpointLogin) {
-					return nil, apiErr
-				}
-
-				// Otherwise, the token may have expired, so attempt to login
-				// again, and retry the original request on success. Note that
-				// this should be unusual, since we checked whether the token
-				// had expired before executing this request. However, since
-				// HVCA doesn't return information about the actual lifetime
-				// of the token, we're having to assume that the currently
-				// documented token lifetime will remain the same. If the
-				// lifetime ever is shortened, this will act as a safeguard
-				// and prevent otherwise fatal failures that a reactive
-				// re-login could easily resolve.
+				// The token may have expired, so attempt to login again, and
+				// retry the original request on success. Note that this should
+				// be unusual, since we checked whether the token had expired
+				// before executing this request. However, since HVCA doesn't
+				// return information about the actual lifetime of the token,
+				// we're having to assume that the currently documented token
+				// lifetime will remain the same. If the lifetime ever is
+				// shortened, this will act as a safeguard and prevent
+				// otherwise fatal failures that a reactive re-login could
+				// easily resolve.
 				var err = c.login(ctx)
 				if err != nil {
 					return nil, err
@@ -221,24 +213,6 @@ func (c *Client) DefaultTimeout() time.Duration {
 	return c.config.Timeout
 }
 
-// New creates a new client with no initial login client and a custom http
-// client to facilitate re-use between hvclients.
-func New(conf *Config, httpClient *http.Client) (*Client, error) {
-	err := conf.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	// Build a new client.
-	var newClient = Client{
-		config:     conf,
-		BaseURL:    conf.url,
-		HTTPClient: httpClient,
-	}
-
-	return &newClient, nil
-}
-
 // NewClient creates a new HVCA client from a configuration object. An initial
 // login is made, and the returned client is immediately ready to make API
 // calls.
@@ -279,11 +253,23 @@ func NewClient(ctx context.Context, conf *Config) (*Client, error) {
 		}
 	}
 
+	var httpClient = &http.Client{Transport: tnspt}
+
+	// TODO support this better.
+	clientSerial := conf.ExtraHeaders["X-SSL-Client-Serial"]
+
 	// Build a new client.
 	var newClient = Client{
 		config:     conf,
 		BaseURL:    conf.url,
-		HTTPClient: &http.Client{Transport: tnspt},
+		HTTPClient: httpClient,
+		Authorizer: &apiAuthorizer{
+			Endpoint:        conf.url.String() + endpointLogin,
+			HTTPClient:      httpClient,
+			Key:             conf.APIKey,
+			Secret:          conf.APISecret,
+			SSLClientSerial: clientSerial,
+		},
 	}
 
 	// Perform the initial login and return the new client.

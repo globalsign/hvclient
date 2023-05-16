@@ -38,6 +38,14 @@ var testPolicyFullJSON = `{
       "presence": "REQUIRED",
       "format": "^[A-Za-z][A-Za-z -]+$"
     },
+    "given_name": {
+      "presence": "OPTIONAL",
+      "format": "^[A-Za-z][A-Za-z -]+$"
+    },
+    "surname": {
+      "presence": "OPTIONAL",
+      "format": "^[A-Za-z][A-Za-z -]+$"
+    },
     "organization": {
       "presence": "STATIC",
       "format": "GMO GlobalSign"
@@ -49,6 +57,10 @@ var testPolicyFullJSON = `{
       ],
       "mincount": 1,
       "maxcount": 3
+    },
+    "organization_identifier": {
+      "presence": "OPTIONAL",
+      "format": "^.*$"
     },
     "country": {
       "presence": "STATIC",
@@ -65,6 +77,10 @@ var testPolicyFullJSON = `{
     "street_address": {
       "presence": "OPTIONAL",
       "format": "^[A-Za-z0-9][A-Za-z0-9 \\-]+$"
+    },
+    "postal_code": {
+      "presence": "OPTIONAL",
+      "format": "^[0-9]{5}$"
     },
     "email": {
       "presence": "FORBIDDEN",
@@ -85,6 +101,10 @@ var testPolicyFullJSON = `{
     "business_category": {
       "presence": "FORBIDDEN",
       "format": "^[A-Za-z \\-]*$"
+    },
+    "serial_number": {
+      "presence": "FORBIDDEN",
+      "format": "^.*$"
     },
     "extra_attributes": {
       "1.3.6.1.5.5.7.48.1.5": {
@@ -282,6 +302,14 @@ var testFullPolicy = hvclient.Policy{
 			Presence: hvclient.Required,
 			Format:   "^[A-Za-z][A-Za-z -]+$",
 		},
+		GivenName: &hvclient.StringPolicy{
+			Presence: hvclient.Optional,
+			Format:   "^[A-Za-z][A-Za-z -]+$",
+		},
+		Surname: &hvclient.StringPolicy{
+			Presence: hvclient.Optional,
+			Format:   "^[A-Za-z][A-Za-z -]+$",
+		},
 		Organization: &hvclient.StringPolicy{
 			Presence: hvclient.Static,
 			Format:   "GMO GlobalSign",
@@ -294,13 +322,9 @@ var testFullPolicy = hvclient.Policy{
 			MinCount: 1,
 			MaxCount: 3,
 		},
-		StreetAddress: &hvclient.StringPolicy{
+		OrganizationalIdentifier: &hvclient.StringPolicy{
 			Presence: hvclient.Optional,
-			Format:   "^[A-Za-z0-9][A-Za-z0-9 \\-]+$",
-		},
-		Locality: &hvclient.StringPolicy{
-			Presence: hvclient.Optional,
-			Format:   "^[A-Za-z][A-Za-z \\-]+$",
+			Format:   "^.*$",
 		},
 		State: &hvclient.StringPolicy{
 			Presence: hvclient.Optional,
@@ -309,6 +333,18 @@ var testFullPolicy = hvclient.Policy{
 		Country: &hvclient.StringPolicy{
 			Presence: hvclient.Static,
 			Format:   "GB",
+		},
+		Locality: &hvclient.StringPolicy{
+			Presence: hvclient.Optional,
+			Format:   "^[A-Za-z][A-Za-z \\-]+$",
+		},
+		StreetAddress: &hvclient.StringPolicy{
+			Presence: hvclient.Optional,
+			Format:   "^[A-Za-z0-9][A-Za-z0-9 \\-]+$",
+		},
+		PostalCode: &hvclient.StringPolicy{
+			Presence: hvclient.Optional,
+			Format:   "^[0-9]{5}$",
 		},
 		Email: &hvclient.StringPolicy{
 			Presence: hvclient.Forbidden,
@@ -329,6 +365,10 @@ var testFullPolicy = hvclient.Policy{
 		BusinessCategory: &hvclient.StringPolicy{
 			Presence: hvclient.Forbidden,
 			Format:   "^[A-Za-z \\-]*$",
+		},
+		SerialNumber: &hvclient.StringPolicy{
+			Presence: hvclient.Forbidden,
+			Format:   "^.*$",
 		},
 		ExtraAttributes: []hvclient.TypeAndValuePolicy{
 			{
@@ -709,7 +749,7 @@ func TestPolicyUnmarshalJSON(t *testing.T) {
 			}
 
 			if !cmp.Equal(got, tc.want) {
-				t.Errorf("got %v, want %v", got, tc.want)
+				t.Errorf("unexpected result\ngot:  %+#v\nwant: %+#v", got, tc.want)
 			}
 		})
 	}

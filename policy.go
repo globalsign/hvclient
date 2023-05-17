@@ -390,7 +390,7 @@ func (p *Policy) UnmarshalJSON(b []byte) error {
 func (p SubjectDNPolicy) MarshalJSON() ([]byte, error) {
 	// These types allow us to unmarshal the policy without repeating a bunch
 	// of fields. `noRecur` prevents this function from being called in
-	// infinite recursion. Without it, if we were to use SubjetDNPolicy
+	// infinite recursion. Without it, if we were to use SubjectDNPolicy
 	// directly, this function would be called until a stack overflow occured.
 	type noRecur SubjectDNPolicy
 	type jsonPolicy struct {

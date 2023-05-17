@@ -31,7 +31,8 @@ var testPolicyFullJSON = `{
     "secondsmin": 3600,
     "secondsmax": 86400,
     "not_before_negative_skew": 120,
-    "not_before_positive_skew": 3600
+    "not_before_positive_skew": 3600,
+    "issuer_expiry": 1735732800
   },
   "subject_dn": {
     "common_name": {
@@ -266,6 +267,30 @@ var testPolicyFullJSON = `{
       "max": 10
     }
   },
+  "signature": {
+    "algorithm": {
+      "presence": "STATIC",
+      "list": [
+        "RSA-PSS"
+      ]
+    },
+    "hash_algorithm": {
+      "presence": "REQUIRED",
+      "list": [
+        "SHA-256",
+        "SHA-512"
+      ]
+    }
+  },
+  "public_key": {
+    "key_type": "RSA",
+    "allowed_lengths": [
+      2048,
+      4096
+    ],
+    "key_format": "PKCS8"
+  },
+  "public_key_signature": "REQUIRED",
   "custom_extensions": {
     "1.3.6.1.5.5.7.48.1.5": {
       "presence": "STATIC",
@@ -278,16 +303,7 @@ var testPolicyFullJSON = `{
       "value_type": "DER",
       "value_format": "^([A-Fa-f0-9]{2})+$"
     }
-  },
-  "public_key": {
-    "key_type": "RSA",
-    "allowed_lengths": [
-      2048,
-      4096
-    ],
-    "key_format": "PKCS8"
-  },
-  "public_key_signature": "REQUIRED"
+  }
 }`
 
 var testFullPolicy = hvclient.Policy{
@@ -296,6 +312,7 @@ var testFullPolicy = hvclient.Policy{
 		SecondsMax:            86400,
 		NotBeforeNegativeSkew: 120,
 		NotBeforePositiveSkew: 3600,
+		IssuerExpiry:          1735732800,
 	},
 	SubjectDN: &hvclient.SubjectDNPolicy{
 		CommonName: &hvclient.StringPolicy{
@@ -535,6 +552,27 @@ var testFullPolicy = hvclient.Policy{
 			Max:      10,
 		},
 	},
+	SignaturePolicy: &hvclient.SignaturePolicy{
+		Algorithm: &hvclient.AlgorithmPolicy{
+			Presence: hvclient.Static,
+			List: []string{
+				"RSA-PSS",
+			},
+		},
+		HashAlgorithm: &hvclient.AlgorithmPolicy{
+			Presence: hvclient.Required,
+			List: []string{
+				"SHA-256",
+				"SHA-512",
+			},
+		},
+	},
+	PublicKey: &hvclient.PublicKeyPolicy{
+		KeyType:        hvclient.RSA,
+		AllowedLengths: []int{2048, 4096},
+		KeyFormat:      hvclient.PKCS8,
+	},
+	PublicKeySignature: hvclient.Required,
 	CustomExtensions: []hvclient.CustomExtensionsPolicy{
 		{
 			OID:       asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 48, 1, 5},
@@ -550,12 +588,6 @@ var testFullPolicy = hvclient.Policy{
 			ValueFormat: "^([A-Fa-f0-9]{2})+$",
 		},
 	},
-	PublicKey: &hvclient.PublicKeyPolicy{
-		KeyType:        hvclient.RSA,
-		AllowedLengths: []int{2048, 4096},
-		KeyFormat:      hvclient.PKCS8,
-	},
-	PublicKeySignature: hvclient.Required,
 }
 
 func TestPolicyMarshalJSON(t *testing.T) {

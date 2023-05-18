@@ -27,20 +27,6 @@ import (
 
 // Policy is a certificate request validation policy.
 type Policy struct {
-	Validity            *ValidityPolicy
-	SubjectDN           *SubjectDNPolicy
-	SAN                 *SANPolicy
-	EKUs                *EKUPolicy
-	SubjectDA           *SubjectDAPolicy
-	QualifiedStatements *QualifiedStatementsPolicy
-	MSExtensionTemplate *MSExtensionTemplatePolicy
-	CustomExtensions    []CustomExtensionsPolicy
-	PublicKey           *PublicKeyPolicy
-	PublicKeySignature  Presence
-}
-
-// jsonPolicy is used internally for JSON marshalling/unmarshalling.
-type jsonPolicy struct {
 	Validity            *ValidityPolicy            `json:"validity,omitempty"`
 	SubjectDN           *SubjectDNPolicy           `json:"subject_dn,omitempty"`
 	SAN                 *SANPolicy                 `json:"san,omitempty"`
@@ -48,9 +34,10 @@ type jsonPolicy struct {
 	SubjectDA           *SubjectDAPolicy           `json:"subject_da,omitempty"`
 	QualifiedStatements *QualifiedStatementsPolicy `json:"qualified_statements,omitempty"`
 	MSExtensionTemplate *MSExtensionTemplatePolicy `json:"ms_extension_template,omitempty"`
-	CustomExtensions    customExtensionsPolicies   `json:"custom_extensions,omitempty"`
+	SignaturePolicy     *SignaturePolicy           `json:"signature,omitempty"`
 	PublicKey           *PublicKeyPolicy           `json:"public_key,omitempty"`
 	PublicKeySignature  Presence                   `json:"public_key_signature"`
+	CustomExtensions    []CustomExtensionsPolicy   `json:"custom_extensions,omitempty"`
 }
 
 // ValidityPolicy is a validity field in a validation policy.
@@ -59,40 +46,29 @@ type ValidityPolicy struct {
 	SecondsMax            int64 `json:"secondsmax"`
 	NotBeforeNegativeSkew int64 `json:"not_before_negative_skew"`
 	NotBeforePositiveSkew int64 `json:"not_before_positive_skew"`
+	IssuerExpiry          int64 `json:"issuer_expiry"`
 }
 
 // SubjectDNPolicy is a subject distinguished name field in a validation policy.
 type SubjectDNPolicy struct {
-	CommonName         *StringPolicy
-	Organization       *StringPolicy
-	OrganizationalUnit *ListPolicy
-	Country            *StringPolicy
-	State              *StringPolicy
-	Locality           *StringPolicy
-	StreetAddress      *StringPolicy
-	Email              *StringPolicy
-	JOILocality        *StringPolicy
-	JOIState           *StringPolicy
-	JOICountry         *StringPolicy
-	BusinessCategory   *StringPolicy
-	ExtraAttributes    []TypeAndValuePolicy
-}
-
-// jsonSubjectDNPolicy is used internally for JSON marshalling/unmarshalling.
-type jsonSubjectDNPolicy struct {
-	CommonName         *StringPolicy        `json:"common_name,omitempty"`
-	Organization       *StringPolicy        `json:"organization,omitempty"`
-	OrganizationalUnit *ListPolicy          `json:"organizational_unit,omitempty"`
-	Country            *StringPolicy        `json:"country,omitempty"`
-	State              *StringPolicy        `json:"state,omitempty"`
-	Locality           *StringPolicy        `json:"locality,omitempty"`
-	StreetAddress      *StringPolicy        `json:"street_address,omitempty"`
-	Email              *StringPolicy        `json:"email,omitempty"`
-	JOILocality        *StringPolicy        `json:"jurisdiction_of_incorporation_locality_name,omitempty"`
-	JOIState           *StringPolicy        `json:"jurisdiction_of_incorporation_state_or_province_name,omitempty"`
-	JOICountry         *StringPolicy        `json:"jurisdiction_of_incorporation_country_name,omitempty"`
-	BusinessCategory   *StringPolicy        `json:"business_category,omitempty"`
-	ExtraAttributes    typeAndValuePolicies `json:"extra_attributes,omitempty"`
+	CommonName               *StringPolicy        `json:"common_name,omitempty"`
+	GivenName                *StringPolicy        `json:"given_name,omitempty"`
+	Surname                  *StringPolicy        `json:"surname,omitempty"`
+	Organization             *StringPolicy        `json:"organization,omitempty"`
+	OrganizationalUnit       *ListPolicy          `json:"organizational_unit,omitempty"`
+	OrganizationalIdentifier *StringPolicy        `json:"organization_identifier,omitempty"`
+	Country                  *StringPolicy        `json:"country,omitempty"`
+	State                    *StringPolicy        `json:"state,omitempty"`
+	Locality                 *StringPolicy        `json:"locality,omitempty"`
+	StreetAddress            *StringPolicy        `json:"street_address,omitempty"`
+	PostalCode               *StringPolicy        `json:"postal_code,omitempty"`
+	Email                    *StringPolicy        `json:"email,omitempty"`
+	JOILocality              *StringPolicy        `json:"jurisdiction_of_incorporation_locality_name,omitempty"`
+	JOIState                 *StringPolicy        `json:"jurisdiction_of_incorporation_state_or_province_name,omitempty"`
+	JOICountry               *StringPolicy        `json:"jurisdiction_of_incorporation_country_name,omitempty"`
+	BusinessCategory         *StringPolicy        `json:"business_category,omitempty"`
+	SerialNumber             *StringPolicy        `json:"serial_number,omitempty"`
+	ExtraAttributes          []TypeAndValuePolicy `json:"-"`
 }
 
 // SANPolicy is the subject alternative names field in a validation policy.
@@ -182,6 +158,19 @@ type CustomExtensionsPolicy struct {
 	Critical    bool                  `json:"critical"`
 	ValueType   ValueType             `json:"value_type"`
 	ValueFormat string                `json:"value_format,omitempty"`
+}
+
+// SignaturePolicy is the signature field in a validation policy.
+type SignaturePolicy struct {
+	Algorithm     *AlgorithmPolicy `json:"algorithm"`
+	HashAlgorithm *AlgorithmPolicy `json:"hash_algorithm"`
+}
+
+// AlgorithmPolicy is a list of algorithm names and their presence value entry
+// in a validation policy.
+type AlgorithmPolicy struct {
+	Presence Presence `json:"presence"`
+	List     []string `json:"list"`
 }
 
 // PublicKeyPolicy is the public key field in a validation policy.
@@ -359,40 +348,43 @@ var optionalStaticPresenceValues = map[string]OptionalStaticPresence{
 
 // MarshalJSON returns the JSON encoding of a validation policy.
 func (p Policy) MarshalJSON() ([]byte, error) {
-	return json.Marshal(jsonPolicy{
-		Validity:            p.Validity,
-		SubjectDN:           p.SubjectDN,
-		SAN:                 p.SAN,
-		EKUs:                p.EKUs,
-		SubjectDA:           p.SubjectDA,
-		QualifiedStatements: p.QualifiedStatements,
-		MSExtensionTemplate: p.MSExtensionTemplate,
-		CustomExtensions:    customExtensionsPolicies(p.CustomExtensions),
-		PublicKey:           p.PublicKey,
-		PublicKeySignature:  p.PublicKeySignature,
-	})
+	// These types allow us to unmarshal the policy without repeating a bunch
+	// of fields. `noRecur` prevents this function from being called in
+	// infinite recursion. Without it, if we were to use SubjectDNPolicy
+	// directly, this function would be called until a stack overflow occured.
+	type noRecur Policy
+	type jsonPolicy struct {
+		noRecur
+		CustomExtensions customExtensionsPolicies `json:"custom_extensions"`
+	}
+
+	var data jsonPolicy
+	data.noRecur = noRecur(p)
+	data.CustomExtensions = customExtensionsPolicies(p.CustomExtensions)
+
+	return json.Marshal(data)
 }
 
 // UnmarshalJSON parses a JSON-encoded validation policy and stores the result
 // in the object.
 func (p *Policy) UnmarshalJSON(b []byte) error {
+	// These types allow us to unmarshal the policy without repeating a bunch
+	// of fields. `noRecur` prevents this function from being called in
+	// infinite recursion. Without it, if we were to use SubjectDNPolicy
+	// directly, this function would be called until a stack overflow occured.
+	type noRecur Policy
+	type jsonPolicy struct {
+		noRecur
+		CustomExtensions customExtensionsPolicies `json:"custom_extensions"`
+	}
+
 	var data jsonPolicy
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
 
-	*p = Policy{
-		Validity:            data.Validity,
-		SubjectDN:           data.SubjectDN,
-		SAN:                 data.SAN,
-		EKUs:                data.EKUs,
-		SubjectDA:           data.SubjectDA,
-		QualifiedStatements: data.QualifiedStatements,
-		MSExtensionTemplate: data.MSExtensionTemplate,
-		CustomExtensions:    []CustomExtensionsPolicy(data.CustomExtensions),
-		PublicKey:           data.PublicKey,
-		PublicKeySignature:  data.PublicKeySignature,
-	}
+	*p = Policy(data.noRecur)
+	p.CustomExtensions = []CustomExtensionsPolicy(data.CustomExtensions)
 
 	return nil
 }
@@ -400,46 +392,43 @@ func (p *Policy) UnmarshalJSON(b []byte) error {
 // MarshalJSON returns the JSON encoding of a subject distinguished name
 // policy.
 func (p SubjectDNPolicy) MarshalJSON() ([]byte, error) {
-	return json.Marshal(jsonSubjectDNPolicy{
-		CommonName:         p.CommonName,
-		Organization:       p.Organization,
-		OrganizationalUnit: p.OrganizationalUnit,
-		Country:            p.Country,
-		State:              p.State,
-		Locality:           p.Locality,
-		StreetAddress:      p.StreetAddress,
-		Email:              p.Email,
-		JOILocality:        p.JOILocality,
-		JOIState:           p.JOIState,
-		JOICountry:         p.JOICountry,
-		BusinessCategory:   p.BusinessCategory,
-		ExtraAttributes:    typeAndValuePolicies(p.ExtraAttributes),
-	})
+	// These types allow us to unmarshal the policy without repeating a bunch
+	// of fields. `noRecur` prevents this function from being called in
+	// infinite recursion. Without it, if we were to use SubjectDNPolicy
+	// directly, this function would be called until a stack overflow occured.
+	type noRecur SubjectDNPolicy
+	type jsonPolicy struct {
+		noRecur
+		ExtraAttributes typeAndValuePolicies `json:"extra_attributes"`
+	}
+
+	var data jsonPolicy
+	data.noRecur = noRecur(p)
+	data.ExtraAttributes = typeAndValuePolicies(p.ExtraAttributes)
+
+	return json.Marshal(data)
 }
 
 // UnmarshalJSON parses a JSON-encoded subject distinguished name policy and
 // stores the result in the object.
 func (p *SubjectDNPolicy) UnmarshalJSON(b []byte) error {
-	var data jsonSubjectDNPolicy
+	// These types allow us to unmarshal the policy without repeating a bunch
+	// of fields. `noRecur` prevents this function from being called in
+	// infinite recursion. Without it, if we were to use SubjectDNPolicy
+	// directly, this function would be called until a stack overflow occured.
+	type noRecur SubjectDNPolicy
+	type jsonPolicy struct {
+		noRecur
+		ExtraAttributes typeAndValuePolicies `json:"extra_attributes"`
+	}
+
+	var data jsonPolicy
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
 
-	*p = SubjectDNPolicy{
-		CommonName:         data.CommonName,
-		Organization:       data.Organization,
-		OrganizationalUnit: data.OrganizationalUnit,
-		Country:            data.Country,
-		State:              data.State,
-		Locality:           data.Locality,
-		StreetAddress:      data.StreetAddress,
-		Email:              data.Email,
-		JOILocality:        data.JOILocality,
-		JOIState:           data.JOIState,
-		JOICountry:         data.JOICountry,
-		BusinessCategory:   data.BusinessCategory,
-		ExtraAttributes:    []TypeAndValuePolicy(data.ExtraAttributes),
-	}
+	*p = SubjectDNPolicy(data.noRecur)
+	p.ExtraAttributes = []TypeAndValuePolicy(data.ExtraAttributes)
 
 	return nil
 }

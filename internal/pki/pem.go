@@ -87,7 +87,7 @@ func PrivateKeyFromFileWithPassword(filename, password string) (interface{}, err
 		return rsakey, nil
 	}
 
-	return nil, errors.New("unsupported private key type DAVE")
+	return nil, errors.New("unsupported private key type")
 }
 
 // PublicKeyFromFile reads a PEM-encoded file and returns the public key it

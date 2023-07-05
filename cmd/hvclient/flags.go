@@ -86,6 +86,12 @@ var (
 
 var fEKUs = flag.String("ekus", "", "extended key usages")
 
+// Signature flags.
+var (
+	fSigAlg  = flag.String("sigalg", "", `signature algorithm to use (e.g. "" to use policy default or specify one of, "RSA", "RSA-PSS", or, "ECDSA")`)
+	fSigHash = flag.String("sighash", "", `signature hash algorithm to use (e.g. "" to use policy default or specify one of, "SHA-256", "SHA-384", or "SHA-512")`)
+)
+
 // Time window flags.
 var (
 	fFrom  = flag.String("from", "", "start of the time window in layout "+defaultTimeLayout+" (default: 30 days ago)")

@@ -37,6 +37,8 @@ type requestValues struct {
 	subject    subjectValues
 	san        sanValues
 	ekus       string
+	sigAlg     string
+	sigHash    string
 	publickey  string
 	privatekey string
 	csr        string
@@ -136,6 +138,15 @@ func buildRequest(reqinfo *requestValues) (*hvclient.Request, error) {
 		reqinfo.ekus,
 	); err != nil {
 		return nil, err
+	}
+
+	// Only add the signature hash algorithm if specified, otherwise we don't
+	// want to bother sending out an object.
+	if reqinfo.sigAlg != "" || reqinfo.sigHash != "" {
+		request.Signature = &hvclient.Signature{
+			Algorithm:     reqinfo.sigAlg,
+			HashAlgorithm: reqinfo.sigHash,
+		}
 	}
 
 	if request.PublicKey, request.PrivateKey, request.CSR, err = getKeys(

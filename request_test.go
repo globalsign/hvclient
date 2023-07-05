@@ -186,6 +186,10 @@ const testRequestFullJSON = `{
     "custom_extensions": {
         "2.5.29.99.1": "NIL",
         "2.5.29.99.2": "SOME TEXT"
+    },
+    "signature": {
+        "algorithm": "RSA",
+        "hash_algorithm": "SHA-256"
     }
 }`
 
@@ -288,6 +292,10 @@ var testRequestFullRequest = hvclient.Request{
 			OID:   asn1.ObjectIdentifier{2, 5, 29, 99, 2},
 			Value: "SOME TEXT",
 		},
+	},
+	Signature: &hvclient.Signature{
+		Algorithm:     "RSA",
+		HashAlgorithm: "SHA-256",
 	},
 }
 

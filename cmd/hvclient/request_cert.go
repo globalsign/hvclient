@@ -61,7 +61,7 @@ func requestCert(clnt *hvclient.Client) error {
 				uris:     *fURIs,
 			},
 			ekus:       *fEKUs,
-			sigAlg:     *fSigHash,
+			sigAlg:     *fSigAlg,
 			sigHash:    *fSigHash,
 			publickey:  *fPublicKey,
 			privatekey: *fPrivateKey,

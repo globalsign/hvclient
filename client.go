@@ -20,6 +20,8 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+
+	// "errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -29,7 +31,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/globalsign/hvclient/internal/httputils"
+	"github.com/vsglobalsign/hvclient/internal/httputils"
 )
 
 // Client is a fully-featured client through which HVCA API calls can be made.
@@ -48,13 +50,14 @@ import (
 //
 // It is safe to make concurrent API calls from a single client object.
 type Client struct {
-	config     *Config
-	url        *url.URL
-	httpClient *http.Client
-	token      string
-	lastLogin  time.Time
-	tokenMtx   sync.RWMutex
-	loginMtx   sync.Mutex
+	BaseURL       *url.URL
+	HTTPClient    *http.Client
+	Config        *Config
+	Token         string
+	LastLogin     time.Time
+	TokenMtx      sync.RWMutex
+	LoginMtx      sync.Mutex
+	ClientProfile *ClientProfile
 }
 
 const (
@@ -91,7 +94,7 @@ func (c *Client) makeRequest(
 			body = bytes.NewReader(data)
 		}
 
-		var request, err = http.NewRequestWithContext(ctx, method, c.url.String()+path, body)
+		var request, err = http.NewRequestWithContext(ctx, method, c.BaseURL.String()+path, body)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new HTTP request: %w", err)
 		}
@@ -105,7 +108,7 @@ func (c *Client) makeRequest(
 
 		// Add any extra headers to the request first, so they can't override
 		// any headers we add ourselves.
-		for key, value := range c.config.ExtraHeaders {
+		for key, value := range c.Config.ExtraHeaders {
 			request.Header.Add(key, value)
 		}
 
@@ -119,11 +122,11 @@ func (c *Client) makeRequest(
 			}
 
 			// Add the authentication token to all requests except login requests.
-			request.Header.Set(httputils.AuthorizationHeader, "Bearer "+c.tokenRead())
+			request.Header.Set(httputils.AuthorizationHeader, "Bearer "+c.GetToken())
 		}
 
 		// Execute the request.
-		if response, err = c.httpClient.Do(request); err != nil {
+		if response, err = c.HTTPClient.Do(request); err != nil {
 			return nil, fmt.Errorf("failed to execute HTTP request: %w", err)
 		}
 		defer httputils.ConsumeAndCloseResponseBody(response)
@@ -132,7 +135,7 @@ func (c *Client) makeRequest(
 		// of the 2XX range as an error. Also treat 202 status codes as "errors",
 		// because we want to retry in that event.
 		if response.StatusCode < 200 || response.StatusCode > 299 || response.StatusCode == http.StatusAccepted {
-			var apiErr = newAPIError(response)
+			var apiErr = NewAPIError(response)
 
 			// Depending on the status code, we may want to retry the request.
 			switch apiErr.StatusCode {
@@ -217,7 +220,56 @@ func (c *Client) makeRequest(
 // configuration when creating the context to pass to an API method if the
 // original configuration information is no longer available.
 func (c *Client) DefaultTimeout() time.Duration {
-	return c.config.Timeout
+	return c.Config.Timeout
+}
+
+// NewThinClient creates a new client with no initial login client and a custom
+// http client to facilitate re-use between hvclients.
+func NewThinClient(profile *ClientProfile, httpClient *http.Client) (*Client, error) {
+
+	// Build an HTTP transport using any proxy settings from the environment.
+	// Experimentation suggests that the other values seem to reasonably
+	// maximally encourage the sharing of TCP connections.
+	var tnspt = &http.Transport{
+		MaxIdleConnsPerHost: 1024,
+		MaxIdleConns:        1024,
+		MaxConnsPerHost:     1024,
+		Proxy:               http.ProxyFromEnvironment,
+	}
+
+	profile.Config.url, _ = url.Parse(profile.Config.URL)
+
+	if profile.Config.url.Scheme == "https" {
+		// Populate TLS client certificates only if one was provided.
+		var tlsCerts []tls.Certificate
+		if profile.Config.TLSCert != nil {
+			tlsCerts = []tls.Certificate{
+				{
+					Certificate: [][]byte{profile.Config.TLSCert.Raw},
+					PrivateKey:  profile.Config.TLSKey,
+					Leaf:        profile.Config.TLSCert,
+				},
+			}
+		}
+
+		tnspt.TLSClientConfig = &tls.Config{
+			RootCAs:            profile.Config.TLSRoots,
+			Certificates:       tlsCerts,
+			InsecureSkipVerify: profile.Config.InsecureSkipVerify,
+		}
+	}
+
+	// Build a new client.
+	var newClient = Client{
+		Config:        profile.Config,
+		Token:         profile.Token,
+		BaseURL:       profile.Config.url,
+		HTTPClient:    &http.Client{Transport: tnspt},
+		ClientProfile: profile,
+		// }
+	}
+
+	return &newClient, nil
 }
 
 // NewClient creates a new HVCA client from a configuration object. An initial
@@ -245,7 +297,7 @@ func NewClient(ctx context.Context, conf *Config) (*Client, error) {
 		var tlsCerts []tls.Certificate
 		if conf.TLSCert != nil {
 			tlsCerts = []tls.Certificate{
-				tls.Certificate{
+				{
 					Certificate: [][]byte{conf.TLSCert.Raw},
 					PrivateKey:  conf.TLSKey,
 					Leaf:        conf.TLSCert,
@@ -262,9 +314,9 @@ func NewClient(ctx context.Context, conf *Config) (*Client, error) {
 
 	// Build a new client.
 	var newClient = Client{
-		config:     conf,
-		url:        conf.url,
-		httpClient: &http.Client{Transport: tnspt},
+		Config:     conf,
+		BaseURL:    conf.url,
+		HTTPClient: &http.Client{Transport: tnspt},
 	}
 
 	// Perform the initial login and return the new client.

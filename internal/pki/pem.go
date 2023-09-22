@@ -83,10 +83,6 @@ func PrivateKeyFromFileWithPassword(filename, password string) (interface{}, err
 		return rsakey, nil
 	}
 
-	if rsakey, err := x509.ParsePKCS8PrivateKey(keybytes); err == nil {
-		return rsakey, nil
-	}
-
 	return nil, errors.New("unsupported private key type")
 }
 

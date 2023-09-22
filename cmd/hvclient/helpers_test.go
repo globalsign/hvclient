@@ -22,9 +22,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/globalsign/hvclient"
-	"github.com/globalsign/hvclient/internal/testhelpers"
 	"github.com/google/go-cmp/cmp"
+	"github.com/vsglobalsign/hvclient"
+	"github.com/vsglobalsign/hvclient/internal/testhelpers"
 )
 
 func TestCheckOneValue(t *testing.T) {

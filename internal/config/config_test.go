@@ -19,8 +19,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/globalsign/hvclient/internal/config"
 	"github.com/google/go-cmp/cmp"
+	"github.com/vsglobalsign/hvclient/internal/config"
 )
 
 func TestConfigNewFromFile(t *testing.T) {

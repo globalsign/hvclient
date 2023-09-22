@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/globalsign/hvclient"
-	"github.com/globalsign/hvclient/internal/testhelpers"
+	"github.com/vsglobalsign/hvclient"
+	"github.com/vsglobalsign/hvclient/internal/testhelpers"
 )
 
 const testPEM = `-----BEGIN CERTIFICATE-----

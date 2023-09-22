@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/globalsign/hvclient"
-	"github.com/globalsign/hvclient/internal/testhelpers"
+	"github.com/vsglobalsign/hvclient"
+	"github.com/vsglobalsign/hvclient/internal/testhelpers"
 )
 
 const testRequestCSRPEM = `-----BEGIN CERTIFICATE REQUEST-----
@@ -186,10 +186,6 @@ const testRequestFullJSON = `{
     "custom_extensions": {
         "2.5.29.99.1": "NIL",
         "2.5.29.99.2": "SOME TEXT"
-    },
-    "signature": {
-        "algorithm": "RSA",
-        "hash_algorithm": "SHA-256"
     }
 }`
 
@@ -293,10 +289,6 @@ var testRequestFullRequest = hvclient.Request{
 			Value: "SOME TEXT",
 		},
 	},
-	Signature: &hvclient.Signature{
-		Algorithm:     "RSA",
-		HashAlgorithm: "SHA-256",
-	},
 }
 
 func TestRequestMarshalJSON(t *testing.T) {
@@ -319,42 +311,6 @@ func TestRequestMarshalJSON(t *testing.T) {
 			},
 			want: `{
     "public_key": "-----BEGIN CERTIFICATE REQUEST-----\nMIID1jCCAr4CAQAwgYwxCzAJBgNVBAYTAkdCMQ8wDQYDVQQIEwZMb25kb24xDzAN\nBgNVBAcTBkxvbmRvbjEaMBgGA1UECRMRMSBHbG9iYWxTaWduIFJvYWQxFzAVBgNV\nBAoTDkdNTyBHbG9iYWxTaWduMRMwEQYDVQQLEwpPcGVyYXRpb25zMREwDwYDVQQD\nEwhKb2huIERvZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANNRyiSc\nrpzY/vPy+3tjTxz0gsLBO+fbT+dn15vX7VgWj0wp0nTQfdYg8oBxDqB4KMsnQjip\ncEyoVv46pyPfmjlXDyLqqWQodCbsvjc+vxReG5AN6FC4/vKnXVMeVDS45H1fnHib\nwNPlAPYADfH4wIIB6ZinYBK9G+tK6e0o6aoDSumVFgezqiZdASSmUaO+NtaCLFr1\nKtBDBy7dUHZTfNORCz5Sq9w2XuM5jWspXb2PG6+Mr2bvFS6zB2CfiTrLGtYQZqsO\n99De+NM4LEMR/9AuOdi+cfDJ6jrXg+SkaiNCgBL7E5ZD72X7TWSaiJ/cu2f4mg5C\nsuess+3JScoR5/UCAwEAAaCCAQIwgf8GCSqGSIb3DQEJDjGB8TCB7jCBvAYDVR0R\nBIG0MIGxgh10ZXN0LmRlbW8uaHZjYS5nbG9iYWxzaWduLmNvbYIedGVzdDIuZGVt\nby5odmNhLmdsb2JhbHNpZ24uY29tgR5hZG1pbkBkZW1vLmh2Y2EuZ2xvYmFsc2ln\nbi5jb22BIGNvbnRhY3RAZGVtby5odmNhLmdsb2JhbHNpZ24uY29thwTGKdaahiho\ndHRwOi8vdGVzdC5kZW1vLmh2Y2EuZ2xvYmFsc2lnbi5jb20vdXJpMAsGA1UdDwQE\nAwIDqDAgBgNVHSUBAf8EFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwDQYJKoZIhvcN\nAQELBQADggEBAJyVtFN3ykzNtEwxjwOJZdM1n6kBtVqI++n7Pvo7Y3w1mUZ3VSae\n6JBNjudfazHWqZZo1Djy2uZxzwvow2RjmcjxHDL4siO/dKopAtZOdH5eFn3efzZc\nnXZ2JQpmu2lauhQNh052k54qmy8lk86yVr7KBYx67ZPZkpPJMy3a5cEnByr26LnX\nuyrFCzayZxSHwj4u178+PgzNz4avQWv1jaCSDmgvs423N3z2DP0r30LfsVPvKsr4\nW9S7IjDr8TSVRpRCjx7M7QooOgovrKk08khTO4NDXO4FcJLcSsvb38QfvUeg/7WV\nL+9OFs/MYElfTUTFQd36X+378dgeOiZCKG4=\n-----END CERTIFICATE REQUEST-----"
-}`,
-		},
-		{
-			name: "RSAPublicKey",
-			req: hvclient.Request{
-				PublicKey: testhelpers.MustExtractRSAPublicKey(t, testRequestRSAPrivateKeyPEM),
-			},
-			want: `{
-    "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7s0nIwA4nzrc5az0iD6F\n710WI2BnabCVe1wNXUckq7RdWXtshlQODZow+M6t7P2FLolYYyhT9vD5hFlMNBKY\nFqAAkauGlmx12luVyURRLW0ht9Piu41MaLnLCCMM7tQ/5lixMHkT86sX/wX8q32Z\nOuatyUgVQUV1hKXZCH12y9VK9U3pQGoPgG15SbCo6yfUYvYLp7NmNEb55Gz4I1xf\n4PBaRvynr0dtwbFXQOQAfg+q29sm+elYnAQLvtVVyYmfn+jqK9u1Ey+X2sNns3HW\nz9OSQt7e9lFIKMlospQPl4YuGhfcID/xC1gZLV5wlvghFJx/1QUW/yI3MZGXpIav\njwIDAQAB\n-----END PUBLIC KEY-----"
-}`,
-		},
-		{
-			name: "RSAPublicKeyNoPointer",
-			req: hvclient.Request{
-				PublicKey: *testhelpers.MustExtractRSAPublicKey(t, testRequestRSAPrivateKeyPEM),
-			},
-			want: `{
-    "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7s0nIwA4nzrc5az0iD6F\n710WI2BnabCVe1wNXUckq7RdWXtshlQODZow+M6t7P2FLolYYyhT9vD5hFlMNBKY\nFqAAkauGlmx12luVyURRLW0ht9Piu41MaLnLCCMM7tQ/5lixMHkT86sX/wX8q32Z\nOuatyUgVQUV1hKXZCH12y9VK9U3pQGoPgG15SbCo6yfUYvYLp7NmNEb55Gz4I1xf\n4PBaRvynr0dtwbFXQOQAfg+q29sm+elYnAQLvtVVyYmfn+jqK9u1Ey+X2sNns3HW\nz9OSQt7e9lFIKMlospQPl4YuGhfcID/xC1gZLV5wlvghFJx/1QUW/yI3MZGXpIav\njwIDAQAB\n-----END PUBLIC KEY-----"
-}`,
-		},
-		{
-			name: "ECPublicKey",
-			req: hvclient.Request{
-				PublicKey: testhelpers.MustExtractECPublicKey(t, testRequestECPrivateKeyPEM),
-			},
-			want: `{
-    "public_key": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAETKbxjrMcHuXVmdmy0d1xSSjfY86U\nQlrBHFcYT3SHReVZZ0MdTjg/9PNUrWDpkZ75q4pZV5EpMgqrIdSIEqCiuA==\n-----END PUBLIC KEY-----"
-}`,
-		},
-		{
-			name: "ECPublicKeyNoPointer",
-			req: hvclient.Request{
-				PublicKey: *testhelpers.MustExtractECPublicKey(t, testRequestECPrivateKeyPEM),
-			},
-			want: `{
-    "public_key": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAETKbxjrMcHuXVmdmy0d1xSSjfY86U\nQlrBHFcYT3SHReVZZ0MdTjg/9PNUrWDpkZ75q4pZV5EpMgqrIdSIEqCiuA==\n-----END PUBLIC KEY-----"
 }`,
 		},
 		{
@@ -1547,37 +1503,6 @@ func TestRequestPKCS10(t *testing.T) {
 
 			if err = got.CheckSignature(); err != nil {
 				t.Errorf("signature check failed: %v", err)
-			}
-		})
-	}
-}
-
-func TestRequestPKCS10Failure(t *testing.T) {
-	t.Parallel()
-
-	var testcases = []struct {
-		name    string
-		request hvclient.Request
-	}{
-		{
-			name: "NoPrivateKey",
-			request: hvclient.Request{
-				Subject: &hvclient.DN{
-					CommonName: "John Doe",
-				},
-				PublicKey: testhelpers.MustGetPublicKeyFromFile(t, "testdata/rsa_pub.key"),
-			},
-		},
-	}
-
-	for _, tc := range testcases {
-		var tc = tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			if _, err := tc.request.PKCS10(); err == nil {
-				t.Fatalf("unexpectedly built PKCS10 request")
 			}
 		})
 	}

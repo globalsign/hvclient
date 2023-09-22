@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/globalsign/hvclient/internal/httputils"
 	"github.com/google/go-cmp/cmp"
+	"github.com/vsglobalsign/hvclient/internal/httputils"
 )
 
 // errReader implements io.Reader and always returns an error.
@@ -105,7 +105,7 @@ func TestAPIError(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var got = newAPIError(tc.in)
+			var got = NewAPIError(tc.in)
 			if !cmp.Equal(got, tc.want) {
 				t.Fatalf("got %v, want %v", got, tc.want)
 			}

@@ -50,8 +50,8 @@ const (
 // login logs into the HVCA server and stores the authentication token.
 func (c *Client) login(ctx context.Context) error {
 	var req = loginRequest{
-		APIKey:    c.config.APIKey,
-		APISecret: c.config.APISecret,
+		APIKey:    c.Config.APIKey,
+		APISecret: c.Config.APISecret,
 	}
 
 	var resp loginResponse
@@ -68,7 +68,7 @@ func (c *Client) login(ctx context.Context) error {
 		return fmt.Errorf("failed to login: %w", err)
 	}
 
-	c.tokenSet(resp.AccessToken)
+	c.SetToken(resp.AccessToken)
 
 	return nil
 }
@@ -90,8 +90,8 @@ func (c *Client) loginIfTokenHasExpired(ctx context.Context) error {
 	// inefficient. Also note that access to the token is sychronized using
 	// a different mutex, so attempting to acquire that mutex while holding
 	// this one won't cause a deadlock.
-	c.loginMtx.Lock()
-	defer c.loginMtx.Unlock()
+	c.LoginMtx.Lock()
+	defer c.LoginMtx.Unlock()
 
 	// Check again if the token is believed to be expired, as another
 	// goroutine may have acquired the login mutex before we did.
@@ -106,35 +106,37 @@ func (c *Client) loginIfTokenHasExpired(ctx context.Context) error {
 // to be expired (or if there is no stored authentication token), indicating
 // that another login is required.
 func (c *Client) tokenHasExpired() bool {
-	c.tokenMtx.RLock()
-	defer c.tokenMtx.RUnlock()
+	c.TokenMtx.RLock()
+	defer c.TokenMtx.RUnlock()
 
-	return time.Since(c.lastLogin) > tokenLifetime
+	return time.Since(c.LastLogin) > tokenLifetime
 }
 
 // tokenReset clears the stored authentication token and the last login time.
 func (c *Client) tokenReset() {
-	c.tokenMtx.Lock()
-	defer c.tokenMtx.Unlock()
+	c.TokenMtx.Lock()
+	defer c.TokenMtx.Unlock()
 
-	c.token = ""
-	c.lastLogin = time.Time{}
+	c.Token = ""
+	c.LastLogin = time.Time{}
 }
 
-// tokenSet sets the stored authentication token and sets the last login time
+// SetToken sets the stored authentication token and sets the last login time
 // to the current time.
-func (c *Client) tokenSet(token string) {
-	c.tokenMtx.Lock()
-	defer c.tokenMtx.Unlock()
+func (c *Client) SetToken(token string) {
+	c.TokenMtx.Lock()
+	defer c.TokenMtx.Unlock()
 
-	c.token = token
-	c.lastLogin = time.Now()
+	c.Token = token
+	c.LastLogin = time.Now()
 }
 
-// tokenRead performs a synchronized read of the stored authentication token.
-func (c *Client) tokenRead() string {
-	c.tokenMtx.RLock()
-	defer c.tokenMtx.RUnlock()
+// GetToken performs a synchronized read of the stored authentication token.
+func (c *Client) GetToken() string {
+	c.TokenMtx.RLock()
+	defer c.TokenMtx.RUnlock()
 
-	return c.token
+	return c.Token
 }
+
+//

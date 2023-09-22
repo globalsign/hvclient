@@ -22,7 +22,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/globalsign/hvclient/internal/oids"
+	"github.com/vsglobalsign/hvclient/internal/oids"
 )
 
 // Policy is a certificate request validation policy.

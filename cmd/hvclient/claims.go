@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/globalsign/hvclient"
+	"github.com/vsglobalsign/hvclient"
 )
 
 // claimsDomains lists the ID, status, domain, created-at and assert-by times (or the

@@ -19,7 +19,7 @@ import (
 	"encoding/asn1"
 	"testing"
 
-	"github.com/globalsign/hvclient/internal/oids"
+	"github.com/vsglobalsign/hvclient/internal/oids"
 )
 
 func TestStringToOID(t *testing.T) {

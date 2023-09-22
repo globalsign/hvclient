@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/globalsign/hvclient"
-	"github.com/globalsign/hvclient/internal/pki"
+	"github.com/vsglobalsign/hvclient"
+	"github.com/vsglobalsign/hvclient/internal/pki"
 )
 
 // trustChain outputs the chain of trust for the certificates issued

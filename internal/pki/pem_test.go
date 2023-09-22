@@ -23,8 +23,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/globalsign/hvclient/internal/pki"
-	"github.com/globalsign/hvclient/internal/testhelpers"
+	"github.com/vsglobalsign/hvclient/internal/pki"
+	"github.com/vsglobalsign/hvclient/internal/testhelpers"
 )
 
 func TestFileIsEncryptedPEMBlock(t *testing.T) {

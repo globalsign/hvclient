@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/globalsign/hvclient/internal/config"
-	"github.com/globalsign/hvclient/internal/pki"
+	"github.com/vsglobalsign/hvclient/internal/config"
+	"github.com/vsglobalsign/hvclient/internal/pki"
 )
 
 // Config is a configuration object for an HVCA client.
@@ -78,6 +78,16 @@ type Config struct {
 	// request. If this is omitted or set to zero, a reasonable default will
 	// be used.
 	Timeout time.Duration
+}
+
+// ClientProfile is a configuration object for HVCA client and contains
+// a Config field and a token field
+type ClientProfile struct {
+	// Configuration
+	Config *Config
+
+	// User Token
+	Token string
 }
 
 const (

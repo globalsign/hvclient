@@ -113,12 +113,6 @@ Certificate request options:
     -ekus=<string>                Comma-separated list of extended key usage
                                   OIDs, e.g. "1.3.6.1.5.5.7.3.2"
 
-    -sigalg=<string>              An algorithm name to be used for the certificate
-                                  signature e.g. "RSA", "RSA-PSS", or "ECDSA"
-
-    -sighash=<string>             An algorithm name to be used for the certificate
-                                  signature hash e.g. "SHA-256", "SHA-384", or "SHA-512"
-
     -template=<file>              Read values from the specified JSON-encoded
                                   file. Options specified at the command line
                                   override or append to the values in this

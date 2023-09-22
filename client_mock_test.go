@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/globalsign/hvclient"
-	"github.com/globalsign/hvclient/internal/pki"
 	"github.com/google/go-cmp/cmp"
+	"github.com/vsglobalsign/hvclient"
+	"github.com/vsglobalsign/hvclient/internal/pki"
 )
 
 func TestClientMockNew(t *testing.T) {
@@ -142,7 +142,7 @@ func TestClientMockCertificatesRequest(t *testing.T) {
 				t.Fatalf("failed to read CSR: %v", err)
 			}
 
-			var got *big.Int
+			var got *string
 			got, err = client.CertificateRequest(
 				ctx,
 				&hvclient.Request{
@@ -273,17 +273,19 @@ func TestClientMockCertificatesRevokeWithReason(t *testing.T) {
 	t.Parallel()
 
 	var testcases = []struct {
-		name   string
-		serial *big.Int
-		reason hvclient.RevocationReason
-		time   int64
-		err    error
+		name                     string
+		serial                   *big.Int
+		reason                   hvclient.RevocationReason
+		time                     int64
+		keyCompromiseAttestation string
+		err                      error
 	}{
 		{
-			name:   "OK",
-			serial: big.NewInt(0x741daf9ec2d5f7dc),
-			reason: hvclient.RevocationReasonUnspecified,
-			time:   0,
+			name:                     "OK",
+			serial:                   big.NewInt(0x741daf9ec2d5f7dc),
+			reason:                   hvclient.RevocationReasonUnspecified,
+			time:                     0,
+			keyCompromiseAttestation: "",
 		},
 		{
 			name:   "NotFound",
@@ -304,7 +306,7 @@ func TestClientMockCertificatesRevokeWithReason(t *testing.T) {
 			var ctx, cancel = context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 
-			var err = client.CertificateRevokeWithReason(ctx, tc.serial, tc.reason, tc.time)
+			var err = client.CertificateRevokeWithReason(ctx, tc.serial, tc.reason, tc.time, tc.keyCompromiseAttestation)
 			if (err == nil) != (tc.err == nil) {
 				t.Fatalf("got error %v, want %v", err, tc.err)
 			}

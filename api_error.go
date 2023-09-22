@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/globalsign/hvclient/internal/httputils"
+	"github.com/vsglobalsign/hvclient/internal/httputils"
 )
 
 // APIError is an error returned by the HVCA HTTP API.
@@ -40,8 +40,8 @@ func (e APIError) Error() string {
 	return fmt.Sprintf("%d: %s", e.StatusCode, e.Description)
 }
 
-// newAPIError creates a new APIError object from an HTTP response.
-func newAPIError(r *http.Response) APIError {
+// NewAPIError creates a new APIError object from an HTTP response.
+func NewAPIError(r *http.Response) APIError {
 	// All HVCA error response bodies have a problem+json content type, so
 	// return a generic error if that's not the content type we have.
 	var err = httputils.VerifyResponseContentType(r, httputils.ContentTypeProblemJSON)

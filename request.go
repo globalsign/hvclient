@@ -16,26 +16,20 @@ limitations under the License.
 package hvclient
 
 import (
-	"crypto"
-	"crypto/ecdsa"
 	"crypto/rand"
-	"crypto/rsa"
-	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/big"
 	"net"
 	"net/url"
 	"sort"
 	"time"
 
-	"github.com/globalsign/hvclient/internal/oids"
-	"github.com/globalsign/hvclient/internal/pki"
+	"github.com/vsglobalsign/hvclient/internal/oids"
+	"github.com/vsglobalsign/hvclient/internal/pki"
 )
 
 // Request is a request to HVCA for the issuance of a new certificate.
@@ -68,10 +62,10 @@ type Request struct {
 	QualifiedStatements *QualifiedStatements
 	MSExtension         *MSExtension
 	CustomExtensions    []OIDAndString
-	Signature           *Signature
 	CSR                 *x509.CertificateRequest
+	Signature           *Signature
 	PrivateKey          interface{}
-	PublicKey           interface{}
+	PublicKey           string
 }
 
 // Validity contains the requested not-before and not-after times for a
@@ -155,10 +149,10 @@ type MSExtension struct {
 	MinorVersion int
 }
 
-// Signature contains the names of the algorithms used to sign the certificate.
+// Signature is the signature field in Request.
 type Signature struct {
-	Algorithm     string `json:"algorithm,omitempty"`
-	HashAlgorithm string `json:"hash_algorithm,omitempty"`
+	Algorithm     string `json:"algorithm"`
+	HashAlgorithm string `json:"hash_algorithm"`
 }
 
 // jsonRequest is used internally for JSON marshalling/unmarshalling.
@@ -298,91 +292,6 @@ func (r Request) MarshalJSON() ([]byte, error) {
 		ekus[i] = jsonOID(r.EKUs[i])
 	}
 
-	// Convert PKCS#10 certificate request, if present.
-	var publicKey string
-	var publicKeySig string
-	var err error
-
-	switch {
-	case r.PublicKey != nil:
-		switch k := r.PublicKey.(type) {
-		case rsa.PublicKey:
-			if _, publicKey, err = publicKeyBytesAndString(&k); err != nil {
-				return nil, err
-			}
-		case *rsa.PublicKey:
-			if _, publicKey, err = publicKeyBytesAndString(k); err != nil {
-				return nil, err
-			}
-		case ecdsa.PublicKey:
-			if _, publicKey, err = publicKeyBytesAndString(&k); err != nil {
-				return nil, err
-			}
-		case *ecdsa.PublicKey:
-			if _, publicKey, err = publicKeyBytesAndString(k); err != nil {
-				return nil, err
-			}
-		default:
-			if _, publicKey, err = publicKeyBytesAndString(k); err != nil {
-				return nil, err
-			}
-		}
-
-	case r.PrivateKey != nil:
-		switch k := r.PrivateKey.(type) {
-		case *rsa.PrivateKey:
-			var pubKeyBytes []byte
-			var err error
-
-			if pubKeyBytes, publicKey, err = publicKeyBytesAndString(&k.PublicKey); err != nil {
-				return nil, err
-			}
-
-			var h = sha256.Sum256(pubKeyBytes)
-
-			var signedBytes []byte
-			if signedBytes, err = rsa.SignPKCS1v15(rand.Reader, k, crypto.SHA256, h[:]); err != nil {
-				return nil, err
-			}
-
-			publicKeySig = base64.StdEncoding.EncodeToString(signedBytes)
-
-		case *ecdsa.PrivateKey:
-			var pubKeyBytes []byte
-			var err error
-
-			if pubKeyBytes, publicKey, err = publicKeyBytesAndString(&k.PublicKey); err != nil {
-				return nil, err
-			}
-
-			var h = sha256.Sum256(pubKeyBytes)
-
-			var r, s *big.Int
-			if r, s, err = ecdsa.Sign(rand.Reader, k, h[:]); err != nil {
-				return nil, err
-			}
-
-			var signedBytes []byte
-			if signedBytes, err = asn1.Marshal([]*big.Int{r, s}); err != nil {
-				return nil, err
-			}
-
-			publicKeySig = base64.StdEncoding.EncodeToString(signedBytes)
-
-		default:
-			return nil, fmt.Errorf("unsupported private key type: %T", k)
-		}
-
-	case r.CSR != nil:
-		publicKey = pki.CSRToPEMString(r.CSR)
-
-		// Remove trailing newline from string, if present.
-		if publicKey[len(publicKey)-1] == '\n' {
-			publicKey = publicKey[:len(publicKey)-1]
-		}
-
-	}
-
 	return json.Marshal(jsonRequest{
 		Validity:            r.Validity,
 		Subject:             r.Subject,
@@ -393,8 +302,9 @@ func (r Request) MarshalJSON() ([]byte, error) {
 		MSExtension:         r.MSExtension,
 		CustomExtensions:    raw,
 		Signature:           r.Signature,
-		PublicKey:           publicKey,
-		PublicKeySignature:  publicKeySig,
+		// PublicKey:           publicKey,
+		// PublicKeySignature:  publicKeySig,
+		PublicKey: r.PublicKey,
 	})
 }
 
@@ -458,6 +368,7 @@ func (r *Request) UnmarshalJSON(b []byte) error {
 		MSExtension:         jsonreq.MSExtension,
 		CustomExtensions:    exts,
 		Signature:           jsonreq.Signature,
+		PublicKey:           jsonreq.PublicKey,
 	}
 
 	return nil

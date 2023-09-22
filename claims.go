@@ -45,24 +45,30 @@ type ClaimLogEntryStatus int
 
 // Claim is a domain claim.
 type Claim struct {
-	ID        string
-	Status    ClaimStatus
-	Domain    string
-	CreatedAt time.Time
-	ExpiresAt time.Time
-	AssertBy  time.Time
-	Log       []ClaimLogEntry
+	ID                     string
+	Status                 ClaimStatus
+	Token                  string
+	Domain                 string
+	CreatedAt              time.Time
+	ExpiresAt              time.Time
+	AssertBy               time.Time
+	LastVerifiedAt         time.Time
+	LastVerificationMethod string
+	Log                    []ClaimLogEntry
 }
 
 // jsonClaim is used internally for JSON marshalling/unmarshalling.
 type jsonClaim struct {
-	ID        string          `json:"id"`
-	Status    ClaimStatus     `json:"status"`
-	Domain    string          `json:"domain"`
-	CreatedAt int64           `json:"created_at"`
-	ExpiresAt int64           `json:"expires_at"`
-	AssertBy  int64           `json:"assert_by"`
-	Log       []ClaimLogEntry `json:"log"`
+	ID                     string          `json:"id"`
+	Status                 ClaimStatus     `json:"status"`
+	Token                  string          `json:"token"`
+	Domain                 string          `json:"domain"`
+	CreatedAt              int64           `json:"created_at"`
+	ExpiresAt              int64           `json:"expires_at"`
+	AssertBy               int64           `json:"assert_by"`
+	LastVerifiedAt         int64           `json:"last_verified_at"`
+	LastVerificationMethod string          `json:"last_verification_method"`
+	Log                    []ClaimLogEntry `json:"log"`
 }
 
 // ClaimAssertionInfo contains information for making a domain claim.
@@ -220,22 +226,29 @@ func (c Claim) Equal(other Claim) bool {
 	return c.ID == other.ID &&
 		c.Status == other.Status &&
 		c.Domain == other.Domain &&
+		c.Token == other.Token &&
+		c.LastVerificationMethod == other.LastVerificationMethod &&
 		c.CreatedAt.Equal(other.CreatedAt) &&
 		c.ExpiresAt.Equal(other.ExpiresAt) &&
-		c.AssertBy.Equal(other.AssertBy)
+		c.AssertBy.Equal(other.AssertBy) &&
+		c.LastVerifiedAt.Equal(other.LastVerifiedAt)
+
 }
 
 // MarshalJSON returns the JSON encoding of a domain claim and stores the
 // result in the object.
 func (c Claim) MarshalJSON() ([]byte, error) {
 	return json.Marshal(jsonClaim{
-		ID:        c.ID,
-		Status:    c.Status,
-		Domain:    c.Domain,
-		CreatedAt: c.CreatedAt.Unix(),
-		ExpiresAt: c.ExpiresAt.Unix(),
-		AssertBy:  c.AssertBy.Unix(),
-		Log:       c.Log,
+		ID:                     c.ID,
+		Status:                 c.Status,
+		Domain:                 c.Domain,
+		Token:                  c.Token,
+		CreatedAt:              c.CreatedAt.Unix(),
+		ExpiresAt:              c.ExpiresAt.Unix(),
+		AssertBy:               c.AssertBy.Unix(),
+		LastVerifiedAt:         c.LastVerifiedAt.Unix(),
+		LastVerificationMethod: c.LastVerificationMethod,
+		Log:                    c.Log,
 	})
 }
 
@@ -248,13 +261,16 @@ func (c *Claim) UnmarshalJSON(b []byte) error {
 	}
 
 	*c = Claim{
-		ID:        data.ID,
-		Status:    data.Status,
-		Domain:    data.Domain,
-		CreatedAt: time.Unix(data.CreatedAt, 0).UTC(),
-		ExpiresAt: time.Unix(data.ExpiresAt, 0).UTC(),
-		AssertBy:  time.Unix(data.AssertBy, 0).UTC(),
-		Log:       data.Log,
+		ID:                     data.ID,
+		Status:                 data.Status,
+		Domain:                 data.Domain,
+		Token:                  data.Token,
+		CreatedAt:              time.Unix(data.CreatedAt, 0).UTC(),
+		ExpiresAt:              time.Unix(data.ExpiresAt, 0).UTC(),
+		AssertBy:               time.Unix(data.AssertBy, 0).UTC(),
+		LastVerifiedAt:         time.Unix(data.LastVerifiedAt, 0).UTC(),
+		LastVerificationMethod: data.LastVerificationMethod,
+		Log:                    data.Log,
 	}
 
 	return nil

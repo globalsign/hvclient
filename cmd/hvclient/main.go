@@ -23,7 +23,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/globalsign/hvclient"
+	"github.com/vsglobalsign/hvclient"
 )
 
 const (

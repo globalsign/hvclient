@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/globalsign/hvclient/internal/httputils"
 	"github.com/google/go-cmp/cmp"
-	"github.com/vsglobalsign/hvclient/internal/httputils"
 )
 
 // errReader implements io.Reader and always returns an error.

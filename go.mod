@@ -1,4 +1,4 @@
-module github.com/vsglobalsign/hvclient
+module github.com/globalsign/hvclient
 
 go 1.18
 

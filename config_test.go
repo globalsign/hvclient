@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vsglobalsign/hvclient/internal/testhelpers"
+	"github.com/globalsign/hvclient/internal/testhelpers"
 )
 
 func TestConfigNewFromFile(t *testing.T) {

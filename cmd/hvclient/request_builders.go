@@ -27,8 +27,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vsglobalsign/hvclient"
-	"github.com/vsglobalsign/hvclient/internal/pki"
+	"github.com/globalsign/hvclient"
+	"github.com/globalsign/hvclient/internal/pki"
 )
 
 type requestValues struct {

@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/vsglobalsign/hvclient"
+	"github.com/globalsign/hvclient"
 )
 
 // validationPolicy outputs the validation policy in JSON format.

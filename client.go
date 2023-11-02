@@ -31,7 +31,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vsglobalsign/hvclient/internal/httputils"
+	"github.com/globalsign/hvclient/internal/httputils"
 )
 
 // Client is a fully-featured client through which HVCA API calls can be made.

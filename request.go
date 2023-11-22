@@ -65,7 +65,14 @@ type Request struct {
 	CSR                 *x509.CertificateRequest
 	Signature           *Signature
 	PrivateKey          interface{}
-	PublicKey           string
+	PublicKey           interface{}
+}
+
+// CertificateRekeyRequest is a request to HVCA to reissue a certificate.
+type CertificateRekeyRequest struct {
+	Signature          *Signature `json:"signature"`
+	PublicKey          string     `json:"public_key"`
+	PublicKeySignature string     `json:"public_key_signature"`
 }
 
 // Validity contains the requested not-before and not-after times for a
@@ -166,7 +173,7 @@ type jsonRequest struct {
 	MSExtension         *MSExtension         `json:"ms_extension_template,omitempty"`
 	CustomExtensions    json.RawMessage      `json:"custom_extensions,omitempty"`
 	Signature           *Signature           `json:"signature,omitempty"`
-	PublicKey           string               `json:"public_key,omitempty"`
+	PublicKey           interface{}          `json:"public_key,omitempty"`
 	PublicKeySignature  string               `json:"public_key_signature,omitempty"`
 }
 

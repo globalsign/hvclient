@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"os"
 
 	"github.com/globalsign/hvclient"
 )
@@ -94,4 +95,40 @@ func revokeCert(clnt *hvclient.Client, serialNumber string) {
 	if err := clnt.CertificateRevoke(ctx, sn); err != nil {
 		log.Fatalf("%v", err)
 	}
+}
+
+// rekeyCert reissues the certificate with the specified serial number.
+func rekeyCert(clnt *hvclient.Client, serialNumber string) error {
+
+	var input string
+	if *fCSR != "" {
+		input = *fCSR
+	} else if *fPublicKey != "" {
+		input = *fPublicKey
+	} else {
+		fmt.Println("you must specify either -csr or -publickey")
+		return nil
+	}
+
+	publicKey, err := os.ReadFile(input)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return err
+	}
+
+	// initializing the CertificateRekeyRequest
+	var req = &hvclient.CertificateRekeyRequest{}
+	req.PublicKey = string(publicKey)
+
+	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	var sn *string
+	if sn, err = clnt.CertificateRekey(ctx, req, serialNumber); err != nil {
+		return fmt.Errorf("couldn't obtain certificate: %v", err)
+	}
+
+	fmt.Println("Reissued Certificate :", *sn)
+
+	return nil
 }

@@ -125,6 +125,7 @@ Certificate and account information options:
   -retrieve=<serial>    Retrieve the previously-issued certificate with the
                         specified serial number
   -revoke=<serial>      Revoke the certificate with the specified serial number
+  -rekey=<serial>       Reissue the certificate with the specified serial number
   -status=<serial>      Show the issued/revoked status for the certificate with
                         the specified serial number
   -updated=<serial>     Show the last-updated time for the certificate with the

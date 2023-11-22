@@ -106,6 +106,7 @@ var (
 	fStatus   = flag.String("status", "", "show the status of the certificate with the specified serial number")
 	fUpdated  = flag.String("updated", "", "show the updated-at time for the certificate with the specified serial number")
 	fRevoke   = flag.String("revoke", "", "revoke the certificate with the specified serial number")
+	fRekey    = flag.String("rekey", "", "rekey the certificate with the specified serial number")
 )
 
 // Account statistics and information flags.

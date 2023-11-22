@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/big"
 	"os"
 
@@ -101,16 +102,21 @@ func requestCert(clnt *hvclient.Client) error {
 	var ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var serialNumber *big.Int
+	var serialNumber *string
 	if serialNumber, err = clnt.CertificateRequest(ctx, request); err != nil {
 		return fmt.Errorf("couldn't obtain certificate: %v", err)
+	}
+
+	var sn, ok = big.NewInt(0).SetString(*serialNumber, 16)
+	if !ok {
+		log.Fatalf("invalid serial number: %s", *serialNumber)
 	}
 
 	// Using the serial number of the new certificate, request the
 	// certificate itself and output it.
 	var info *hvclient.CertInfo
-	if info, err = clnt.CertificateRetrieve(ctx, serialNumber); err != nil {
-		return fmt.Errorf("couldn't retrieve certificate %s: %v", serialNumber, err)
+	if info, err = clnt.CertificateRetrieve(ctx, sn); err != nil {
+		return fmt.Errorf("couldn't retrieve certificate %s: %v", *serialNumber, err)
 	}
 
 	// Output the PEM-encoded certificate.

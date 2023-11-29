@@ -178,7 +178,7 @@ func (c *Client) CertificateRekey(ctx context.Context, req *CertificateRekeyRequ
 		nil,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to reissue certificate: %w", err)
+		return nil, err
 	}
 	var snString string
 	snString, err = headerFromResponse(r, certSNHeaderName)

@@ -111,7 +111,7 @@ func main() {
 	timeout = clnt.DefaultTimeout()
 
 	// Select and execute desired operation.
-	var willRequest = !(*fPublicKey == "" && *fPrivateKey == "" && *fCSR == "")
+	var willRequest = (!(*fPublicKey == "" && *fPrivateKey == "" && *fCSR == "") && (*fRekey == ""))
 
 	switch {
 	case willRequest:
@@ -121,6 +121,9 @@ func main() {
 
 	case *fRetrieve != "":
 		retrieveCert(clnt, *fRetrieve)
+
+	case *fRekey != "":
+		rekeyCert(clnt, *fRekey)
 
 	case *fRevoke != "":
 		revokeCert(clnt, *fRevoke)

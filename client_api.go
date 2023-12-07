@@ -113,6 +113,7 @@ const (
 	pathDNS                             = "/dns"
 	pathHTTP                            = "/http"
 	pathEmail                           = "/email"
+	pathRekey                           = "/rekey"
 )
 
 // CertificateRequest requests a new certificate based. The HVCA API is
@@ -162,6 +163,29 @@ func (c *Client) CertificateRetrieve(
 	}
 
 	return &r, nil
+}
+
+// CertificateRekey Submits a rekey request for an existing ISSUED certificate.The HVCA API is
+// asynchronous, and on success this method returns the serial number of
+// the new certificate. After a short delay, the certificate itself may be
+// retrieved via the CertificateRetrieve method.
+func (c *Client) CertificateRekey(ctx context.Context, req *CertificateRekeyRequest, id string) (*string, error) {
+	var r, err = c.makeRequest(
+		ctx,
+		endpointCertificates+"/"+url.QueryEscape(id)+pathRekey,
+		http.MethodPost,
+		req,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	var snString string
+	snString, err = headerFromResponse(r, certSNHeaderName)
+	if err != nil {
+		return nil, err
+	}
+	return &snString, nil
 }
 
 // CertificateRevoke revokes a certificate.

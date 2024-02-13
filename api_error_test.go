@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/globalsign/hvclient/internal/httputils"
 	"github.com/google/go-cmp/cmp"
+	"github.com/globalsign/hvclient/internal/httputils"
 )
 
 // errReader implements io.Reader and always returns an error.
@@ -53,6 +53,26 @@ func TestAPIError(t *testing.T) {
 			want: APIError{
 				StatusCode:  http.StatusBadRequest,
 				Description: "custom message",
+			},
+		},
+		{
+			name: "OKWithErrors",
+			in: &http.Response{
+				Body: ioutil.NopCloser(strings.NewReader(`{
+					"description": "san: failed dns/email domain name verification",
+					"errors": {
+						"requires_label_separator": "dummy"
+					}
+				}`)),
+				Header: http.Header{
+					httputils.ContentTypeHeader: []string{httputils.ContentTypeProblemJSON},
+				},
+				StatusCode: http.StatusBadRequest,
+			},
+			want: APIError{
+				StatusCode:  http.StatusBadRequest,
+				Description: "san: failed dns/email domain name verification",
+				Errors: map[string]string{"requires_label_separator": "dummy"},
 			},
 		},
 		{

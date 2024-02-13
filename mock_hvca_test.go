@@ -27,10 +27,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/globalsign/hvclient"
 	"github.com/globalsign/hvclient/internal/httputils"
 	"github.com/globalsign/hvclient/internal/pki"
-	"github.com/go-chi/chi"
 )
 
 // Note: mocking up the entire HVCA API service seems a little extreme, and
@@ -133,6 +133,7 @@ const (
 	mockAPIKey              = "mock_api_key"
 	mockAPISecret           = "mock_api_secret"
 	mockCertSerial          = "741DAF9EC2D5F7DC"
+	mockCertSerialLocation  = "http://local/certificates/741DAF9EC2D5F7DC"
 	mockCounterIssued       = 72
 	mockCounterRevoked      = 14
 	mockClaimDomainVerified = "verified.com."

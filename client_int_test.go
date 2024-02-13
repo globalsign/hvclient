@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 /*
@@ -30,6 +31,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -161,23 +163,38 @@ func TestCertificates(t *testing.T) {
 			for i := range certs {
 				req.Validity.NotBefore = time.Now()
 
+				// Validate SANs.
+				headers := map[string]string{"mode": "domain-validation"}
+
+				httpResponse, err := client.ValidateSANs(ctx, req, headers)
+				if err != nil || httpResponse.StatusCode != 204{
+					t.Fatalf("failed to validate SANs: %v", err)
+				}
+
 				// Request certificate.
-				var serialNumber *big.Int
+				var serialNumber *string
 				serialNumber, err = client.CertificateRequest(ctx, req)
 				if err != nil {
 					t.Fatalf("failed to request certificate: %v", err)
 				}
 
+				// change the serial number to Big Int to use in subsequent function calls.
+				intValue, err := strconv.ParseInt(*serialNumber, 10, 64)
+				if err != nil {
+					t.Fatalf("failed to convert serial to int: %v", err)
+				}
+				serialNumberBigInt := big.NewInt(intValue)
+
 				// Retrieve it.
 				var info *hvclient.CertInfo
-				info, err = client.CertificateRetrieve(ctx, serialNumber)
+				info, err = client.CertificateRetrieve(ctx, serialNumberBigInt)
 				if err != nil {
 					t.Fatalf("failed to retrieve certificate: %v", err)
 				}
 
 				// Verify the serial number in the certificate we received
 				// is indeed the one we were expecting.
-				if serialNumber.Cmp(info.X509.SerialNumber) != 0 {
+				if serialNumberBigInt.Cmp(info.X509.SerialNumber) != 0 {
 					t.Fatalf("got serial number %x, want %x", serialNumber, info.X509.SerialNumber)
 				}
 

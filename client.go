@@ -76,6 +76,7 @@ func (c *Client) makeRequest(
 	ctx context.Context,
 	path string,
 	method string,
+	headers map[string]string,
 	in interface{},
 	out interface{},
 ) (*http.Response, error) {
@@ -112,6 +113,11 @@ func (c *Client) makeRequest(
 			request.Header.Add(key, value)
 		}
 
+		// Add custom headers which are passed as arguments 
+		for key, value := range headers {
+			request.Header.Add(key, value)
+		}
+
 		// Perform specific processing for non-login requests.
 		if !strings.HasPrefix(path, endpointLogin) {
 			// Since this is not a login request, preemptively login again if
@@ -129,6 +135,7 @@ func (c *Client) makeRequest(
 		if response, err = c.HTTPClient.Do(request); err != nil {
 			return nil, fmt.Errorf("failed to execute HTTP request: %w", err)
 		}
+
 		defer httputils.ConsumeAndCloseResponseBody(response)
 
 		// HVCA doesn't return any 3XX HTTP status codes, so treat everything outside

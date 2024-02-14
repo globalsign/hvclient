@@ -146,6 +146,8 @@ func (c *Client) CertificateRequest(
 	return &snString, nil
 }
 
+// ValidateSANs validates a set of Subject Alternative Names (SANs) within
+// a certificate request. On success this method returns an 204 HTTP response.
 func (c *Client) ValidateSANs(
 	ctx context.Context,
 	req *Request,

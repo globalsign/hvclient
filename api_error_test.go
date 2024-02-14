@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/globalsign/hvclient/internal/httputils"
+	"github.com/google/go-cmp/cmp"
 )
 
 // errReader implements io.Reader and always returns an error.
@@ -72,7 +72,7 @@ func TestAPIError(t *testing.T) {
 			want: APIError{
 				StatusCode:  http.StatusBadRequest,
 				Description: "san: failed dns/email domain name verification",
-				Errors: map[string]string{"requires_label_separator": "dummy"},
+				Errors: &map[string]string{"requires_label_separator": "dummy"},
 			},
 		},
 		{

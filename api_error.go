@@ -25,18 +25,23 @@ import (
 )
 
 // APIError is an error returned by the HVCA HTTP API.
-type APIError struct {
+type APIError 	struct {
 	StatusCode  int
 	Description string
+	Errors      *map[string]string `json:"errors,omitempty"` // Additional error details
 }
 
 // hvcaError is the format of an HVCA error HTTP response body.
 type hvcaError struct {
-	Description string `json:"description"`
+	Description string 		 		`json:"description"`
+	Errors 		map[string]string 	`json:"errors,omitempty"`
 }
 
 // Error returns a string representation of the error.
 func (e APIError) Error() string {
+	if e.Errors != nil {
+		return fmt.Sprintf("%d: %s %v", e.StatusCode, e.Description, *e.Errors)
+	}
 	return fmt.Sprintf("%d: %s", e.StatusCode, e.Description)
 }
 
@@ -63,5 +68,10 @@ func NewAPIError(r *http.Response) APIError {
 		return APIError{StatusCode: r.StatusCode, Description: "unknown API error"}
 	}
 
-	return APIError{StatusCode: r.StatusCode, Description: hvErr.Description}
+	var errors *map[string]string
+	if len(hvErr.Errors) > 0 {
+		errors = &hvErr.Errors
+	}
+
+	return APIError{StatusCode: r.StatusCode, Description: hvErr.Description, Errors: errors}
 }

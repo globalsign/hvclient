@@ -22,8 +22,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/globalsign/hvclient"
 	"github.com/google/go-cmp/cmp"
+	"github.com/globalsign/hvclient"
 )
 
 var testPolicyFullJSON = `{

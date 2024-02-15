@@ -56,6 +56,26 @@ func TestAPIError(t *testing.T) {
 			},
 		},
 		{
+			name: "OKWithErrors",
+			in: &http.Response{
+				Body: ioutil.NopCloser(strings.NewReader(`{
+					"description": "san: failed dns/email domain name verification",
+					"errors": {
+						"requires_label_separator": "dummy"
+					}
+				}`)),
+				Header: http.Header{
+					httputils.ContentTypeHeader: []string{httputils.ContentTypeProblemJSON},
+				},
+				StatusCode: http.StatusBadRequest,
+			},
+			want: APIError{
+				StatusCode:  http.StatusBadRequest,
+				Description: "san: failed dns/email domain name verification",
+				Errors: &map[string]string{"requires_label_separator": "dummy"},
+			},
+		},
+		{
 			name: "BadContentType",
 			in: &http.Response{
 				Body: ioutil.NopCloser(strings.NewReader(`{"description":"custom message"}`)),

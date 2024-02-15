@@ -59,6 +59,7 @@ func (c *Client) login(ctx context.Context) error {
 		ctx,
 		endpointLogin,
 		http.MethodPost,
+		nil,
 		req,
 		&resp,
 	)

@@ -129,6 +129,7 @@ func (c *Client) CertificateRequest(
 		ctx,
 		endpointCertificates,
 		http.MethodPost,
+		nil,
 		req,
 		nil,
 	)
@@ -145,6 +146,29 @@ func (c *Client) CertificateRequest(
 	return &snString, nil
 }
 
+// ValidateSANs validates a set of Subject Alternative Names (SANs) within
+// a certificate request. On success this method returns an 204 HTTP response.
+func (c *Client) ValidateSANs(
+	ctx context.Context,
+	req *Request,
+	headers map[string]string,
+) (*http.Response, error) {
+
+	var response, err = c.makeRequest(
+		ctx,
+		endpointCertificates,
+		http.MethodPost,
+		headers,
+		req,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
 // CertificateRetrieve retrieves a certificate.
 func (c *Client) CertificateRetrieve(
 	ctx context.Context,
@@ -155,6 +179,7 @@ func (c *Client) CertificateRetrieve(
 		ctx,
 		endpointCertificates+"/"+url.QueryEscape(fmt.Sprintf("%X", serial)),
 		http.MethodGet,
+		nil,
 		nil,
 		&r,
 	)
@@ -174,6 +199,7 @@ func (c *Client) CertificateRekey(ctx context.Context, req *CertificateRekeyRequ
 		ctx,
 		endpointCertificates+"/"+url.QueryEscape(id)+pathRekey,
 		http.MethodPost,
+		nil,
 		req,
 		nil,
 	)
@@ -227,6 +253,7 @@ func (c *Client) CertificateRevokeWithReason(
 		ctx,
 		endpointCertificates+"/"+url.QueryEscape(fmt.Sprintf("%X", serial)),
 		http.MethodPatch,
+		nil,
 		&patch,
 		nil,
 	)
@@ -242,6 +269,7 @@ func (c *Client) TrustChain(ctx context.Context) ([]*x509.Certificate, error) {
 		ctx,
 		endpointTrustChain,
 		http.MethodGet,
+		nil,
 		nil,
 		&chain,
 	)
@@ -277,6 +305,7 @@ func (c *Client) Policy(ctx context.Context) (*Policy, error) {
 		endpointPolicy,
 		http.MethodGet,
 		nil,
+		nil,
 		&pol,
 	)
 	if err != nil {
@@ -310,7 +339,7 @@ func (c *Client) countersCommon(
 	path string,
 ) (int64, error) {
 	var count counter
-	var _, err = c.makeRequest(ctx, path, http.MethodGet, nil, &count)
+	var _, err = c.makeRequest(ctx, path, http.MethodGet,nil, nil, &count)
 	if err != nil {
 		return 0, err
 	}
@@ -379,6 +408,7 @@ func (c *Client) statsCommon(
 		path+paginationString(page, perPage, from, to),
 		http.MethodGet,
 		nil,
+		nil,
 		&stats,
 	)
 	if err != nil {
@@ -419,6 +449,7 @@ func (c *Client) ClaimsDomains(
 		endpointClaimsDomains+queryParams,
 		http.MethodGet,
 		nil,
+		nil,
 		&claims,
 	)
 	if err != nil {
@@ -442,6 +473,7 @@ func (c *Client) ClaimSubmit(ctx context.Context, domain string) (*ClaimAssertio
 		ctx,
 		endpointClaimsDomains+"/"+url.QueryEscape(domain),
 		http.MethodPost,
+		nil,
 		nil,
 		&info,
 	)
@@ -468,6 +500,7 @@ func (c *Client) ClaimRetrieve(ctx context.Context, id string) (*Claim, error) {
 		endpointClaimsDomains+"/"+url.QueryEscape(id),
 		http.MethodGet,
 		nil,
+		nil,
 		&claim,
 	)
 	if err != nil {
@@ -483,6 +516,7 @@ func (c *Client) ClaimDelete(ctx context.Context, id string) error {
 		ctx,
 		endpointClaimsDomains+"/"+url.QueryEscape(id),
 		http.MethodDelete,
+		nil,
 		nil,
 		nil,
 	)
@@ -543,6 +577,7 @@ func (c *Client) ClaimEmailRetrieve(ctx context.Context, id string) (*Authorised
 		endpointClaimsDomains+"/"+url.QueryEscape(id)+pathEmail,
 		http.MethodGet,
 		nil,
+		nil,
 		&authorisedEmails,
 	)
 	if err != nil {
@@ -566,6 +601,7 @@ func (c *Client) ClaimReassert(ctx context.Context, id string) (*ClaimAssertionI
 		endpointClaimsDomains+"/"+url.QueryEscape(id)+pathReassert,
 		http.MethodPost,
 		nil,
+		nil,
 		&info,
 	)
 	if err != nil {
@@ -588,6 +624,7 @@ func (c *Client) claimAssert(ctx context.Context, body interface{}, id, path str
 		ctx,
 		endpointClaimsDomains+"/"+url.QueryEscape(id)+path,
 		http.MethodPost,
+		nil,
 		body,
 		nil,
 	)
@@ -612,6 +649,7 @@ func (c *Client) ClaimADNRetrieve(ctx context.Context, id string) ([]string, err
 		ctx,
 		endpointClaimsDomains+"/"+url.QueryEscape(id)+pathDNS,
 		http.MethodGet,
+		nil,
 		nil,
 		&adns,
 	)

@@ -163,13 +163,13 @@ func TestCertificates(t *testing.T) {
 			for i := range certs {
 				req.Validity.NotBefore = time.Now()
 
-				// Validate SANs.
-				headers := map[string]string{"mode": "domain-validation"}
+			// Validate certificate request.
+			headers := map[string]string{"mode": "domain-validation"}
 
-				httpResponse, err := client.ValidateSANs(ctx, req, headers)
-				if err != nil || httpResponse.StatusCode != 204{
-					t.Fatalf("failed to validate SANs: %v", err)
-				}
+			httpResponse, err := client.ValidateCertificateRequest(ctx, req, headers)
+			if err != nil || httpResponse.StatusCode != 204 {
+				t.Fatalf("failed to validate Certificate request: %v", err)
+			}
 
 				// Request certificate.
 				var serialNumber *string

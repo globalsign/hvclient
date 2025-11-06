@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 /*
@@ -62,7 +63,7 @@ func TestRelogin(t *testing.T) {
 		t.Fatalf("failed to create new client from file: %v", err)
 	}
 
-	var oldToken = clnt.tokenRead()
+	var oldToken = clnt.GetToken()
 
 	if _, err = clnt.Policy(ctx); err != nil {
 		t.Fatalf("couldn't get response: %v", err)
@@ -76,7 +77,7 @@ func TestRelogin(t *testing.T) {
 		t.Fatalf("couldn't get response: %v", err)
 	}
 
-	var newToken = clnt.tokenRead()
+	var newToken = clnt.GetToken()
 
 	if oldToken == newToken {
 		t.Errorf("old and new tokens unexpectedly compare equal")
@@ -87,13 +88,13 @@ func TestRelogin(t *testing.T) {
 	// a new token is automatically obtained.
 	oldToken = newToken
 
-	clnt.tokenSet(expiredToken)
+	clnt.SetToken(expiredToken)
 
 	if _, err = clnt.Policy(ctx); err != nil {
 		t.Fatalf("couldn't get response: %v", err)
 	}
 
-	newToken = clnt.tokenRead()
+	newToken = clnt.GetToken()
 
 	if oldToken == newToken {
 		t.Errorf("old and new tokens unexpectedly compare equal")

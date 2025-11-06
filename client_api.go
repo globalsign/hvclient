@@ -58,12 +58,21 @@ type AuthorisedEmails struct {
 // DNSResults is a set of maps for all queried record types. Record types are the keys of the maps.
 type DNSResults struct {
 	SOA SOAResults `json:"SOA"`
-	// TXT is not supported
-	// CAA is not supported
+	TXT TXTResults `json:"TXT"`
+	CAA CAAResults `json:"CAA"`
 }
 
 // SOAResults is a map of SOA records for DNS results
-type SOAResults struct {
+type SOAResults DNSEmailResults
+
+// TXTResults is a map of TXT records for DNS results
+type TXTResults DNSEmailResults
+
+// CAAResults is a map of CAA records for DNS results
+type CAAResults DNSEmailResults
+
+// DNSEmailResults is a set of email addresses and errors for a DNS record type
+type DNSEmailResults struct {
 	Emails []string `json:"emails"`
 	Errors []string `json:"errors,omitempty"`
 }
@@ -146,7 +155,7 @@ func (c *Client) CertificateRequest(
 	return &snString, nil
 }
 
-// ValidateCertificateRequest validates the certificate issuance request payload. 
+// ValidateCertificateRequest validates the certificate issuance request payload.
 // On success this method returns an 204 HTTP response, but does not issue the certificate.
 func (c *Client) ValidateCertificateRequest(
 	ctx context.Context,
@@ -339,7 +348,7 @@ func (c *Client) countersCommon(
 	path string,
 ) (int64, error) {
 	var count counter
-	var _, err = c.makeRequest(ctx, path, http.MethodGet,nil, nil, &count)
+	var _, err = c.makeRequest(ctx, path, http.MethodGet, nil, nil, &count)
 	if err != nil {
 		return 0, err
 	}

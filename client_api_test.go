@@ -51,25 +51,25 @@ var mockResponseWithErrors string = `{
 				"emails": [
 					"SOAexample@test.com"
 				],
-        "errors": [
-          "Sample SOA error message"
-        ]
+				"errors": [
+					"Sample SOA error message"
+				]
 			},
 			"TXT": {
 				"emails": [
 					"TXTexample@test.com"
 				],
-        "errors": [
-          "Sample TXT error message"
-        ]
+				"errors": [
+					"Sample TXT error message"
+				]
 			},
 			"CAA": {
 				"emails": [
 					"CAAexample@test.com"
 				],
-        "errors": [
-          "Sample CAA error message"
-        ]
+				"errors": [
+					"Sample CAA error message"
+				]
 			}
 		}
 	}`
@@ -83,17 +83,17 @@ var mockResponseTXTOnly string = `{
 			"postmaster@test.com"
 		],
 		"dns": {
-      "SOA": {
-        "emails": []
-      },
+			"SOA": {
+				"emails": []
+			},
 			"TXT": {
 				"emails": [
 					"TXTexample@test.com"
 				]
 			},
-      "CAA": {
-        "emails": []
-      }
+			"CAA": {
+				"emails": []
+			}
 		}
 	}`
 

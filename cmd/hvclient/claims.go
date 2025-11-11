@@ -154,8 +154,12 @@ func claimEmailRetrieve(clnt *hvclient.Client, id, emailAddress string) {
 	}
 
 	fmt.Printf("Constructed: %v\n", authorisedEmails.Constructed)
-	fmt.Printf("DNS: %v\n", authorisedEmails.DNS.SOA.Emails)
-	fmt.Printf("Errors: %v\n", authorisedEmails.DNS.SOA.Errors)
+	fmt.Printf("DNS SOA: %v\n", authorisedEmails.DNS.SOA.Emails)
+	fmt.Printf("Errors SOA: %v\n", authorisedEmails.DNS.SOA.Errors)
+	fmt.Printf("DNS TXT: %v\n", authorisedEmails.DNS.TXT.Emails)
+	fmt.Printf("Errors TXT: %v\n", authorisedEmails.DNS.TXT.Errors)
+	fmt.Printf("DNS CAA: %v\n", authorisedEmails.DNS.CAA.Emails)
+	fmt.Printf("Errors CAA: %v\n", authorisedEmails.DNS.CAA.Errors)
 }
 
 // claimReassert reasserts an existing domain claim with the specified
